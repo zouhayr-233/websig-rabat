@@ -133,6 +133,7 @@ function loadWatersheds(data) {
     }
   });
   window.overlayLayers['Bassins versants'] = lyr;
+  if (window.map) lyr.addTo(window.map);
   notifyLayerReady('Bassins versants');
 }
 
@@ -157,6 +158,7 @@ function loadRivers(data) {
     }
   });
   window.overlayLayers['Oueds / Rivières'] = lyr;
+  if (window.map) lyr.addTo(window.map);
   notifyLayerReady('Oueds / Rivières');
 }
 
@@ -178,6 +180,7 @@ function loadDams(data) {
     }
   });
   window.overlayLayers['Barrages'] = lyr;
+  if (window.map) lyr.addTo(window.map);
   notifyLayerReady('Barrages');
 }
 
@@ -202,6 +205,7 @@ function loadStations(data) {
     }
   });
   window.overlayLayers['Stations pluviométriques'] = lyr;
+  if (window.map) lyr.addTo(window.map);
   notifyLayerReady('Stations pluviométriques');
 }
 
@@ -230,6 +234,7 @@ function loadFloodZones(data) {
     }
   });
   window.overlayLayers['Zones de risque'] = lyr;
+  if (window.map) lyr.addTo(window.map);
   notifyLayerReady('Zones de risque');
 }
 
@@ -249,6 +254,7 @@ function loadAdmin(data) {
     }
   });
   window.overlayLayers['Limites administratives'] = lyr;
+  if (window.map) lyr.addTo(window.map);
   notifyLayerReady('Limites administratives');
 }
 
