@@ -310,6 +310,14 @@ ul { list-style: none; padding: 0; }
 
 .radio-item { padding-left: 26px; }
 .layer-name { flex: 1; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Layer type icon (replaces color-box) */
+.layer-type-icon {
+  font-size: 11px; color: var(--blue-light); flex-shrink: 0;
+  width: 16px; text-align: center; line-height: 1;
+}
+.layer-type-icon.line-icon { font-size: 14px; font-weight: 900; color: var(--blue-main); }
+.layer-type-icon.risk-icon { color: var(--risk-medium); }
+
 .layer-zoom-btn {
   background: transparent; border: none; color: var(--text-dim);
   cursor: pointer; font-size: 13px; padding: 0 2px;

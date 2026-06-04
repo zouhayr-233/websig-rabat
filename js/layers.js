@@ -110,10 +110,16 @@ function loadWatersheds(data) {
     { fill: '#f5cba7', border: '#bf360c' },  /* peach       */
     { fill: '#d7bde2', border: '#4a148c' },  /* lavender    */
   ];
-  let i = 0;
+  /* Use stable OBJECTID so resetStyle never changes colour */
+  const colorMap = {};
+  data.features.forEach(function(f, idx) {
+    const id = (f.properties && (f.properties.OBJECTID || f.properties.CodeSousBas)) || idx;
+    colorMap[String(id)] = palette[idx % palette.length];
+  });
   const lyr = L.geoJSON(data, {
-    style: function() {
-      const p = palette[i++ % palette.length];
+    style: function(feature) {
+      const id = String((feature.properties && (feature.properties.OBJECTID || feature.properties.CodeSousBas)) || 0);
+      const p  = colorMap[id] || palette[0];
       return { fillColor: p.fill, fillOpacity: 0.45, color: p.border, weight: 1.8 };
     },
     onEachFeature: function(feat, l) {
@@ -127,8 +133,12 @@ function loadWatersheds(data) {
         + '<tr><td>Superficie</td><td>' + sup + '</td></tr>'
         + '<tr><td>Bassin</td><td>' + (p.CodeBassin || '—') + '</td></tr>'
         + '</table></div>', { maxWidth: 280 });
-      l.on('mouseover', function(){ this.setStyle({ fillOpacity: 0.6, weight: 3 }); });
-      l.on('mouseout',  function(){ lyr.resetStyle(this); });
+      l.on('mouseover', function(){ this.setStyle({ fillOpacity: 0.7, weight: 2.5 }); });
+      l.on('mouseout',  function() {
+        const id = String((this.feature.properties && (this.feature.properties.OBJECTID || this.feature.properties.CodeSousBas)) || 0);
+        const p  = colorMap[id] || palette[0];
+        this.setStyle({ fillColor: p.fill, fillOpacity: 0.45, color: p.border, weight: 1.8 });
+      });
     }
   });
   window.overlayLayers['Bassins versants'] = lyr;

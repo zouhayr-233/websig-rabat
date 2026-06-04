@@ -18,8 +18,8 @@
   <!-- Leaflet MiniMap CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.css" />
 
-  <!-- App styles -->
-  <link rel="stylesheet" href="css/style.css" />
+  <!-- App styles (v3 — light professional theme) -->
+  <link rel="stylesheet" href="css/style.css?v=3" />
 </head>
 <body>
 
@@ -176,31 +176,31 @@
               <div class="layer-group-body" id="body-water">
                 <label class="layer-item">
                   <input type="checkbox" class="layer-checkbox" checked data-layer="Bassins versants" id="cb-watersheds" />
-                  <span class="layer-color-box" style="background:#264653;border:2px solid #00b4d8;"></span>
+                  <span class="layer-type-icon">▭</span>
                   <span class="layer-name">Bassins versants</span>
                   <button class="layer-zoom-btn" data-layer="Bassins versants" title="Centrer">⊙</button>
                 </label>
                 <label class="layer-item">
                   <input type="checkbox" class="layer-checkbox" checked data-layer="Oueds / Rivières" id="cb-rivers" />
-                  <span class="layer-color-box" style="background:#0077b6;"></span>
+                  <span class="layer-type-icon line-icon">—</span>
                   <span class="layer-name">Oueds / Rivières</span>
                   <button class="layer-zoom-btn" data-layer="Oueds / Rivières" title="Centrer">⊙</button>
                 </label>
                 <label class="layer-item">
                   <input type="checkbox" class="layer-checkbox" checked data-layer="Barrages" id="cb-dams" />
-                  <span class="layer-color-box" style="background:#0096c7;"></span>
+                  <span class="layer-type-icon">⬤</span>
                   <span class="layer-name">Barrages</span>
                   <button class="layer-zoom-btn" data-layer="Barrages" title="Centrer">⊙</button>
                 </label>
                 <label class="layer-item">
                   <input type="checkbox" class="layer-checkbox" checked data-layer="Stations pluviométriques" id="cb-stations" />
-                  <span class="layer-color-box" style="background:#48cae4;"></span>
+                  <span class="layer-type-icon">⬤</span>
                   <span class="layer-name">Stations pluviométriques</span>
                   <button class="layer-zoom-btn" data-layer="Stations pluviométriques" title="Centrer">⊙</button>
                 </label>
                 <label class="layer-item">
                   <input type="checkbox" class="layer-checkbox" checked data-layer="Nappes souterraines" id="cb-aquifers" />
-                  <span class="layer-color-box" style="background:#023e8a;border:2px solid #0096c7;"></span>
+                  <span class="layer-type-icon">▭</span>
                   <span class="layer-name">Nappes souterraines</span>
                   <button class="layer-zoom-btn" data-layer="Nappes souterraines" title="Centrer">⊙</button>
                 </label>
@@ -217,8 +217,8 @@
               <div class="layer-group-body" id="body-risk">
                 <label class="layer-item">
                   <input type="checkbox" class="layer-checkbox" checked data-layer="Zones de risque" id="cb-flood" />
-                  <span class="layer-color-box" style="background:linear-gradient(90deg,#e63946 33%,#f4a261 66%,#2a9d8f 100%);"></span>
-                  <span class="layer-name">Zones de risque</span>
+                  <span class="layer-type-icon risk-icon">▭</span>
+                  <span class="layer-name">Zones de risque inondation</span>
                   <button class="layer-zoom-btn" data-layer="Zones de risque" title="Centrer">⊙</button>
                 </label>
               </div>
@@ -234,7 +234,7 @@
               <div class="layer-group-body" id="body-admin">
                 <label class="layer-item">
                   <input type="checkbox" class="layer-checkbox" checked data-layer="Limites administratives" id="cb-admin" />
-                  <span class="layer-color-box" style="background:transparent;border:2px dashed #e0e0e0;"></span>
+                  <span class="layer-type-icon">⬜</span>
                   <span class="layer-name">Limites administratives</span>
                   <button class="layer-zoom-btn" data-layer="Limites administratives" title="Centrer">⊙</button>
                 </label>

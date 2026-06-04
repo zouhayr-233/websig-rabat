@@ -234,39 +234,92 @@ document.addEventListener('DOMContentLoaded', function () {
   const mobileMenu = document.getElementById('btn-mobile-menu');
   if (mobileMenu && sidebar) mobileMenu.addEventListener('click', function () { sidebar.classList.toggle('collapsed'); });
 
-  /* ── DYNAMIC LEGEND ──────────────────────────────── */
+  /* ── DYNAMIC LEGEND — single source of truth ─────── */
+  /* Colours match layers.js exactly (no duplicates).   */
   function updateLegend() {
     const container = document.getElementById('legend-content');
     if (!container) return;
-    const active = Array.from(document.querySelectorAll('.layer-checkbox:checked')).map(function (c) { return c.dataset.layer; });
-    if (!active.length) { container.innerHTML = '<p class="legend-empty">Activez une couche pour voir sa légende.</p>'; return; }
+    const active = Array.from(
+      document.querySelectorAll('.layer-checkbox:checked')
+    ).map(function(c){ return c.dataset.layer; });
+    if (!active.length) {
+      container.innerHTML = '<p class="legend-empty">Activez une couche pour voir sa légende.</p>';
+      return;
+    }
     let html = '';
+
     if (active.includes('Bassins versants'))
-      html += lg('Bassins versants', [['#264653','#00b4d8','Bou Regreg'],['#2a9d8f','#00b4d8','Sebou'],['#457b9d','#00b4d8','Côtier Nord'],['#1d3557','#00b4d8','Côtier Sud']].map(function(x){ return {color:x[0],border:x[1],label:x[2]}; }), 'polygon');
+      html += lg('Bassins versants', [
+        {fill:'#aed6f1', border:'#1565c0', label:'Bassin 1'},
+        {fill:'#a9dfbf', border:'#1b5e20', label:'Bassin 2'},
+        {fill:'#f9e79f', border:'#f57f17', label:'Bassin 3'},
+        {fill:'#f5cba7', border:'#bf360c', label:'Bassin 4'},
+        {fill:'#d7bde2', border:'#4a148c', label:'Bassin 5'},
+      ], 'polygon');
+
     if (active.includes('Oueds / Rivières'))
-      html += lg('Oueds / Rivières', [{color:'#0077b6',height:4,label:'Principal'},{color:'#0096c7',height:2.5,label:'Secondaire'},{color:'#00b4d8',height:1.5,label:'Mineur'}], 'line');
+      html += lg('Oueds / Rivières', [
+        {color:'#1565c0', height:3,   label:'Oued principal'},
+        {color:'#1976d2', height:1.5, label:'Oued secondaire'},
+      ], 'line');
+
     if (active.includes('Barrages'))
-      html += lg('Barrages', [{icon:'🏗️',label:'Barrage / retenue'}], 'icon');
+      html += lg('Barrages', [{icon:'🏗️', label:'Barrage existant'}], 'icon');
+
     if (active.includes('Stations pluviométriques'))
-      html += lg('Stations pluviométriques', [{icon:'🌧',label:'Station pluviométrique'}], 'icon');
+      html += lg('Stations pluviométriques', [{icon:'🌦', label:'Station pluviométrique'}], 'icon');
+
+    if (active.includes('Nappes souterraines'))
+      html += lg('Nappes souterraines', [
+        {fill:'#bbdefb', border:'#1565c0', dashed:true, label:'Nappe souterraine'},
+      ], 'polygon');
+
     if (active.includes('Zones de risque'))
-      html += lg('Risque d\'inondation', [{color:'#e63946',label:'Élevé'},{color:'#f4a261',label:'Moyen'},{color:'#2a9d8f',label:'Faible'}], 'polygon');
+      html += lg('Risque inondation (Random Forest)', [
+        {fill:'#ffcdd2', border:'#c62828', label:'Risque élevé'},
+        {fill:'#ffe0b2', border:'#e65100', label:'Risque moyen'},
+        {fill:'#dcedc8', border:'#2e7d32', label:'Risque faible', dashed:true},
+      ], 'polygon');
+
     if (active.includes('Limites administratives'))
-      html += lg('Limites administratives', [{color:'#e0e0e0',dashed:true,label:'Limite province/préfecture'}], 'line');
+      html += lg('Limites administratives', [
+        {color:'#0d47a1', dashed:true, height:2, label:'Limite de région'},
+      ], 'line');
+
     container.innerHTML = html || '<p class="legend-empty">Activez une couche pour voir sa légende.</p>';
   }
 
   function lg(title, items, type) {
-    const rows = items.map(function (item) {
-      if (type === 'polygon') return `<div class="legend-item"><span class="legend-color" style="background:${item.color};border:2px solid ${item.border||item.color};opacity:.75"></span><span>${item.label}</span></div>`;
-      if (type === 'line')    return `<div class="legend-item"><span class="legend-line" style="${item.dashed?'border-top:'+(item.height||2)+'px dashed '+item.color:'background:'+item.color+';height:'+(item.height||2)+'px'}"></span><span>${item.label}</span></div>`;
-      if (type === 'icon')    return `<div class="legend-item"><span style="font-size:16px;line-height:1">${item.icon}</span><span>${item.label}</span></div>`;
+    const rows = items.map(function(item) {
+      if (type === 'polygon') {
+        const bd = item.border || item.fill;
+        const ds = item.dashed ? 'border:2px dashed '+bd : 'border:2px solid '+bd;
+        return '<div class="legend-item">'
+          + '<span class="legend-color" style="background:' + item.fill + ';' + ds + ';opacity:.85"></span>'
+          + '<span>' + item.label + '</span></div>';
+      }
+      if (type === 'line') {
+        const s = item.dashed
+          ? 'border-top:' + (item.height||2) + 'px dashed ' + item.color + ';height:0'
+          : 'background:' + item.color + ';height:' + (item.height||2) + 'px';
+        return '<div class="legend-item">'
+          + '<span class="legend-line" style="' + s + '"></span>'
+          + '<span>' + item.label + '</span></div>';
+      }
+      if (type === 'icon')
+        return '<div class="legend-item">'
+          + '<span style="font-size:16px;line-height:1">' + item.icon + '</span>'
+          + '<span>' + item.label + '</span></div>';
       return '';
     }).join('');
-    return `<div class="legend-group"><div class="legend-group-title">${title}</div>${rows}</div>`;
+    return '<div class="legend-group">'
+      + '<div class="legend-group-title">' + title + '</div>'
+      + rows + '</div>';
   }
 
   window.updateLegend = updateLegend;
+  /* Call once on first layerReady, then on every change — no duplicates because
+     container.innerHTML is always fully replaced */
   document.addEventListener('layerReady', updateLegend);
 
   /* ── TABLE SORT ───────────────────────────────────── */
