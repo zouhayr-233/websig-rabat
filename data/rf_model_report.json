@@ -1,0 +1,38 @@
+{
+  "model": "RandomForestClassifier",
+  "n_estimators": 300,
+  "cv_f1_mean": 0.9085,
+  "cv_f1_std": 0.0256,
+  "n_train": 1224,
+  "n_flood": 95,
+  "features": [
+    "elevation",
+    "slope",
+    "twi",
+    "dist_river",
+    "dist_reservoir",
+    "river_score",
+    "reservoir_score",
+    "ann_precip",
+    "max_monthly",
+    "precip_cv"
+  ],
+  "feature_importances": {
+    "elevation": 0.2341,
+    "twi": 0.1867,
+    "dist_river": 0.1819,
+    "river_score": 0.1757,
+    "precip_cv": 0.0561,
+    "slope": 0.0437,
+    "ann_precip": 0.0412,
+    "reservoir_score": 0.0296,
+    "dist_reservoir": 0.0266,
+    "max_monthly": 0.0243
+  },
+  "thresholds": {
+    "high": 0.6,
+    "medium": 0.4,
+    "low": 0.25
+  },
+  "projection_analysis": "EPSG:26192"
+}
