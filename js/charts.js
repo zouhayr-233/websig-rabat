@@ -7,25 +7,25 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
-  /* ----- Global Chart.js defaults (dark theme) ----- */
-  Chart.defaults.color = '#e0e0e0';
-  Chart.defaults.borderColor = 'rgba(27,45,66,0.8)';
+  /* ----- Global Chart.js defaults (light professional theme) ----- */
+  Chart.defaults.color = '#546e7a';
+  Chart.defaults.borderColor = 'rgba(21,101,192,0.12)';
   Chart.defaults.font.family = "'Source Sans Pro', sans-serif";
   Chart.defaults.font.size = 11;
 
-  const darkPlugin = {
-    id: 'darkBg',
+  const lightPlugin = {
+    id: 'lightBg',
     beforeDraw: function (chart) {
       const ctx = chart.canvas.getContext('2d');
       ctx.save();
       ctx.globalCompositeOperation = 'destination-over';
-      ctx.fillStyle = '#162032';
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, chart.canvas.width, chart.canvas.height);
       ctx.restore();
     }
   };
 
-  Chart.register(darkPlugin);
+  Chart.register(lightPlugin);
 
   /* ======================================================
      TAB 1 — STATISTIQUES
@@ -40,8 +40,8 @@ document.addEventListener('DOMContentLoaded', function () {
         labels: ['Risque élevé', 'Risque moyen', 'Risque faible'],
         datasets: [{
           data: [245, 890, 1340],
-          backgroundColor: ['#e63946', '#f4a261', '#2a9d8f'],
-          borderColor: '#162032',
+          backgroundColor: ['#c62828', '#e65100', '#2e7d32'],
+          borderColor: '#ffffff',
           borderWidth: 3,
           hoverOffset: 8
         }]

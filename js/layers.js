@@ -34,40 +34,41 @@ function hideSpinnerNow() {
   if (s) s.style.display = 'none';
 }
 
-/* ── Custom icons ───────────────────────────────────── */
+/* ── Custom icons (professional light theme) ─────────── */
 var damIcon = L.divIcon({
   className: '',
-  html: '<svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">'
-      + '<circle cx="15" cy="15" r="13" fill="#0d1b2a" stroke="#00b4d8" stroke-width="2.5"/>'
-      + '<rect x="9" y="11" width="12" height="7" rx="1" fill="#00b4d8"/>'
-      + '<rect x="7" y="17" width="16" height="3" rx="1" fill="#0096c7"/>'
+  html: '<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">'
+      + '<circle cx="16" cy="16" r="14" fill="#ffffff" stroke="#1565c0" stroke-width="2.5"/>'
+      + '<rect x="9" y="12" width="14" height="8" rx="1.5" fill="#1565c0"/>'
+      + '<rect x="7" y="19" width="18" height="3.5" rx="1.5" fill="#0d47a1"/>'
+      + '<path d="M10 15.5 Q16 13 22 15.5" stroke="white" stroke-width="1.2" fill="none" opacity="0.7"/>'
       + '</svg>',
-  iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -17]
+  iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -18]
 });
 
 var stationIcon = L.divIcon({
   className: '',
-  html: '<svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">'
-      + '<circle cx="14" cy="14" r="12" fill="#0d1b2a" stroke="#48cae4" stroke-width="2.5"/>'
-      + '<path d="M11 8C11 8,7 13,7 15C7 17.5,8.8 19,11 19C13.2 19,15 17.5,15 15C15 13,11 8,11 8Z" fill="#48cae4" opacity="0.9"/>'
-      + '<line x1="19" y1="9" x2="18" y2="13" stroke="#48cae4" stroke-width="1.5" stroke-linecap="round"/>'
-      + '<line x1="21" y1="12" x2="20" y2="16" stroke="#48cae4" stroke-width="1.5" stroke-linecap="round"/>'
+  html: '<svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">'
+      + '<circle cx="15" cy="15" r="13" fill="#ffffff" stroke="#1976d2" stroke-width="2.5"/>'
+      + '<path d="M12 8C12 8,7 14,7 17C7 19.8,9.2 22,12 22C14.8 22,17 19.8,17 17C17 14,12 8,12 8Z" fill="#42a5f5" opacity="0.85"/>'
+      + '<line x1="20" y1="9"  x2="19" y2="13" stroke="#1976d2" stroke-width="1.5" stroke-linecap="round"/>'
+      + '<line x1="22" y1="13" x2="21" y2="17" stroke="#1976d2" stroke-width="1.5" stroke-linecap="round"/>'
       + '</svg>',
-  iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -16]
+  iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -17]
 });
 
-/* ── Risk colour ────────────────────────────────────── */
+/* ── Professional risk colours ──────────────────────── */
 function riskColor(code) {
-  if (!code) return '#2a9d8f';
+  if (!code) return '#388e3c';
   const c = code.toLowerCase();
-  return c.includes('elev') || c.includes('high') || c === '1' ? '#e63946'
-       : c.includes('moyen') || c.includes('med') || c === '2' ? '#f4a261'
-       : '#2a9d8f';
+  return c.includes('elev') || c.includes('high') || c === '1' ? '#c62828'
+       : c.includes('moyen') || c.includes('med') || c === '2' ? '#e65100'
+       : '#388e3c';
 }
 
 /* ── Level bar ──────────────────────────────────────── */
 function levelBar(pct) {
-  const c = pct > 70 ? '#2a9d8f' : pct > 40 ? '#f4a261' : '#e63946';
+  const c = pct > 70 ? '#1976d2' : pct > 40 ? '#e65100' : '#c62828';
   return '<div class="popup-level-bar">'
        + '<div class="popup-level-bar-label"><span>Remplissage</span>'
        + '<span style="color:' + c + ';font-weight:700">' + pct + '%</span></div>'
@@ -101,11 +102,19 @@ function renderStationChart(id, months) {
 /* 1. SOUS-BASSINS (SousBassin.shp)
       Fields: NomSousBas, CodeSousBas, Superficie, CodeBassin */
 function loadWatersheds(data) {
-  const palette = ['#264653','#2a9d8f','#457b9d','#1d3557','#e9c46a'];
+  /* Distinct pastel palette — professional cartographic colours */
+  const palette = [
+    { fill: '#aed6f1', border: '#1565c0' },  /* sky blue    */
+    { fill: '#a9dfbf', border: '#1b5e20' },  /* mint green  */
+    { fill: '#f9e79f', border: '#f57f17' },  /* pale yellow */
+    { fill: '#f5cba7', border: '#bf360c' },  /* peach       */
+    { fill: '#d7bde2', border: '#4a148c' },  /* lavender    */
+  ];
   let i = 0;
   const lyr = L.geoJSON(data, {
     style: function() {
-      return { fillColor: palette[i++ % palette.length], fillOpacity: 0.4, color: '#00b4d8', weight: 2 };
+      const p = palette[i++ % palette.length];
+      return { fillColor: p.fill, fillOpacity: 0.45, color: p.border, weight: 1.8 };
     },
     onEachFeature: function(feat, l) {
       const p = feat.properties || {};
@@ -133,10 +142,11 @@ function loadRivers(data) {
   const lyr = L.geoJSON(data, {
     style: function(feat) {
       const fc = (feat.properties || {}).fclass || '';
+      const major = fc.includes('river') || fc === '';
       return {
-        color: fc.includes('river') || fc === '' ? '#0077b6' : '#48cae4',
-        weight: fc.includes('river') ? 3 : 1.5,
-        opacity: 0.85
+        color:   major ? '#1565c0' : '#1976d2',
+        weight:  major ? 2.5 : 1.2,
+        opacity: 0.9
       };
     },
     onEachFeature: function(feat, l) {
@@ -215,10 +225,16 @@ function loadStations(data) {
 function loadFloodZones(data) {
   const lyr = L.geoJSON(data, {
     style: function(feat) {
-      const code = (feat.properties || {}).risk_code || 'low';
-      const c = riskColor(code);
-      return { fillColor: c, fillOpacity: 0.45, color: c, weight: 1.5,
-               dashArray: code === 'low' ? '6,4' : null };
+      const code  = (feat.properties || {}).risk_code || 'low';
+      const fills = { high: '#ffcdd2', medium: '#ffe0b2', low: '#dcedc8' };
+      const lines = { high: '#c62828', medium: '#e65100', low: '#2e7d32' };
+      return {
+        fillColor: fills[code] || '#dcedc8',
+        fillOpacity: 0.65,
+        color: lines[code] || '#2e7d32',
+        weight: 1.5,
+        dashArray: code === 'low' ? '6,4' : null
+      };
     },
     onEachFeature: function(feat, l) {
       const p = feat.properties || {};
@@ -247,8 +263,8 @@ function loadFloodZones(data) {
 function loadAdmin(data) {
   const lyr = L.geoJSON(data, {
     style: function() {
-      return { fillColor: 'transparent', fillOpacity: 0, color: '#e0e0e0',
-               weight: 2, dashArray: '8,5', opacity: 0.8 };
+      return { fillColor: 'transparent', fillOpacity: 0, color: '#0d47a1',
+               weight: 2.5, dashArray: '9,5', opacity: 0.75 };
     },
     onEachFeature: function(feat, l) {
       const p = feat.properties || {};
@@ -275,7 +291,7 @@ function loadAdmin(data) {
 function loadAquifers(data) {
   const lyr = L.geoJSON(data, {
     style: function() {
-      return { fillColor: '#023e8a', fillOpacity: 0.3, color: '#0096c7', weight: 1.5, dashArray: '4,3' };
+      return { fillColor: '#bbdefb', fillOpacity: 0.5, color: '#1565c0', weight: 1.5, dashArray: '5,4' };
     },
     onEachFeature: function(feat, l) {
       const p = feat.properties || {};
