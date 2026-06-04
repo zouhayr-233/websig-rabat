@@ -444,6 +444,16 @@
   <!-- MEASUREMENT RESULT TOOLTIP -->
   <div id="measure-result" style="display:none;"></div>
 
+  <!-- SPINNER FAILSAFE: hides no matter what, before any other JS runs -->
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      setTimeout(function () {
+        var s = document.getElementById('loading-spinner');
+        if (s) s.style.display = 'none';
+      }, 3000);
+    });
+  </script>
+
   <!-- JS MODULES -->
   <script src="js/map.js"></script>
   <script src="js/layers.js"></script>

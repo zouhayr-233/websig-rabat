@@ -92,22 +92,25 @@ const NorthArrowControl = L.Control.extend({
 
 new NorthArrowControl().addTo(map);
 
-/* --- MiniMap (bottom-right) --- */
-const miniMapLayer = L.tileLayer(
-  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  { subdomains: 'abcd', maxZoom: 19 }
-);
-
-const miniMap = new L.Control.MiniMap(miniMapLayer, {
-  position: 'bottomright',
-  width: 110,
-  height: 80,
-  zoomLevelOffset: -6,
-  toggleDisplay: true,
-  minimized: false,
-  aimingRectOptions: { color: '#00b4d8', weight: 1, opacity: 0.8, fillOpacity: 0.1 },
-  shadowRectOptions: { color: '#00b4d8', weight: 1, opacity: 0, fillOpacity: 0 }
-}).addTo(map);
+/* --- MiniMap (bottom-right, optional — CDN may be unavailable) --- */
+try {
+  const miniMapLayer = L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    { subdomains: 'abcd', maxZoom: 19 }
+  );
+  new L.Control.MiniMap(miniMapLayer, {
+    position: 'bottomright',
+    width: 110,
+    height: 80,
+    zoomLevelOffset: -6,
+    toggleDisplay: true,
+    minimized: false,
+    aimingRectOptions: { color: '#00b4d8', weight: 1, opacity: 0.8, fillOpacity: 0.1 },
+    shadowRectOptions: { color: '#00b4d8', weight: 1, opacity: 0, fillOpacity: 0 }
+  }).addTo(map);
+} catch (e) {
+  console.warn('MiniMap plugin not available:', e.message);
+}
 
 /* --- Mouse coordinates (updates on mousemove) --- */
 map.on('mousemove', function (e) {
