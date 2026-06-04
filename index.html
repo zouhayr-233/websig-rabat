@@ -7,26 +7,16 @@
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Source+Sans+Pro:wght@300;400;600&display=swap" rel="stylesheet" />
 
-  <!-- Leaflet 1.9.4 -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WPeE=" crossorigin=""></script>
+  <!-- Leaflet 1.9.4 CSS only (no SRI — avoids CDN hash mismatch blocking) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-  <!-- Leaflet.draw -->
+  <!-- Leaflet.draw CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 
-  <!-- Leaflet MiniMap -->
+  <!-- Leaflet MiniMap CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.js"></script>
-
-  <!-- Chart.js 4.4.0 -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-  <!-- html2canvas for PNG export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <!-- App styles -->
   <link rel="stylesheet" href="css/style.css" />
@@ -259,7 +249,7 @@
       </div><!-- /sidebar -->
 
       <!-- MAP -->
-      <div id="map"></div>
+      <div id="map" style="height:calc(100vh - 50px);min-height:400px;flex:1;position:relative;"></div>
 
       <!-- RIGHT PANEL -->
       <div id="right-panel">
@@ -444,17 +434,32 @@
   <!-- MEASUREMENT RESULT TOOLTIP -->
   <div id="measure-result" style="display:none;"></div>
 
-  <!-- SPINNER FAILSAFE: hides no matter what, before any other JS runs -->
+  <!-- ALL JS at bottom of body: CDN libs first, then app modules -->
+
+  <!-- Leaflet 1.9.4 JS — no integrity hash (prevents SRI blocking) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Leaflet.draw -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+  <!-- Leaflet MiniMap -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- html2canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- SPINNER FAILSAFE -->
   <script>
-    window.addEventListener('DOMContentLoaded', function () {
-      setTimeout(function () {
-        var s = document.getElementById('loading-spinner');
-        if (s) s.style.display = 'none';
-      }, 3000);
-    });
+    setTimeout(function () {
+      var s = document.getElementById('loading-spinner');
+      if (s) s.style.display = 'none';
+    }, 4000);
   </script>
 
-  <!-- JS MODULES -->
+  <!-- APP MODULES -->
   <script src="js/map.js"></script>
   <script src="js/layers.js"></script>
   <script src="js/controls.js"></script>
