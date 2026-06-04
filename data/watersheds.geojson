@@ -1,0 +1,141 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 1,
+        "name": "Bassin du Bou Regreg",
+        "area_km2": 6000,
+        "main_river": "Oued Bou Regreg",
+        "avg_rainfall": 450,
+        "alt_max": 1624,
+        "alt_min": 0,
+        "perimeter_km": 420,
+        "provinces": "Rabat, Salé, Témara, Khmisset, Khénifra",
+        "population": 1850000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-7.0, 33.5],
+          [-6.8, 33.5],
+          [-6.6, 33.55],
+          [-6.4, 33.6],
+          [-6.2, 33.7],
+          [-6.0, 33.8],
+          [-5.9, 34.0],
+          [-6.0, 34.1],
+          [-6.2, 34.1],
+          [-6.4, 34.0],
+          [-6.5, 33.95],
+          [-6.6, 33.9],
+          [-6.7, 33.85],
+          [-6.85, 33.95],
+          [-6.9, 34.05],
+          [-7.0, 34.0],
+          [-7.0, 33.5]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 2,
+        "name": "Bassin du Sebou",
+        "area_km2": 40000,
+        "main_river": "Oued Sebou",
+        "avg_rainfall": 520,
+        "alt_max": 3340,
+        "alt_min": 0,
+        "perimeter_km": 1020,
+        "provinces": "Kénitra, Sidi Kacem, Meknès, Fès",
+        "population": 5200000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-6.0, 34.1],
+          [-5.9, 34.0],
+          [-5.7, 33.9],
+          [-5.5, 34.0],
+          [-5.5, 34.3],
+          [-5.6, 34.5],
+          [-5.7, 34.7],
+          [-5.9, 34.85],
+          [-6.1, 34.9],
+          [-6.3, 34.85],
+          [-6.5, 34.75],
+          [-6.6, 34.6],
+          [-6.65, 34.45],
+          [-6.6, 34.3],
+          [-6.5, 34.2],
+          [-6.3, 34.15],
+          [-6.2, 34.1],
+          [-6.0, 34.1]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 3,
+        "name": "Bassin côtier Nord",
+        "area_km2": 1200,
+        "main_river": "Oued Cherrat",
+        "avg_rainfall": 380,
+        "alt_max": 520,
+        "alt_min": 0,
+        "perimeter_km": 180,
+        "provinces": "Skhirat-Témara",
+        "population": 320000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-6.9, 34.1],
+          [-6.7, 34.1],
+          [-6.5, 34.2],
+          [-6.4, 34.3],
+          [-6.5, 34.4],
+          [-6.6, 34.45],
+          [-6.7, 34.4],
+          [-6.75, 34.3],
+          [-6.85, 34.25],
+          [-6.95, 34.2],
+          [-6.9, 34.1]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 4,
+        "name": "Bassin côtier Sud",
+        "area_km2": 800,
+        "main_river": "Oued Ykem",
+        "avg_rainfall": 360,
+        "alt_max": 380,
+        "alt_min": 0,
+        "perimeter_km": 140,
+        "provinces": "Skhirat-Témara",
+        "population": 180000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-7.0, 33.5],
+          [-6.85, 33.5],
+          [-6.7, 33.55],
+          [-6.6, 33.6],
+          [-6.5, 33.7],
+          [-6.55, 33.8],
+          [-6.7, 33.85],
+          [-6.85, 33.95],
+          [-7.0, 34.0],
+          [-7.0, 33.5]
+        ]]
+      }
+    }
+  ]
+}

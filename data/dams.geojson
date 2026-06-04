@@ -1,0 +1,68 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 1,
+        "name": "Sidi Mohamed Ben Abdellah",
+        "name_short": "SMBA",
+        "capacity_Mm3": 1082,
+        "height_m": 65,
+        "year_built": 1974,
+        "current_level": 78,
+        "oued": "Oued Bou Regreg",
+        "province": "Rabat-Salé-Kénitra",
+        "area_ha": 3630,
+        "purpose": "AEP, irrigation, industrie",
+        "annual_production_Mm3": 286
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-6.75, 33.88]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 2,
+        "name": "Barrage Sidi Châhed",
+        "name_short": "Sidi Châhed",
+        "capacity_Mm3": 40,
+        "height_m": 30,
+        "year_built": 1981,
+        "current_level": 62,
+        "oued": "Oued Bou Regreg",
+        "province": "Rabat-Salé-Kénitra",
+        "area_ha": 350,
+        "purpose": "Irrigation, AEP",
+        "annual_production_Mm3": 18
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-6.35, 33.65]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 3,
+        "name": "Barrage Al Wahda",
+        "name_short": "Al Wahda",
+        "capacity_Mm3": 3792,
+        "height_m": 90,
+        "year_built": 1996,
+        "current_level": 85,
+        "oued": "Oued Ouergha (Sebou)",
+        "province": "Ouazzane",
+        "area_ha": 15000,
+        "purpose": "AEP, irrigation, hydroélectricité",
+        "annual_production_Mm3": 1250
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-5.68, 34.52]
+      }
+    }
+  ]
+}

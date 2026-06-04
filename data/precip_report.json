@@ -1,0 +1,142 @@
+{
+  "region": "Rabat-Salé-Kénitra (bbox RSK)",
+  "source": "NASA POWER PRECTOTCORR_SUM",
+  "period": "2000–2025",
+  "bbox": {
+    "min_lat": 33.3,
+    "max_lat": 35.0,
+    "min_lon": -7.2,
+    "max_lon": -5.2
+  },
+  "grid_points_in_bbox": 12,
+  "monthly_means_mm": {
+    "JAN": 70.3,
+    "FEB": 58.3,
+    "MAR": 74.5,
+    "APR": 47.6,
+    "MAY": 27.1,
+    "JUN": 4.7,
+    "JUL": 1.7,
+    "AUG": 3.6,
+    "SEP": 22.1,
+    "OCT": 62.2,
+    "NOV": 91.4,
+    "DEC": 80.9
+  },
+  "monthly_labels_fr": {
+    "JAN": "Jan",
+    "FEB": "Fév",
+    "MAR": "Mar",
+    "APR": "Avr",
+    "MAY": "Mai",
+    "JUN": "Jun",
+    "JUL": "Jul",
+    "AUG": "Aoû",
+    "SEP": "Sep",
+    "OCT": "Oct",
+    "NOV": "Nov",
+    "DEC": "Déc"
+  },
+  "annual_series": [
+    {
+      "year": 2000,
+      "mean_mm": 510.2
+    },
+    {
+      "year": 2001,
+      "mean_mm": 399.2
+    },
+    {
+      "year": 2002,
+      "mean_mm": 614.8
+    },
+    {
+      "year": 2003,
+      "mean_mm": 625.3
+    },
+    {
+      "year": 2004,
+      "mean_mm": 473.5
+    },
+    {
+      "year": 2005,
+      "mean_mm": 328.6
+    },
+    {
+      "year": 2006,
+      "mean_mm": 534.5
+    },
+    {
+      "year": 2007,
+      "mean_mm": 437.1
+    },
+    {
+      "year": 2008,
+      "mean_mm": 715.8
+    },
+    {
+      "year": 2009,
+      "mean_mm": 775.1
+    },
+    {
+      "year": 2010,
+      "mean_mm": 1032.8
+    },
+    {
+      "year": 2011,
+      "mean_mm": 688.9
+    },
+    {
+      "year": 2012,
+      "mean_mm": 558.4
+    },
+    {
+      "year": 2013,
+      "mean_mm": 601.4
+    },
+    {
+      "year": 2014,
+      "mean_mm": 641.5
+    },
+    {
+      "year": 2015,
+      "mean_mm": 324.2
+    },
+    {
+      "year": 2016,
+      "mean_mm": 604.8
+    },
+    {
+      "year": 2017,
+      "mean_mm": 363.4
+    },
+    {
+      "year": 2018,
+      "mean_mm": 990.0
+    },
+    {
+      "year": 2019,
+      "mean_mm": 319.3
+    },
+    {
+      "year": 2020,
+      "mean_mm": 542.2
+    },
+    {
+      "year": 2021,
+      "mean_mm": 472.5
+    },
+    {
+      "year": 2022,
+      "mean_mm": 369.9
+    },
+    {
+      "year": 2023,
+      "mean_mm": 263.7
+    },
+    {
+      "year": 2024,
+      "mean_mm": 387.6
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "elev_min": -13.0,
+  "elev_max": 1311.0,
+  "elev_mean": 254.2,
+  "elev_std": 262.8,
+  "crs": "GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",6378249.2,293.466021293627]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST]]",
+  "bounds": {
+    "west": -7.1262,
+    "south": 33.1488,
+    "east": -5.3146,
+    "north": 35.0171
+  },
+  "resolution_x": 0.000833,
+  "resolution_y": 0.000833,
+  "nodata": -32768.0
+}
