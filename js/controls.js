@@ -1,502 +1,292 @@
+'use strict';
 /* ===================================================
    WebSIG RSK — controls.js
-   UI interactions: checkboxes, tabs, sidebar, toolbar,
-   measure tools, legend, modal, fullscreen
+   All UI interactions wired here.
+   Critical fix: never cache window.overlayLayers
+   reference — always read it fresh at call time.
    =================================================== */
 
-'use strict';
-
-/* ---- Wait for DOM + layers ---- */
 document.addEventListener('DOMContentLoaded', function () {
 
-  /* ==================================================
-     BASE LAYER RADIO BUTTONS
-     ================================================== */
-  document.querySelectorAll('input[name="base-layer"]').forEach(function (radio) {
-    radio.addEventListener('change', function () {
-      if (window.switchBaseLayer) {
-        window.switchBaseLayer(this.value);
-      }
+  /* ── helpers ─────────────────────────────────────── */
+
+  function getLayer(name) {
+    return window.overlayLayers && window.overlayLayers[name];
+  }
+
+  /* Add or remove a layer by name.
+     Reads window.overlayLayers at call time — no stale refs. */
+  function toggleLayer(name, add) {
+    const lyr = getLayer(name);
+    if (!lyr || !window.map) return;
+    try {
+      if (add) { window.map.addLayer(lyr); }
+      else      { window.map.removeLayer(lyr); }
+    } catch (e) { console.warn('[controls] toggleLayer:', name, e.message); }
+  }
+
+  /* ── BASE LAYER RADIOS ───────────────────────────── */
+  document.querySelectorAll('input[name="base-layer"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      if (window.switchBaseLayer) window.switchBaseLayer(this.value);
     });
   });
 
-  /* ==================================================
-     OVERLAY LAYER CHECKBOXES
-     ================================================== */
+  /* ── OVERLAY CHECKBOXES ──────────────────────────── */
   document.querySelectorAll('.layer-checkbox').forEach(function (cb) {
     cb.addEventListener('change', function () {
-      const name = this.dataset.layer;
-      const layers = window.overlayLayers || {};
+      const name    = this.dataset.layer;
+      const checked = this.checked;
 
-      if (!layers[name]) {
-        /* Layer not yet loaded — queue the toggle */
-        document.addEventListener('layerReady', function handler(e) {
-          if (e.detail.name === name) {
-            document.removeEventListener('layerReady', handler);
-            if (cb.checked) {
-              window.map.addLayer(layers[name]);
-            }
-            updateLegend();
-          }
-        });
+      if (getLayer(name)) {
+        /* Layer already loaded — toggle immediately */
+        toggleLayer(name, checked);
+        updateLegend();
         return;
       }
 
-      if (this.checked) {
-        window.map.addLayer(layers[name]);
-      } else {
-        window.map.removeLayer(layers[name]);
+      /* Layer not yet loaded — wait for layerReady event */
+      console.log('[controls] waiting for layer:', name);
+      function handler(e) {
+        if (e.detail.name === name) {
+          document.removeEventListener('layerReady', handler);
+          if (checked) toggleLayer(name, true);
+          updateLegend();
+        }
       }
-      updateLegend();
+      document.addEventListener('layerReady', handler);
     });
   });
 
-  /* ==================================================
-     ZOOM-TO-LAYER BUTTONS
-     ================================================== */
+  /* ── ZOOM-TO-LAYER BUTTONS ───────────────────────── */
   document.querySelectorAll('.layer-zoom-btn').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
       e.preventDefault();
-      const name = this.dataset.layer;
-      const layers = window.overlayLayers || {};
-      if (layers[name] && layers[name].getBounds) {
-        try {
-          const bounds = layers[name].getBounds();
-          if (bounds.isValid()) {
-            window.map.fitBounds(bounds, { padding: [30, 30], animate: true });
-          }
-        } catch (err) {
-          console.warn('fitBounds failed for', name);
-        }
-      }
+      const lyr = getLayer(this.dataset.layer);
+      if (!lyr || !lyr.getBounds) return;
+      try {
+        const b = lyr.getBounds();
+        if (b.isValid()) window.map.fitBounds(b, { padding: [30, 30], animate: true });
+      } catch (_) {}
     });
   });
 
-  /* ==================================================
-     COLLAPSIBLE LAYER GROUPS
-     ================================================== */
-  document.querySelectorAll('.layer-group-header').forEach(function (header) {
-    header.addEventListener('click', function () {
-      const group = this.closest('.layer-group');
-      if (group) group.classList.toggle('collapsed');
+  /* ── COLLAPSIBLE LAYER GROUPS ────────────────────── */
+  document.querySelectorAll('.layer-group-header').forEach(function (h) {
+    h.addEventListener('click', function () {
+      const g = this.closest('.layer-group');
+      if (g) g.classList.toggle('collapsed');
     });
   });
 
-  /* ==================================================
-     SIDEBAR COLLAPSE TOGGLE
-     ================================================== */
+  /* ── SIDEBAR COLLAPSE ────────────────────────────── */
+  const sidebar       = document.getElementById('sidebar');
   const sidebarToggle = document.getElementById('sidebar-toggle');
-  const sidebar = document.getElementById('sidebar');
-
   if (sidebarToggle && sidebar) {
     sidebarToggle.addEventListener('click', function () {
       sidebar.classList.toggle('collapsed');
       this.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
-      setTimeout(function () { window.map.invalidateSize(); }, 320);
+      setTimeout(function () { if (window.map) window.map.invalidateSize(); }, 320);
     });
   }
 
-  /* ==================================================
-     RIGHT PANEL COLLAPSE TOGGLE
-     ================================================== */
-  const rightToggle = document.getElementById('right-panel-toggle');
-  const rightPanel = document.getElementById('right-panel');
-
+  /* ── RIGHT PANEL COLLAPSE ────────────────────────── */
+  const rightPanel   = document.getElementById('right-panel');
+  const rightToggle  = document.getElementById('right-panel-toggle');
   if (rightToggle && rightPanel) {
     rightToggle.addEventListener('click', function () {
       rightPanel.classList.toggle('collapsed');
       this.textContent = rightPanel.classList.contains('collapsed') ? '◀' : '▶';
-      setTimeout(function () { window.map.invalidateSize(); }, 320);
+      setTimeout(function () { if (window.map) window.map.invalidateSize(); }, 320);
     });
   }
 
-  /* ==================================================
-     RIGHT PANEL TAB SWITCHING
-     ================================================== */
+  /* ── PANEL TABS ──────────────────────────────────── */
   document.querySelectorAll('.tab-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      const tabId = 'tab-' + this.dataset.tab;
-
-      document.querySelectorAll('.tab-btn').forEach(function (b) {
-        b.classList.remove('active');
-      });
-      document.querySelectorAll('.tab-content').forEach(function (c) {
-        c.classList.remove('active');
-      });
-
+      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-content').forEach(function (c) { c.classList.remove('active'); });
       this.classList.add('active');
-      const tabEl = document.getElementById(tabId);
-      if (tabEl) tabEl.classList.add('active');
+      const tab = document.getElementById('tab-' + this.dataset.tab);
+      if (tab) tab.classList.add('active');
     });
   });
 
-  /* ==================================================
-     SEARCH BAR
-     ================================================== */
+  /* ── SEARCH BAR ──────────────────────────────────── */
   const searchInput = document.getElementById('search-input');
-  const searchBtn = document.getElementById('search-btn');
-
+  const searchBtn   = document.getElementById('search-btn');
   if (searchInput) {
     searchInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        if (window.searchLocation) window.searchLocation(this.value.trim());
-      }
-      if (e.key === 'Escape') {
-        const resultsDiv = document.getElementById('search-results');
-        if (resultsDiv) resultsDiv.innerHTML = '';
-      }
+      if (e.key === 'Enter'  && window.searchLocation) window.searchLocation(this.value.trim());
+      if (e.key === 'Escape') { const d = document.getElementById('search-results'); if (d) d.innerHTML = ''; }
     });
   }
-
-  if (searchBtn) {
+  if (searchBtn && searchInput) {
     searchBtn.addEventListener('click', function () {
-      if (searchInput && window.searchLocation) {
-        window.searchLocation(searchInput.value.trim());
-      }
+      if (window.searchLocation) window.searchLocation(searchInput.value.trim());
     });
   }
-
-  /* Close results when clicking outside */
   document.addEventListener('click', function (e) {
-    const searchSection = document.querySelector('.search-section');
-    if (searchSection && !searchSection.contains(e.target)) {
-      const resultsDiv = document.getElementById('search-results');
-      if (resultsDiv) resultsDiv.innerHTML = '';
-    }
+    const sec = document.querySelector('.search-section');
+    if (sec && !sec.contains(e.target)) { const d = document.getElementById('search-results'); if (d) d.innerHTML = ''; }
   });
 
-  /* ==================================================
-     TOOLBAR BUTTONS
-     ================================================== */
+  /* ── TOOLBAR BUTTONS ─────────────────────────────── */
   const btnExport = document.getElementById('btn-export-png');
-  if (btnExport) {
-    btnExport.addEventListener('click', function () {
-      if (window.exportMapPNG) window.exportMapPNG();
-    });
-  }
+  if (btnExport) btnExport.addEventListener('click', function () { if (window.exportMapPNG) window.exportMapPNG(); });
 
-  const btnFullscreen = document.getElementById('btn-fullscreen');
-  if (btnFullscreen) {
-    btnFullscreen.addEventListener('click', function () {
-      if (window.toggleFullscreen) window.toggleFullscreen();
-    });
+  const btnFS = document.getElementById('btn-fullscreen');
+  if (btnFS) {
+    btnFS.addEventListener('click', function () { if (window.toggleFullscreen) window.toggleFullscreen(); });
     document.addEventListener('fullscreenchange', function () {
-      const isFS = !!document.fullscreenElement;
-      btnFullscreen.querySelector('.btn-label').textContent = isFS ? 'Quitter' : 'Plein écran';
-      btnFullscreen.querySelector('.btn-icon').textContent = isFS ? '⛶' : '⛶';
+      const fs = !!document.fullscreenElement;
+      const lbl = btnFS.querySelector('.btn-label');
+      if (lbl) lbl.textContent = fs ? 'Quitter' : 'Plein écran';
     });
   }
 
   const btnInfo = document.getElementById('btn-info');
-  if (btnInfo) {
-    btnInfo.addEventListener('click', function () {
-      openInfoModal();
-    });
-  }
+  if (btnInfo) btnInfo.addEventListener('click', openInfoModal);
 
-  /* ==================================================
-     MEASURE TOOLS (Leaflet.draw)
-     ================================================== */
-  const measureGroup = new L.FeatureGroup().addTo(window.map);
+  /* ── MEASURE TOOLS ───────────────────────────────── */
+  let measureGroup = null;
   let measureMode = null;
-  let currentDrawHandler = null;
+  let drawHandler = null;
 
-  const drawOptions = {
-    distance: {
-      polyline: {
-        shapeOptions: { color: '#00b4d8', weight: 2, dashArray: '5,5' },
-        showLength: true,
-        metric: true,
-        feet: false
-      }
-    },
-    area: {
-      polygon: {
-        shapeOptions: { color: '#f4a261', weight: 2, fillOpacity: 0.15 },
-        showArea: true,
-        metric: true
-      }
-    }
-  };
+  /* Wrap in try/catch — Leaflet.draw CDN may be unavailable */
+  try { measureGroup = new L.FeatureGroup().addTo(window.map); } catch (e) { console.warn('L.FeatureGroup unavailable'); }
 
   function startMeasure(mode) {
     stopMeasure();
     measureMode = mode;
-
-    const btn = mode === 'distance'
-      ? document.getElementById('btn-measure-distance')
-      : document.getElementById('btn-measure-area');
+    const btn = document.getElementById(mode === 'distance' ? 'btn-measure-distance' : 'btn-measure-area');
     if (btn) btn.classList.add('active');
-
     const clearBtn = document.getElementById('btn-clear-measure');
     if (clearBtn) clearBtn.style.display = 'flex';
-
-    if (mode === 'distance') {
-      currentDrawHandler = new L.Draw.Polyline(window.map, drawOptions.distance.polyline);
-    } else {
-      currentDrawHandler = new L.Draw.Polygon(window.map, drawOptions.area.polygon);
-    }
-    currentDrawHandler.enable();
-    window.map.getContainer().style.cursor = 'crosshair';
+    try {
+      const opts = mode === 'distance'
+        ? { shapeOptions: { color: '#00b4d8', weight: 2, dashArray: '5,5' }, metric: true, feet: false }
+        : { shapeOptions: { color: '#f4a261', weight: 2, fillOpacity: 0.15 }, metric: true };
+      drawHandler = mode === 'distance'
+        ? new L.Draw.Polyline(window.map, opts)
+        : new L.Draw.Polygon(window.map, opts);
+      drawHandler.enable();
+      window.map.getContainer().style.cursor = 'crosshair';
+    } catch (e) { console.warn('Leaflet.draw unavailable:', e.message); stopMeasure(); }
   }
 
   function stopMeasure() {
-    if (currentDrawHandler) {
-      currentDrawHandler.disable();
-      currentDrawHandler = null;
-    }
+    try { if (drawHandler) { drawHandler.disable(); drawHandler = null; } } catch (_) {}
     measureMode = null;
-    window.map.getContainer().style.cursor = '';
-    document.querySelectorAll('#btn-measure-distance, #btn-measure-area').forEach(function (b) {
-      b.classList.remove('active');
-    });
+    if (window.map) window.map.getContainer().style.cursor = '';
+    document.querySelectorAll('#btn-measure-distance,#btn-measure-area').forEach(function (b) { b.classList.remove('active'); });
   }
 
   function clearMeasures() {
     stopMeasure();
-    measureGroup.clearLayers();
-    const resultDiv = document.getElementById('measure-result');
-    if (resultDiv) resultDiv.style.display = 'none';
-    const clearBtn = document.getElementById('btn-clear-measure');
-    if (clearBtn) clearBtn.style.display = 'none';
+    if (measureGroup) measureGroup.clearLayers();
+    const r = document.getElementById('measure-result'); if (r) r.style.display = 'none';
+    const c = document.getElementById('btn-clear-measure'); if (c) c.style.display = 'none';
   }
 
-  const btnDist = document.getElementById('btn-measure-distance');
-  if (btnDist) {
-    btnDist.addEventListener('click', function () {
-      if (measureMode === 'distance') {
-        stopMeasure();
-      } else {
-        startMeasure('distance');
-      }
-    });
-  }
-
-  const btnArea = document.getElementById('btn-measure-area');
-  if (btnArea) {
-    btnArea.addEventListener('click', function () {
-      if (measureMode === 'area') {
-        stopMeasure();
-      } else {
-        startMeasure('area');
-      }
-    });
-  }
-
+  const btnDist  = document.getElementById('btn-measure-distance');
+  const btnArea  = document.getElementById('btn-measure-area');
   const btnClear = document.getElementById('btn-clear-measure');
-  if (btnClear) {
-    btnClear.addEventListener('click', clearMeasures);
-  }
+  if (btnDist)  btnDist.addEventListener('click',  function () { measureMode === 'distance' ? stopMeasure() : startMeasure('distance'); });
+  if (btnArea)  btnArea.addEventListener('click',  function () { measureMode === 'area'     ? stopMeasure() : startMeasure('area');     });
+  if (btnClear) btnClear.addEventListener('click', clearMeasures);
 
-  /* Handle draw:created */
-  window.map.on('draw:created', function (e) {
-    measureGroup.addLayer(e.layer);
-    stopMeasure();
-
-    let resultText = '';
-    if (e.layerType === 'polyline') {
-      let totalMeters = 0;
-      const latlngs = e.layer.getLatLngs();
-      for (let i = 1; i < latlngs.length; i++) {
-        totalMeters += latlngs[i - 1].distanceTo(latlngs[i]);
+  if (window.map) {
+    window.map.on('draw:created', function (e) {
+      if (measureGroup) measureGroup.addLayer(e.layer);
+      stopMeasure();
+      let txt = '';
+      if (e.layerType === 'polyline') {
+        const ll = e.layer.getLatLngs();
+        let m = 0;
+        for (let i = 1; i < ll.length; i++) m += ll[i-1].distanceTo(ll[i]);
+        txt = m >= 1000 ? 'Distance : ' + (m/1000).toFixed(3) + ' km' : 'Distance : ' + Math.round(m) + ' m';
+      } else if (e.layerType === 'polygon') {
+        try {
+          const a = L.GeometryUtil.geodesicArea(e.layer.getLatLngs()[0]);
+          txt = a >= 1e6 ? 'Superficie : ' + (a/1e6).toFixed(4) + ' km²' : 'Superficie : ' + Math.round(a) + ' m²';
+        } catch (_) {}
       }
-      if (totalMeters >= 1000) {
-        resultText = '📏 Distance : ' + (totalMeters / 1000).toFixed(3) + ' km';
-      } else {
-        resultText = '📏 Distance : ' + Math.round(totalMeters) + ' m';
+      if (txt) {
+        const r = document.getElementById('measure-result');
+        if (r) { r.textContent = txt; r.style.display = 'block'; setTimeout(function () { r.style.display = 'none'; }, 8000); }
       }
-    } else if (e.layerType === 'polygon') {
-      const area = L.GeometryUtil.geodesicArea(e.layer.getLatLngs()[0]);
-      if (area >= 1000000) {
-        resultText = '⬡ Superficie : ' + (area / 1000000).toFixed(4) + ' km²';
-      } else {
-        resultText = '⬡ Superficie : ' + Math.round(area) + ' m²';
-      }
-    }
-
-    if (resultText) {
-      const resultDiv = document.getElementById('measure-result');
-      if (resultDiv) {
-        resultDiv.textContent = resultText;
-        resultDiv.style.display = 'block';
-        setTimeout(function () {
-          if (resultDiv) resultDiv.style.display = 'none';
-        }, 8000);
-      }
-    }
-  });
-
-  /* ==================================================
-     INFO MODAL
-     ================================================== */
-  function openInfoModal() {
-    const modal = document.getElementById('info-modal');
-    if (modal) modal.style.display = 'flex';
-  }
-
-  function closeInfoModal() {
-    const modal = document.getElementById('info-modal');
-    if (modal) modal.style.display = 'none';
-  }
-
-  const modalOverlay = document.getElementById('info-modal');
-  if (modalOverlay) {
-    modalOverlay.addEventListener('click', function (e) {
-      if (e.target === this) closeInfoModal();
     });
   }
 
-  const modalClose = document.getElementById('modal-close-btn');
-  if (modalClose) modalClose.addEventListener('click', closeInfoModal);
+  /* ── INFO MODAL ──────────────────────────────────── */
+  function openInfoModal()  { const m = document.getElementById('info-modal'); if (m) m.style.display = 'flex';  }
+  function closeInfoModal() { const m = document.getElementById('info-modal'); if (m) m.style.display = 'none'; }
 
-  const modalOk = document.getElementById('modal-ok-btn');
-  if (modalOk) modalOk.addEventListener('click', closeInfoModal);
+  const infoModal = document.getElementById('info-modal');
+  if (infoModal) infoModal.addEventListener('click', function (e) { if (e.target === this) closeInfoModal(); });
+  const btnMC = document.getElementById('modal-close-btn'); if (btnMC) btnMC.addEventListener('click', closeInfoModal);
+  const btnMO = document.getElementById('modal-ok-btn');    if (btnMO) btnMO.addEventListener('click', closeInfoModal);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeInfoModal(); });
 
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeInfoModal();
-  });
-
-  /* ==================================================
-     MOBILE HAMBURGER MENU
-     ================================================== */
+  /* ── MOBILE HAMBURGER ────────────────────────────── */
   const mobileMenu = document.getElementById('btn-mobile-menu');
-  if (mobileMenu && sidebar) {
-    mobileMenu.addEventListener('click', function () {
-      sidebar.classList.toggle('collapsed');
-    });
-  }
+  if (mobileMenu && sidebar) mobileMenu.addEventListener('click', function () { sidebar.classList.toggle('collapsed'); });
 
-  /* ==================================================
-     DYNAMIC LEGEND
-     ================================================== */
-  window.updateLegend = updateLegend;
-
+  /* ── DYNAMIC LEGEND ──────────────────────────────── */
   function updateLegend() {
     const container = document.getElementById('legend-content');
     if (!container) return;
-
-    const activeCheckboxes = Array.from(
-      document.querySelectorAll('.layer-checkbox:checked')
-    ).map(function (cb) { return cb.dataset.layer; });
-
-    if (activeCheckboxes.length === 0) {
-      container.innerHTML = '<p class="legend-empty">Activez une couche pour voir sa légende.</p>';
-      return;
-    }
-
+    const active = Array.from(document.querySelectorAll('.layer-checkbox:checked')).map(function (c) { return c.dataset.layer; });
+    if (!active.length) { container.innerHTML = '<p class="legend-empty">Activez une couche pour voir sa légende.</p>'; return; }
     let html = '';
-
-    if (activeCheckboxes.includes('Bassins versants')) {
-      html += buildLegendGroup('Bassins versants', [
-        { color: '#264653', border: '#00b4d8', label: 'Bassin du Bou Regreg' },
-        { color: '#2a9d8f', border: '#00b4d8', label: 'Bassin du Sebou' },
-        { color: '#457b9d', border: '#00b4d8', label: 'Bassin côtier Nord' },
-        { color: '#1d3557', border: '#00b4d8', label: 'Bassin côtier Sud' }
-      ], 'polygon');
-    }
-
-    if (activeCheckboxes.includes('Oueds / Rivières')) {
-      html += buildLegendGroup('Oueds / Rivières', [
-        { color: '#0077b6', height: 4, label: 'Oued principal (ordre ≥ 6)' },
-        { color: '#0096c7', height: 2.5, label: 'Oued secondaire (ordre 3–5)' },
-        { color: '#00b4d8', height: 1.5, label: 'Cours d\'eau mineur (ordre 1–2)' }
-      ], 'line');
-    }
-
-    if (activeCheckboxes.includes('Barrages')) {
-      html += buildLegendGroup('Barrages', [
-        { icon: '🏗️', label: 'Barrage / retenue' }
-      ], 'icon');
-    }
-
-    if (activeCheckboxes.includes('Stations pluviométriques')) {
-      html += buildLegendGroup('Stations pluviométriques', [
-        { icon: '🌧', label: 'Station pluviométrique' }
-      ], 'icon');
-    }
-
-    if (activeCheckboxes.includes('Zones de risque')) {
-      html += buildLegendGroup('Risque d\'inondation', [
-        { color: '#e63946', label: 'Risque élevé' },
-        { color: '#f4a261', label: 'Risque moyen' },
-        { color: '#2a9d8f', label: 'Risque faible' }
-      ], 'polygon');
-    }
-
-    if (activeCheckboxes.includes('Limites administratives')) {
-      html += buildLegendGroup('Limites administratives', [
-        { color: '#e0e0e0', border: '#e0e0e0', dashed: true, label: 'Limite de province/préfecture' }
-      ], 'line');
-    }
-
+    if (active.includes('Bassins versants'))
+      html += lg('Bassins versants', [['#264653','#00b4d8','Bou Regreg'],['#2a9d8f','#00b4d8','Sebou'],['#457b9d','#00b4d8','Côtier Nord'],['#1d3557','#00b4d8','Côtier Sud']].map(function(x){ return {color:x[0],border:x[1],label:x[2]}; }), 'polygon');
+    if (active.includes('Oueds / Rivières'))
+      html += lg('Oueds / Rivières', [{color:'#0077b6',height:4,label:'Principal'},{color:'#0096c7',height:2.5,label:'Secondaire'},{color:'#00b4d8',height:1.5,label:'Mineur'}], 'line');
+    if (active.includes('Barrages'))
+      html += lg('Barrages', [{icon:'🏗️',label:'Barrage / retenue'}], 'icon');
+    if (active.includes('Stations pluviométriques'))
+      html += lg('Stations pluviométriques', [{icon:'🌧',label:'Station pluviométrique'}], 'icon');
+    if (active.includes('Zones de risque'))
+      html += lg('Risque d\'inondation', [{color:'#e63946',label:'Élevé'},{color:'#f4a261',label:'Moyen'},{color:'#2a9d8f',label:'Faible'}], 'polygon');
+    if (active.includes('Limites administratives'))
+      html += lg('Limites administratives', [{color:'#e0e0e0',dashed:true,label:'Limite province/préfecture'}], 'line');
     container.innerHTML = html || '<p class="legend-empty">Activez une couche pour voir sa légende.</p>';
   }
 
-  function buildLegendGroup(title, items, type) {
-    let inner = '';
-    items.forEach(function (item) {
-      if (type === 'polygon') {
-        const borderColor = item.border || item.color;
-        inner += `<div class="legend-item">
-          <span class="legend-color" style="background:${item.color};border:2px solid ${borderColor};opacity:0.75"></span>
-          <span>${item.label}</span>
-        </div>`;
-      } else if (type === 'line') {
-        const h = item.height || 2;
-        const dash = item.dashed ? 'border-top: ' + h + 'px dashed ' + item.color : 'background:' + item.color + ';height:' + h + 'px';
-        inner += `<div class="legend-item">
-          <span class="legend-line" style="${dash}"></span>
-          <span>${item.label}</span>
-        </div>`;
-      } else if (type === 'icon') {
-        inner += `<div class="legend-item">
-          <span style="font-size:16px;line-height:1">${item.icon}</span>
-          <span>${item.label}</span>
-        </div>`;
-      }
-    });
-
-    return `<div class="legend-group">
-      <div class="legend-group-title">${title}</div>
-      ${inner}
-    </div>`;
+  function lg(title, items, type) {
+    const rows = items.map(function (item) {
+      if (type === 'polygon') return `<div class="legend-item"><span class="legend-color" style="background:${item.color};border:2px solid ${item.border||item.color};opacity:.75"></span><span>${item.label}</span></div>`;
+      if (type === 'line')    return `<div class="legend-item"><span class="legend-line" style="${item.dashed?'border-top:'+(item.height||2)+'px dashed '+item.color:'background:'+item.color+';height:'+(item.height||2)+'px'}"></span><span>${item.label}</span></div>`;
+      if (type === 'icon')    return `<div class="legend-item"><span style="font-size:16px;line-height:1">${item.icon}</span><span>${item.label}</span></div>`;
+      return '';
+    }).join('');
+    return `<div class="legend-group"><div class="legend-group-title">${title}</div>${rows}</div>`;
   }
 
-  /* Listen for layer ready events to auto-update legend */
-  document.addEventListener('layerReady', function () {
-    updateLegend();
-  });
+  window.updateLegend = updateLegend;
+  document.addEventListener('layerReady', updateLegend);
 
-  /* ==================================================
-     TABLE SORTING (precipitation tab)
-     ================================================== */
-  document.querySelectorAll('.data-table th').forEach(function (th, index) {
+  /* ── TABLE SORT ───────────────────────────────────── */
+  document.querySelectorAll('.data-table th').forEach(function (th, idx) {
     th.addEventListener('click', function () {
-      const table = this.closest('table');
-      const tbody = table.querySelector('tbody');
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-      let asc = !this.dataset.asc;
+      const tbody = this.closest('table').querySelector('tbody');
+      const rows  = Array.from(tbody.querySelectorAll('tr'));
+      const asc   = !(this.dataset.asc === '1');
       this.dataset.asc = asc ? '1' : '';
-
       rows.sort(function (a, b) {
-        const aVal = a.querySelectorAll('td')[index].textContent.trim();
-        const bVal = b.querySelectorAll('td')[index].textContent.trim();
-        const aNum = parseFloat(aVal.replace(/\s/g, '').replace(',', '.'));
-        const bNum = parseFloat(bVal.replace(/\s/g, '').replace(',', '.'));
-
-        if (!isNaN(aNum) && !isNaN(bNum)) {
-          return asc ? aNum - bNum : bNum - aNum;
-        }
-        return asc ? aVal.localeCompare(bVal, 'fr') : bVal.localeCompare(aVal, 'fr');
+        const av = a.querySelectorAll('td')[idx].textContent.trim();
+        const bv = b.querySelectorAll('td')[idx].textContent.trim();
+        const an = parseFloat(av.replace(/\s/g,'').replace(',','.'));
+        const bn = parseFloat(bv.replace(/\s/g,'').replace(',','.'));
+        if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
+        return asc ? av.localeCompare(bv,'fr') : bv.localeCompare(av,'fr');
       });
-
-      rows.forEach(function (row) { tbody.appendChild(row); });
-
-      document.querySelectorAll('.data-table th').forEach(function (t) {
-        t.style.color = '';
-      });
-      th.style.color = 'var(--accent-water)';
+      rows.forEach(function (r) { tbody.appendChild(r); });
+      document.querySelectorAll('.data-table th').forEach(function (t) { t.style.color = ''; });
+      this.style.color = 'var(--accent-water)';
     });
   });
 
