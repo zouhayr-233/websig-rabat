@@ -7,6 +7,30 @@
 
 window.overlayLayers = {};
 
+/* ── Path prefix (works on GitHub Pages and locally) ── */
+const DATA_PATH = './data/';
+
+/* ── Universal fetch helper with validation ─────────── */
+async function loadLayer(filename, onLoad) {
+  try {
+    const response = await fetch(DATA_PATH + filename);
+    if (!response.ok) {
+      console.warn('Not found:', DATA_PATH + filename, response.status);
+      return null;
+    }
+    const data = await response.json();
+    if (!data || !data.features || data.features.length === 0) {
+      console.warn('Empty or invalid GeoJSON:', filename);
+      return null;
+    }
+    console.log('Loaded ' + data.features.length + ' features from ' + filename);
+    return onLoad(data);
+  } catch (err) {
+    console.warn('Error loading', filename, err.message);
+    return null;
+  }
+}
+
 /* ── Helpers ─────────────────────────────────────── */
 
 function riskColor(level) {
@@ -288,30 +312,16 @@ function loadAdmin(data) {
    ══════════════════════════════════════════════════ */
 
 async function loadAllLayers() {
-  var layers = [
-    { file: 'data/watersheds.geojson',    loader: loadWatersheds },
-    { file: 'data/rivers.geojson',        loader: loadRivers     },
-    { file: 'data/dams.geojson',          loader: loadDams       },
-    { file: 'data/rain_stations.geojson', loader: loadStations   },
-    { file: 'data/flood_zones.geojson',   loader: loadFloodZones },
-    { file: 'data/admin_boundaries.geojson', loader: loadAdmin   }
-  ];
+  await Promise.allSettled([
+    loadLayer('watersheds.geojson',    loadWatersheds),
+    loadLayer('rivers.geojson',        loadRivers),
+    loadLayer('dams.geojson',          loadDams),
+    loadLayer('rain_stations.geojson', loadStations),
+    loadLayer('flood_zones.geojson',   loadFloodZones),
+    loadLayer('admin_boundaries.geojson', loadAdmin)
+  ]);
 
-  await Promise.allSettled(
-    layers.map(async function (l) {
-      try {
-        var r = await fetch(l.file);
-        if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + l.file);
-        var data = await r.json();
-        l.loader(data);
-        console.log('Loaded:', l.file);
-      } catch (e) {
-        console.warn('Skipped:', l.file, e.message);
-      }
-    })
-  );
-
-  /* Hide spinner after all fetch attempts (success or failure) */
+  /* Hide spinner after all attempts, success or failure */
   hideSpinnerNow();
 }
 

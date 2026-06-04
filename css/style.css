@@ -124,11 +124,13 @@ ul { list-style: none; padding: 0; }
 
 /* === APP CONTAINER === */
 #app-container {
-  display: flex;
-  flex-direction: column;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* === TOOLBAR === */
@@ -237,12 +239,12 @@ ul { list-style: none; padding: 0; }
 
 /* === MAIN AREA === */
 #main-area {
-  display: flex;
-  flex-direction: row;
-  flex: 1;
-  width: 100vw;
-  height: calc(100vh - var(--toolbar-h));
-  overflow: hidden;
+  display: flex !important;
+  flex-direction: row !important;
+  flex: 1 !important;
+  width: 100vw !important;
+  height: calc(100vh - 50px) !important;
+  overflow: hidden !important;
 }
 
 /* === SIDEBAR === */
@@ -567,13 +569,13 @@ ul { list-style: none; padding: 0; }
 
 /* === MAP === */
 #map {
-  flex: 1;
-  width: 100%;
-  height: calc(100vh - var(--toolbar-h));
-  min-height: 0;
-  position: relative;
-  background: var(--bg-primary);
-  z-index: 1;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 500px !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 1 !important;
+  background: #1a1a2e !important;
 }
 
 /* Custom Leaflet popup dark theme */
