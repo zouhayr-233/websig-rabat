@@ -6,17 +6,15 @@
 const map = L.map('map', {
   center: [34.02, -6.83],
   zoom: 9,
-  zoomControl: false,
-  preferCanvas: true
+  zoomControl: false
 });
 
-/* Add OSM tiles IMMEDIATELY — before anything else */
+/* Add OSM tiles IMMEDIATELY — no crossOrigin (OSM doesn't send CORS headers) */
 const osmLayer = L.tileLayer(
   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   {
     attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19,
-    crossOrigin: true
+    maxZoom: 19
   }
 ).addTo(map);
 
