@@ -37,52 +37,22 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   /* ── THEMATIC MAP CARDS ──────────────────────────── */
-  /* Layers NOT shown in legend — they stay on map but have no dedicated legend */
+  /* Layers NOT shown in their own legend section */
   var NO_LEGEND_LAYERS = ['Limites administratives', 'Villes principales'];
-
-  /* Track which card's legend to display */
-  var activeLegendLayer = null;
-
-  function refreshActiveLegend() {
-    /* After a card toggle, pick the best card for the legend */
-    if (activeLegendLayer && NO_LEGEND_LAYERS.indexOf(activeLegendLayer) === -1) {
-      /* check it's still active */
-      var cards = document.querySelectorAll('.thematic-card.active');
-      for (var i = 0; i < cards.length; i++) {
-        if (cards[i].dataset.layer === activeLegendLayer) return; /* still active */
-      }
-    }
-    /* Find first active non-excluded card */
-    var all = document.querySelectorAll('.thematic-card.active');
-    activeLegendLayer = null;
-    for (var j = 0; j < all.length; j++) {
-      var n = all[j].dataset.layer;
-      if (NO_LEGEND_LAYERS.indexOf(n) === -1) { activeLegendLayer = n; break; }
-    }
-  }
 
   document.querySelectorAll('.thematic-card').forEach(function (card) {
     card.addEventListener('click', function (e) {
-      /* ignore clicks on the zoom button */
       if (e.target.classList.contains('tc-zoom')) return;
-      const name    = this.dataset.layer;
+      const name      = this.dataset.layer;
       const wasActive = this.classList.contains('active');
       this.classList.toggle('active');
       const nowActive = !wasActive;
-
-      /* If turning ON a non-excluded card → it becomes the legend card */
-      if (nowActive && NO_LEGEND_LAYERS.indexOf(name) === -1) {
-        activeLegendLayer = name;
-      } else {
-        refreshActiveLegend();
-      }
 
       if (getLayer(name)) {
         toggleLayer(name, nowActive);
         updateLegend();
         return;
       }
-      /* layer not yet loaded — wait */
       function handler(ev) {
         if (ev.detail.name === name) {
           document.removeEventListener('layerReady', handler);
@@ -270,78 +240,79 @@ document.addEventListener('DOMContentLoaded', function () {
   if (mobileMenu && sidebar) mobileMenu.addEventListener('click', function () { sidebar.classList.toggle('collapsed'); });
 
   /* ══════════════════════════════════════════════════
-     PROFESSIONAL GIS LEGEND
-     Colours mirror layers.js exactly.
+     PROFESSIONAL GIS LEGEND — all active layers shown
      ══════════════════════════════════════════════════ */
   function updateLegend() {
     const container = document.getElementById('legend-content');
     if (!container) return;
 
-    /* On first call (layerReady), pick a default if none selected yet */
-    if (!activeLegendLayer) refreshActiveLegend();
+    /* Collect all active thematic layers (excluding always-on ones) */
+    var activeLayers = Array.from(document.querySelectorAll('.thematic-card.active'))
+      .map(function (c) { return c.dataset.layer; })
+      .filter(function (n) { return NO_LEGEND_LAYERS.indexOf(n) === -1; });
 
-    if (!activeLegendLayer) {
-      container.innerHTML = '<p class="legend-empty">Cliquez sur une carte pour voir sa légende.</p>';
-      return;
-    }
-
-    const L = activeLegendLayer; /* short alias */
     var sections = [];
 
-    if (L === 'Bassins versants')
-      sections.push(lgSection('🗺️ Bassins versants', [
-        lgPoly('#c8e6fa','#1565c0', false, 'Bassin Atlantique'),
-        lgPoly('#c8efd8','#2e7d32', false, 'Bassin Sebou'),
-        lgPoly('#fff9c4','#f9a825', false, 'Bassin Intermédiaire'),
-        lgPoly('#fce4d0','#bf360c', false, 'Bassin Côtier Nord'),
-        lgPoly('#ead5f5','#6a1b9a', false, 'Bassin Côtier Sud'),
-      ]));
+    activeLayers.forEach(function (L) {
+      if (L === 'Bassins versants')
+        sections.push(lgSection('🗺️ Bassins versants', [
+          lgPoly('#c8e6fa','#1565c0', false, 'Bassin Atlantique'),
+          lgPoly('#c8efd8','#2e7d32', false, 'Bassin Sebou'),
+          lgPoly('#fff9c4','#f9a825', false, 'Bassin Intermédiaire'),
+          lgPoly('#fce4d0','#bf360c', false, 'Bassin Côtier Nord'),
+          lgPoly('#ead5f5','#6a1b9a', false, 'Bassin Côtier Sud'),
+        ]));
 
-    if (L === 'Oueds / Rivières')
-      sections.push(lgSection('🌊 Oueds / Rivières', [
-        lgLine('#0066CC', 5,   false, 'Oued majeur — Sebou, Bou Regreg'),
-        lgLine('#0066CC', 2.5, false, 'Oued principal'),
-        lgLine('#4499DD', 1.5, false, 'Oued secondaire / affluent'),
-      ]));
+      if (L === 'Oueds / Rivières')
+        sections.push(lgSection('🌊 Oueds / Rivières', [
+          lgLine('#0066CC', 5,   false, 'Oued majeur — Sebou, Bou Regreg'),
+          lgLine('#0066CC', 2.5, false, 'Oued principal'),
+          lgLine('#4499DD', 1.5, false, 'Oued secondaire / affluent'),
+        ]));
 
-    if (L === 'Barrages')
-      sections.push(lgSection('🏗️ Barrages', [
-        lgPoint('#0d47a1', 12, '⬟', 'Barrage opérationnel'),
-      ]));
+      if (L === 'Barrages')
+        sections.push(lgSection('🏗️ Barrages', [
+          lgPoint('#0d47a1', 12, '⬟', 'Barrage opérationnel'),
+        ]));
 
-    if (L === 'Stations pluviométriques')
-      sections.push(lgSection('🌧️ Stations pluviométriques', [
-        lgPoint('#1565c0', 10, '●', 'Station de mesure'),
-      ]));
+      if (L === 'Stations pluviométriques')
+        sections.push(lgSection('🌧️ Stations pluviométriques', [
+          lgPoint('#1565c0', 10, '●', 'Station de mesure'),
+        ]));
 
-    if (L === 'Nappes souterraines')
-      sections.push(lgSection('💧 Nappes souterraines', [
-        lgPoly('#bfdbfe','#1d4ed8', true, 'Nappe phréatique'),
-        lgPoly('#a5f3fc','#0891b2', true, 'Nappe littorale'),
-        lgPoly('#bae6fd','#0369a1', true, 'Nappe alluviale'),
-        lgPoly('#cffafe','#0e7490', true, 'Nappe côtière'),
-      ]));
+      if (L === 'Nappes souterraines')
+        sections.push(lgSection('💧 Nappes souterraines', [
+          lgPoly('#bfdbfe','#1d4ed8', true, 'Nappe phréatique'),
+          lgPoly('#a5f3fc','#0891b2', true, 'Nappe littorale'),
+          lgPoly('#bae6fd','#0369a1', true, 'Nappe alluviale'),
+          lgPoly('#cffafe','#0e7490', true, 'Nappe côtière'),
+        ]));
 
-    if (L === 'Zones de risque')
-      sections.push(lgSection('⚠️ Risque d\'inondation', [
-        lgPoly('#fecaca','#dc2626', false, 'Risque ÉLEVÉ'),
-        lgPoly('#fed7aa','#ea580c', false, 'Risque MODÉRÉ'),
-        lgPoly('#fef9c3','#ca8a04', true,  'Risque FAIBLE'),
-      ]));
+      if (L === 'Zones de risque')
+        sections.push(lgSection('⚠️ Risque d\'inondation', [
+          lgPoly('#fecaca','#dc2626', false, 'Risque ÉLEVÉ'),
+          lgPoly('#fed7aa','#ea580c', false, 'Risque MODÉRÉ'),
+          lgPoly('#fef9c3','#ca8a04', true,  'Risque FAIBLE'),
+        ]));
+    });
 
-    /* Limites admin + Villes — toujours présentes dans chaque légende */
-    sections.push(lgSection('🗂️ Limites administratives', [
-      lgLine('#1d4ed8', 2.5, true, 'Limite de région / préfecture'),
-    ]));
-    sections.push(lgSection('🏙️ Villes principales', [
-      lgCity('#6d28d9', 14, '★', 'Capitale — Rabat'),
-      lgCity('#1d4ed8', 10, '●', 'Ville principale (Salé, Kénitra)'),
-      lgCity('#2563eb',  8, '●', 'Ville (Khémisset, Tiflet…)'),
-    ]));
+    /* Limites admin + Villes — toujours présentes si leurs layers sont actifs */
+    var adminActive = document.querySelector('.thematic-card.active[data-layer="Limites administratives"]');
+    var villsActive = document.querySelector('.thematic-card.active[data-layer="Villes principales"]');
+    if (adminActive)
+      sections.push(lgSection('🗂️ Limites administratives', [
+        lgLine('#1d4ed8', 2.5, true, 'Limite de région / préfecture'),
+      ]));
+    if (villsActive)
+      sections.push(lgSection('🏙️ Villes principales', [
+        lgCity('#6d28d9', 14, '★', 'Capitale — Rabat'),
+        lgCity('#1d4ed8', 10, '●', 'Ville principale (Salé, Kénitra)'),
+        lgCity('#2563eb',  8, '●', 'Ville (Khémisset, Tiflet…)'),
+      ]));
 
     container.innerHTML = sections.length
       ? '<div class="gis-legend">' + sections.join('') + '</div>'
-      : '<p class="legend-empty">Cliquez sur une carte pour voir sa légende.</p>';
+      : '<p class="legend-empty">Activez une carte pour voir sa légende.</p>';
   }
 
   /* ── Legend section wrapper ── */
@@ -399,11 +370,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   window.updateLegend = updateLegend;
-  /* On first layer load, set the default legend layer and update */
-  document.addEventListener('layerReady', function onFirstLayer(ev) {
-    if (!activeLegendLayer && NO_LEGEND_LAYERS.indexOf(ev.detail.name) === -1) {
-      activeLegendLayer = ev.detail.name;
-    }
+  /* Each time a layer finishes loading, refresh the legend */
+  document.addEventListener('layerReady', function () {
     updateLegend();
   });
 
