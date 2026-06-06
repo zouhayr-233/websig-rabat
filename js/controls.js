@@ -58,13 +58,38 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   /* ── THEMATIC CARDS ───────────────────────────────── */
+  /* Layers excluded from legend (always on, no standalone legend) */
+  var NO_LEGEND = ['Limites administratives', 'Villes principales'];
+
+  /* Track which card's legend is currently shown */
+  var activeLegendLayer = null;
+
+  function pickLegendLayer() {
+    /* Return the last non-excluded active card */
+    var cards = document.querySelectorAll('.thematic-card.active');
+    var found = null;
+    cards.forEach(function (c) {
+      var n = c.dataset.layer;
+      if (NO_LEGEND.indexOf(n) === -1) found = n;
+    });
+    return found;
+  }
+
   document.querySelectorAll('.thematic-card').forEach(function (card) {
     card.addEventListener('click', function (e) {
       if (e.target.classList.contains('tc-zoom')) return;
-      var name    = this.dataset.layer;
-      var wasOn   = this.classList.contains('active');
+      var name  = this.dataset.layer;
+      var wasOn = this.classList.contains('active');
       this.classList.toggle('active');
-      var nowOn   = !wasOn;
+      var nowOn = !wasOn;
+
+      /* Update legend tracker */
+      if (nowOn && NO_LEGEND.indexOf(name) === -1) {
+        activeLegendLayer = name;
+      } else if (!nowOn && name === activeLegendLayer) {
+        activeLegendLayer = pickLegendLayer();
+      }
+
       if (getLayer(name)) {
         toggleLayer(name, nowOn);
         updateLegend();
@@ -241,17 +266,16 @@ document.addEventListener('DOMContentLoaded', function () {
     var container = document.getElementById('legend-content');
     if (!container) return;
 
-    var active = Array.from(document.querySelectorAll('.thematic-card.active'))
-                      .map(function (c) { return c.dataset.layer; });
-
-    if (!active.length) {
-      container.innerHTML = '<p class="legend-empty">Aucune carte sélectionnée.</p>';
+    /* Show legend only for the last clicked thematic card */
+    var layer = activeLegendLayer || pickLegendLayer();
+    if (!layer) {
+      container.innerHTML = '<p class="legend-empty">Sélectionnez une carte thématique.</p>';
       return;
     }
 
     var html = '';
 
-    if (active.includes('Bassins versants')) {
+    if (layer === 'Bassins versants') {
       html += mlSection('Bassins Versants', [
         mlColor('#c8e6fa','#1565c0', false, 'Bassin Atlantique'),
         mlColor('#c8efd8','#2e7d32', false, 'Bassin Sebou'),
@@ -261,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ]);
     }
 
-    if (active.includes('Oueds / Rivières')) {
+    if (layer === 'Oueds / Rivières') {
       html += mlSection('Réseau Hydrographique', [
         mlLine('#0066CC', 5,   'Oued majeur (Sebou, Bou Regreg)'),
         mlLine('#0066CC', 2.5, 'Oued principal'),
@@ -269,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ]);
     }
 
-    if (active.includes('Nappes souterraines')) {
+    if (layer === 'Nappes souterraines') {
       html += mlSection('Nappes Souterraines', [
         mlColor('#bfdbfe','#1d4ed8', true, 'Nappe phréatique'),
         mlColor('#a5f3fc','#0891b2', true, 'Nappe littorale'),
@@ -278,19 +302,19 @@ document.addEventListener('DOMContentLoaded', function () {
       ]);
     }
 
-    if (active.includes('Barrages')) {
+    if (layer === 'Barrages') {
       html += mlSection('Barrages', [
         mlPoint('#0d47a1', 'Barrage opérationnel'),
       ]);
     }
 
-    if (active.includes('Stations pluviométriques')) {
+    if (layer === 'Stations pluviométriques') {
       html += mlSection('Stations Pluviométriques', [
         mlPoint('#1565c0', 'Station de mesure pluviométrique'),
       ]);
     }
 
-    if (active.includes('Zones de risque')) {
+    if (layer === 'Zones de risque') {
       html += mlSection('Risque d\'Inondation', [
         mlColor('#fecaca','#dc2626', false, 'Risque élevé'),
         mlColor('#fed7aa','#ea580c', false, 'Risque modéré'),
@@ -298,21 +322,9 @@ document.addEventListener('DOMContentLoaded', function () {
       ]);
     }
 
-    if (active.includes('Limites administratives')) {
-      html += mlSection('Limites Administratives', [
-        mlLine('#1d4ed8', 2.5, 'Limite région / préfecture', true),
-      ]);
-    }
+    /* Limites admin & Villes — excluded from individual legend */
 
-    if (active.includes('Villes principales')) {
-      html += mlSection('Villes Principales', [
-        mlPointCity('#6d28d9', 16, '★ Capitale (Rabat)'),
-        mlPointCity('#1d4ed8', 12, '● Ville principale'),
-        mlPointCity('#2563eb',  9, '● Ville secondaire'),
-      ]);
-    }
-
-    container.innerHTML = html || '<p class="legend-empty">Aucune carte sélectionnée.</p>';
+    container.innerHTML = html || '<p class="legend-empty">Sélectionnez une carte thématique.</p>';
   }
 
   /* legend builders */

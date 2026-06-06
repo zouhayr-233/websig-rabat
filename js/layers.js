@@ -415,9 +415,7 @@ function loadAdmin(data) {
         + '<tr><td>Population</td><td><b>' + ((+p.Population || 0).toLocaleString('fr-FR')) + '</b> hab.</td></tr>'
         + '<tr><td>Ménages</td><td>' + ((+p.Menages || 0).toLocaleString('fr-FR')) + '</td></tr>'
         + '</table></div>', { maxWidth: 270 });
-      try {
-        l.bindTooltip(name, { permanent: true, direction: 'center', className: 'admin-label' });
-      } catch(e) {}
+      /* No permanent label in center — title shown at top of map instead */
     }
   });
   window.overlayLayers['Limites administratives'] = lyr;
@@ -593,9 +591,9 @@ loadAllLayers();
       + 'text-shadow:1px 1px 0 white,-1px 1px 0 white,1px -1px 0 white,-1px -1px 0 white,'
       +              '0 1px 3px rgba(255,255,255,0.9)!important;}'
     + '.city-label::before{display:none!important}'
-    + '.city-label-capital{font-size:14px!important;color:#5b21b6!important;}'
-    + '.city-label-major  {font-size:13px!important;color:#1e3a8a!important;}'
-    + '.city-label-secondary{font-size:11px!important;color:#1e40af!important;}'
+    + '.city-label-capital{font-size:10px!important;color:#5b21b6!important;}'
+    + '.city-label-major  {font-size:9px!important;color:#1e3a8a!important;}'
+    + '.city-label-secondary{font-size:8px!important;color:#1e40af!important;}'
     /* Dam hover tooltip */
     + '.dam-tooltip{'
       + 'background:rgba(13,71,161,0.92)!important;border:none!important;'
