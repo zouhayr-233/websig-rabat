@@ -1,110 +1,129 @@
 'use strict';
 /* ===================================================
-   WebSIG RSK — controls.js v4
-   Full-screen professional cartographic interface.
+   WebSIG RSK — controls.js
+   All UI interactions wired here.
+   Critical fix: never cache window.overlayLayers
+   reference — always read it fresh at call time.
    =================================================== */
 
 document.addEventListener('DOMContentLoaded', function () {
 
-  /* ── helpers ──────────────────────────────────────── */
-  function getLayer(name) { return window.overlayLayers && window.overlayLayers[name]; }
+  /* ── helpers ─────────────────────────────────────── */
+
+  function getLayer(name) {
+    return window.overlayLayers && window.overlayLayers[name];
+  }
+
+  /* Add or remove a layer by name.
+     Reads window.overlayLayers at call time — no stale refs. */
   function toggleLayer(name, add) {
-    var lyr = getLayer(name);
+    const lyr = getLayer(name);
     if (!lyr || !window.map) return;
-    try { add ? window.map.addLayer(lyr) : window.map.removeLayer(lyr); } catch (e) {}
+    try {
+      if (add) { window.map.addLayer(lyr); }
+      else      { window.map.removeLayer(lyr); }
+    } catch (e) { console.warn('[controls] toggleLayer:', name, e.message); }
   }
 
-  /* ── CUSTOM ZOOM BUTTONS ──────────────────────────── */
-  var btnZI = document.getElementById('btn-zoom-in');
-  var btnZO = document.getElementById('btn-zoom-out');
-  if (btnZI) btnZI.addEventListener('click', function () { if (window.map) window.map.zoomIn(); });
-  if (btnZO) btnZO.addEventListener('click', function () { if (window.map) window.map.zoomOut(); });
-
-  /* ── PANEL HELPERS ────────────────────────────────── */
-  function showPanel(id) { var p = document.getElementById(id); if (p) p.style.display = 'flex'; }
-  function hidePanel(id) { var p = document.getElementById(id); if (p) p.style.display = 'none'; }
-  function togglePanel(id, btnId) {
-    var p = document.getElementById(id);
-    if (!p) return;
-    var open = p.style.display === 'none' || !p.style.display;
-    p.style.display = open ? 'flex' : 'none';
-    /* close other floating panels */
-    ['layers-panel', 'stats-panel'].forEach(function (oid) { if (oid !== id) hidePanel(oid); });
-    /* sync button active state */
-    if (btnId) {
-      var btn = document.getElementById(btnId);
-      if (btn) btn.classList.toggle('active', open);
-    }
-  }
-
-  /* ── LAYERS PANEL ─────────────────────────────────── */
-  var btnOpen = document.getElementById('btn-open-layers');
-  if (btnOpen) btnOpen.addEventListener('click', function () {
-    togglePanel('layers-panel', 'btn-open-layers');
-  });
-  var btnClose = document.getElementById('close-layers');
-  if (btnClose) btnClose.addEventListener('click', function () {
-    hidePanel('layers-panel');
-    var b = document.getElementById('btn-open-layers'); if (b) b.classList.remove('active');
-  });
-
-  /* ── STATS PANEL ──────────────────────────────────── */
-  var btnStats = document.getElementById('btn-stats');
-  if (btnStats) btnStats.addEventListener('click', function () { togglePanel('stats-panel', 'btn-stats'); });
-  var btnCloseStats = document.getElementById('close-stats');
-  if (btnCloseStats) btnCloseStats.addEventListener('click', function () {
-    hidePanel('stats-panel');
-    var b = document.getElementById('btn-stats'); if (b) b.classList.remove('active');
-  });
-
-  /* ── THEMATIC CARDS ───────────────────────────────── */
-  document.querySelectorAll('.thematic-card').forEach(function (card) {
-    card.addEventListener('click', function (e) {
-      if (e.target.classList.contains('tc-zoom')) return;
-      var name    = this.dataset.layer;
-      var wasOn   = this.classList.contains('active');
-      this.classList.toggle('active');
-      var nowOn   = !wasOn;
-      if (getLayer(name)) {
-        toggleLayer(name, nowOn);
-        updateLegend();
-      } else {
-        document.addEventListener('layerReady', function handler(ev) {
-          if (ev.detail.name !== name) return;
-          document.removeEventListener('layerReady', handler);
-          if (nowOn) toggleLayer(name, true);
-          updateLegend();
-        });
-      }
-    });
-  });
-
-  /* ── ZOOM-TO-LAYER ────────────────────────────────── */
-  document.querySelectorAll('.tc-zoom').forEach(function (btn) {
-    btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      var lyr = getLayer(this.dataset.layer);
-      if (!lyr || !window.map) return;
-      try { var b = lyr.getBounds(); if (b && b.isValid()) window.map.fitBounds(b, { padding: [40, 40], animate: true }); } catch (_) {}
-    });
-  });
-
-  /* ── BASEMAP CARDS ────────────────────────────────── */
+  /* ── BASE LAYER CARDS ────────────────────────────── */
   document.querySelectorAll('.basemap-card').forEach(function (card) {
     card.addEventListener('click', function () {
-      document.querySelectorAll('.basemap-card').forEach(function (c) { c.classList.remove('active'); });
+      document.querySelectorAll('.basemap-card').forEach(function (c) {
+        c.classList.remove('active');
+      });
       this.classList.add('active');
       if (window.switchBaseLayer) window.switchBaseLayer(this.dataset.basemap);
     });
   });
 
-  /* ── SEARCH ───────────────────────────────────────── */
-  var searchInput = document.getElementById('search-input');
-  var searchBtn   = document.getElementById('search-btn');
+  /* ── THEMATIC MAP CARDS ──────────────────────────── */
+  document.querySelectorAll('.thematic-card').forEach(function (card) {
+    card.addEventListener('click', function (e) {
+      /* ignore clicks on the zoom button */
+      if (e.target.classList.contains('tc-zoom')) return;
+      const name    = this.dataset.layer;
+      const wasActive = this.classList.contains('active');
+      this.classList.toggle('active');
+      const nowActive = !wasActive;
+
+      if (getLayer(name)) {
+        toggleLayer(name, nowActive);
+        updateLegend();
+        return;
+      }
+      /* layer not yet loaded — wait */
+      function handler(e) {
+        if (e.detail.name === name) {
+          document.removeEventListener('layerReady', handler);
+          if (nowActive) toggleLayer(name, true);
+          updateLegend();
+        }
+      }
+      document.addEventListener('layerReady', handler);
+    });
+  });
+
+  /* ── ZOOM-TO-LAYER BUTTONS (on thematic cards) ───── */
+  document.querySelectorAll('.tc-zoom').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const lyr = getLayer(this.dataset.layer);
+      if (!lyr || !window.map) return;
+      try {
+        const b = lyr.getBounds ? lyr.getBounds() : null;
+        if (b && b.isValid()) window.map.fitBounds(b, { padding: [30, 30], animate: true });
+      } catch (_) {}
+    });
+  });
+
+  /* ── COLLAPSIBLE LAYER GROUPS ────────────────────── */
+  document.querySelectorAll('.layer-group-header').forEach(function (h) {
+    h.addEventListener('click', function () {
+      const g = this.closest('.layer-group');
+      if (g) g.classList.toggle('collapsed');
+    });
+  });
+
+  /* ── SIDEBAR COLLAPSE ────────────────────────────── */
+  const sidebar       = document.getElementById('sidebar');
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  if (sidebarToggle && sidebar) {
+    sidebarToggle.addEventListener('click', function () {
+      sidebar.classList.toggle('collapsed');
+      this.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+      setTimeout(function () { if (window.map) window.map.invalidateSize(); }, 320);
+    });
+  }
+
+  /* ── RIGHT PANEL COLLAPSE ────────────────────────── */
+  const rightPanel   = document.getElementById('right-panel');
+  const rightToggle  = document.getElementById('right-panel-toggle');
+  if (rightToggle && rightPanel) {
+    rightToggle.addEventListener('click', function () {
+      rightPanel.classList.toggle('collapsed');
+      this.textContent = rightPanel.classList.contains('collapsed') ? '◀' : '▶';
+      setTimeout(function () { if (window.map) window.map.invalidateSize(); }, 320);
+    });
+  }
+
+  /* ── PANEL TABS ──────────────────────────────────── */
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-content').forEach(function (c) { c.classList.remove('active'); });
+      this.classList.add('active');
+      const tab = document.getElementById('tab-' + this.dataset.tab);
+      if (tab) tab.classList.add('active');
+    });
+  });
+
+  /* ── SEARCH BAR ──────────────────────────────────── */
+  const searchInput = document.getElementById('search-input');
+  const searchBtn   = document.getElementById('search-btn');
   if (searchInput) {
     searchInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && window.searchLocation) window.searchLocation(this.value.trim());
-      if (e.key === 'Escape') { var d = document.getElementById('search-results'); if (d) d.innerHTML = ''; }
+      if (e.key === 'Enter'  && window.searchLocation) window.searchLocation(this.value.trim());
+      if (e.key === 'Escape') { const d = document.getElementById('search-results'); if (d) d.innerHTML = ''; }
     });
   }
   if (searchBtn && searchInput) {
@@ -113,45 +132,52 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
   document.addEventListener('click', function (e) {
-    var sb = document.getElementById('search-bar');
-    if (sb && !sb.contains(e.target)) { var d = document.getElementById('search-results'); if (d) d.innerHTML = ''; }
+    const sec = document.querySelector('.search-section');
+    if (sec && !sec.contains(e.target)) { const d = document.getElementById('search-results'); if (d) d.innerHTML = ''; }
   });
 
-  /* ── PANEL TABS ───────────────────────────────────── */
-  document.querySelectorAll('.tab-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var container = this.closest('.sp-body') || document;
-      container.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
-      container.querySelectorAll('.tab-content').forEach(function (c) { c.classList.remove('active'); });
-      this.classList.add('active');
-      var tab = document.getElementById('tab-' + this.dataset.tab);
-      if (tab) tab.classList.add('active');
+  /* ── TOOLBAR BUTTONS ─────────────────────────────── */
+  const btnExport = document.getElementById('btn-export-png');
+  if (btnExport) btnExport.addEventListener('click', function () { if (window.exportMapPNG) window.exportMapPNG(); });
+
+  const btnFS = document.getElementById('btn-fullscreen');
+  if (btnFS) {
+    btnFS.addEventListener('click', function () { if (window.toggleFullscreen) window.toggleFullscreen(); });
+    document.addEventListener('fullscreenchange', function () {
+      const fs = !!document.fullscreenElement;
+      const lbl = btnFS.querySelector('.btn-label');
+      if (lbl) lbl.textContent = fs ? 'Quitter' : 'Plein écran';
     });
-  });
+  }
 
-  /* ── MEASUREMENT TOOLS ────────────────────────────── */
-  var measureGroup = null;
-  var measureMode  = null;
-  var drawHandler  = null;
-  try { measureGroup = new L.FeatureGroup().addTo(window.map); } catch (e) {}
+  const btnInfo = document.getElementById('btn-info');
+  if (btnInfo) btnInfo.addEventListener('click', openInfoModal);
+
+  /* ── MEASURE TOOLS ───────────────────────────────── */
+  let measureGroup = null;
+  let measureMode = null;
+  let drawHandler = null;
+
+  /* Wrap in try/catch — Leaflet.draw CDN may be unavailable */
+  try { measureGroup = new L.FeatureGroup().addTo(window.map); } catch (e) { console.warn('L.FeatureGroup unavailable'); }
 
   function startMeasure(mode) {
     stopMeasure();
     measureMode = mode;
-    var btn = document.getElementById(mode === 'distance' ? 'btn-measure-distance' : 'btn-measure-area');
+    const btn = document.getElementById(mode === 'distance' ? 'btn-measure-distance' : 'btn-measure-area');
     if (btn) btn.classList.add('active');
-    var clearBtn = document.getElementById('btn-clear-measure');
+    const clearBtn = document.getElementById('btn-clear-measure');
     if (clearBtn) clearBtn.style.display = 'flex';
     try {
-      var opts = mode === 'distance'
-        ? { shapeOptions: { color: '#0066CC', weight: 2, dashArray: '5,5' }, metric: true, feet: false }
-        : { shapeOptions: { color: '#ea580c', weight: 2, fillOpacity: 0.15 }, metric: true };
+      const opts = mode === 'distance'
+        ? { shapeOptions: { color: '#00b4d8', weight: 2, dashArray: '5,5' }, metric: true, feet: false }
+        : { shapeOptions: { color: '#f4a261', weight: 2, fillOpacity: 0.15 }, metric: true };
       drawHandler = mode === 'distance'
         ? new L.Draw.Polyline(window.map, opts)
         : new L.Draw.Polygon(window.map, opts);
       drawHandler.enable();
-      if (window.map) window.map.getContainer().style.cursor = 'crosshair';
-    } catch (e) { stopMeasure(); }
+      window.map.getContainer().style.cursor = 'crosshair';
+    } catch (e) { console.warn('Leaflet.draw unavailable:', e.message); stopMeasure(); }
   }
 
   function stopMeasure() {
@@ -164,199 +190,208 @@ document.addEventListener('DOMContentLoaded', function () {
   function clearMeasures() {
     stopMeasure();
     if (measureGroup) measureGroup.clearLayers();
-    var r = document.getElementById('measure-result'); if (r) r.style.display = 'none';
-    var c = document.getElementById('btn-clear-measure'); if (c) c.style.display = 'none';
+    const r = document.getElementById('measure-result'); if (r) r.style.display = 'none';
+    const c = document.getElementById('btn-clear-measure'); if (c) c.style.display = 'none';
   }
 
-  var btnDist  = document.getElementById('btn-measure-distance');
-  var btnArea  = document.getElementById('btn-measure-area');
-  var btnClear = document.getElementById('btn-clear-measure');
+  const btnDist  = document.getElementById('btn-measure-distance');
+  const btnArea  = document.getElementById('btn-measure-area');
+  const btnClear = document.getElementById('btn-clear-measure');
   if (btnDist)  btnDist.addEventListener('click',  function () { measureMode === 'distance' ? stopMeasure() : startMeasure('distance'); });
-  if (btnArea)  btnArea.addEventListener('click',  function () { measureMode === 'area'     ? stopMeasure() : startMeasure('area'); });
+  if (btnArea)  btnArea.addEventListener('click',  function () { measureMode === 'area'     ? stopMeasure() : startMeasure('area');     });
   if (btnClear) btnClear.addEventListener('click', clearMeasures);
 
   if (window.map) {
     window.map.on('draw:created', function (e) {
       if (measureGroup) measureGroup.addLayer(e.layer);
       stopMeasure();
-      var txt = '';
+      let txt = '';
       if (e.layerType === 'polyline') {
-        var ll = e.layer.getLatLngs(); var m = 0;
-        for (var i = 1; i < ll.length; i++) m += ll[i-1].distanceTo(ll[i]);
+        const ll = e.layer.getLatLngs();
+        let m = 0;
+        for (let i = 1; i < ll.length; i++) m += ll[i-1].distanceTo(ll[i]);
         txt = m >= 1000 ? 'Distance : ' + (m/1000).toFixed(3) + ' km' : 'Distance : ' + Math.round(m) + ' m';
       } else if (e.layerType === 'polygon') {
-        try { var a = L.GeometryUtil.geodesicArea(e.layer.getLatLngs()[0]); txt = a >= 1e6 ? 'Superficie : ' + (a/1e6).toFixed(4) + ' km²' : 'Superficie : ' + Math.round(a) + ' m²'; } catch (_) {}
+        try {
+          const a = L.GeometryUtil.geodesicArea(e.layer.getLatLngs()[0]);
+          txt = a >= 1e6 ? 'Superficie : ' + (a/1e6).toFixed(4) + ' km²' : 'Superficie : ' + Math.round(a) + ' m²';
+        } catch (_) {}
       }
-      if (txt) { var r = document.getElementById('measure-result'); if (r) { r.textContent = txt; r.style.display = 'block'; setTimeout(function () { r.style.display = 'none'; }, 8000); } }
+      if (txt) {
+        const r = document.getElementById('measure-result');
+        if (r) { r.textContent = txt; r.style.display = 'block'; setTimeout(function () { r.style.display = 'none'; }, 8000); }
+      }
     });
   }
 
-  /* ── EXPORT / FULLSCREEN / INFO ───────────────────── */
-  var btnExp = document.getElementById('btn-export-png');
-  if (btnExp) btnExp.addEventListener('click', function () { if (window.exportMapPNG) window.exportMapPNG(); });
+  /* ── INFO MODAL ──────────────────────────────────── */
+  function openInfoModal()  { const m = document.getElementById('info-modal'); if (m) m.style.display = 'flex';  }
+  function closeInfoModal() { const m = document.getElementById('info-modal'); if (m) m.style.display = 'none'; }
 
-  var btnFS = document.getElementById('btn-fullscreen');
-  if (btnFS) btnFS.addEventListener('click', function () { if (window.toggleFullscreen) window.toggleFullscreen(); });
+  const infoModal = document.getElementById('info-modal');
+  if (infoModal) infoModal.addEventListener('click', function (e) { if (e.target === this) closeInfoModal(); });
+  const btnMC = document.getElementById('modal-close-btn'); if (btnMC) btnMC.addEventListener('click', closeInfoModal);
+  const btnMO = document.getElementById('modal-ok-btn');    if (btnMO) btnMO.addEventListener('click', closeInfoModal);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeInfoModal(); });
 
-  function openModal()  { var m = document.getElementById('info-modal'); if (m) m.style.display = 'flex'; }
-  function closeModal() { var m = document.getElementById('info-modal'); if (m) m.style.display = 'none'; }
-  var btnInfo = document.getElementById('btn-info');
-  if (btnInfo) btnInfo.addEventListener('click', openModal);
-  var modal = document.getElementById('info-modal');
-  if (modal) modal.addEventListener('click', function (e) { if (e.target === this) closeModal(); });
-  var btnMC = document.getElementById('modal-close-btn'); if (btnMC) btnMC.addEventListener('click', closeModal);
-  var btnMO = document.getElementById('modal-ok-btn');    if (btnMO) btnMO.addEventListener('click', closeModal);
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      closeModal();
-      hidePanel('layers-panel'); var bl = document.getElementById('btn-open-layers'); if (bl) bl.classList.remove('active');
-      hidePanel('stats-panel');  var bs = document.getElementById('btn-stats');        if (bs) bs.classList.remove('active');
-    }
-  });
-
-  /* ── TABLE SORT ───────────────────────────────────── */
-  document.querySelectorAll('.data-table th').forEach(function (th, idx) {
-    th.style.cursor = 'pointer';
-    th.addEventListener('click', function () {
-      var tbody = this.closest('table').querySelector('tbody');
-      var rows  = Array.from(tbody.querySelectorAll('tr'));
-      var asc   = !(this.dataset.asc === '1');
-      this.dataset.asc = asc ? '1' : '';
-      rows.sort(function (a, b) {
-        var av = a.querySelectorAll('td')[idx].textContent.trim();
-        var bv = b.querySelectorAll('td')[idx].textContent.trim();
-        var an = parseFloat(av.replace(/\s/g,'').replace(',','.')); var bn = parseFloat(bv.replace(/\s/g,'').replace(',','.'));
-        if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
-        return asc ? av.localeCompare(bv,'fr') : bv.localeCompare(av,'fr');
-      });
-      rows.forEach(function (r) { tbody.appendChild(r); });
-    });
-  });
+  /* ── MOBILE HAMBURGER ────────────────────────────── */
+  const mobileMenu = document.getElementById('btn-mobile-menu');
+  if (mobileMenu && sidebar) mobileMenu.addEventListener('click', function () { sidebar.classList.toggle('collapsed'); });
 
   /* ══════════════════════════════════════════════════
-     PROFESSIONAL GIS LEGEND — matches the example style
-     Large colored rectangles + labels
+     PROFESSIONAL GIS LEGEND
+     Colours mirror layers.js exactly.
      ══════════════════════════════════════════════════ */
   function updateLegend() {
-    var container = document.getElementById('legend-content');
+    const container = document.getElementById('legend-content');
     if (!container) return;
-
-    var active = Array.from(document.querySelectorAll('.thematic-card.active'))
-                      .map(function (c) { return c.dataset.layer; });
+    const active = Array.from(
+      document.querySelectorAll('.thematic-card.active')
+    ).map(function(c){ return c.dataset.layer; });
 
     if (!active.length) {
-      container.innerHTML = '<p class="legend-empty">Aucune carte sélectionnée.</p>';
+      container.innerHTML = '<p class="legend-empty">Activez une couche pour voir sa légende.</p>';
       return;
     }
 
-    var html = '';
+    var sections = [];
 
-    if (active.includes('Bassins versants')) {
-      html += mlSection('Bassins Versants', [
-        mlColor('#c8e6fa','#1565c0', false, 'Bassin Atlantique'),
-        mlColor('#c8efd8','#2e7d32', false, 'Bassin Sebou'),
-        mlColor('#fff9c4','#f9a825', false, 'Bassin Intermédiaire'),
-        mlColor('#fce4d0','#bf360c', false, 'Bassin Côtier Nord'),
-        mlColor('#ead5f5','#6a1b9a', false, 'Bassin Côtier Sud'),
-      ]);
-    }
+    if (active.includes('Bassins versants'))
+      sections.push(lgSection('🗺️ Bassins versants', [
+        lgPoly('#c8e6fa','#1565c0', false, 'Sous-bassin (Atlantique)'),
+        lgPoly('#c8efd8','#2e7d32', false, 'Sous-bassin (Sebou)'),
+        lgPoly('#fff9c4','#f9a825', false, 'Sous-bassin (Intermédiaire)'),
+        lgPoly('#fce4d0','#bf360c', false, 'Sous-bassin (Côtier N.)'),
+        lgPoly('#ead5f5','#6a1b9a', false, 'Sous-bassin (Côtier S.)'),
+      ]));
 
-    if (active.includes('Oueds / Rivières')) {
-      html += mlSection('Réseau Hydrographique', [
-        mlLine('#0066CC', 5,   'Oued majeur (Sebou, Bou Regreg)'),
-        mlLine('#0066CC', 2.5, 'Oued principal'),
-        mlLine('#4499DD', 1.5, 'Oued secondaire / affluent'),
-      ]);
-    }
+    if (active.includes('Oueds / Rivières'))
+      sections.push(lgSection('🌊 Oueds / Rivières', [
+        lgLine('#0066CC', 5,   false, 'Oued majeur — Sebou, Bou Regreg'),
+        lgLine('#0066CC', 2.5, false, 'Oued principal'),
+        lgLine('#4499DD', 1.5, false, 'Oued secondaire / affluent'),
+      ]));
 
-    if (active.includes('Nappes souterraines')) {
-      html += mlSection('Nappes Souterraines', [
-        mlColor('#bfdbfe','#1d4ed8', true, 'Nappe phréatique'),
-        mlColor('#a5f3fc','#0891b2', true, 'Nappe littorale'),
-        mlColor('#bae6fd','#0369a1', true, 'Nappe alluviale'),
-        mlColor('#cffafe','#0e7490', true, 'Nappe côtière'),
-      ]);
-    }
+    if (active.includes('Barrages'))
+      sections.push(lgSection('🏗️ Barrages', [
+        lgPoint('#0d47a1', 12, '⬟', 'Barrage opérationnel'),
+      ]));
 
-    if (active.includes('Barrages')) {
-      html += mlSection('Barrages', [
-        mlPoint('#0d47a1', 'Barrage opérationnel'),
-      ]);
-    }
+    if (active.includes('Stations pluviométriques'))
+      sections.push(lgSection('🌧️ Stations pluviométriques', [
+        lgPoint('#1565c0', 10, '●', 'Station de mesure'),
+      ]));
 
-    if (active.includes('Stations pluviométriques')) {
-      html += mlSection('Stations Pluviométriques', [
-        mlPoint('#1565c0', 'Station de mesure pluviométrique'),
-      ]);
-    }
+    if (active.includes('Nappes souterraines'))
+      sections.push(lgSection('💧 Nappes souterraines', [
+        lgPoly('#bfdbfe','#1d4ed8', true, 'Nappe phréatique (bleue)'),
+        lgPoly('#a5f3fc','#0891b2', true, 'Nappe littorale (cyan)'),
+        lgPoly('#bae6fd','#0369a1', true, 'Nappe alluviale (bleu ciel)'),
+        lgPoly('#cffafe','#0e7490', true, 'Nappe côtière (cyan pâle)'),
+      ]));
 
-    if (active.includes('Zones de risque')) {
-      html += mlSection('Risque d\'Inondation', [
-        mlColor('#fecaca','#dc2626', false, 'Risque élevé'),
-        mlColor('#fed7aa','#ea580c', false, 'Risque modéré'),
-        mlColor('#fef9c3','#ca8a04', true,  'Risque faible'),
-      ]);
-    }
+    if (active.includes('Zones de risque'))
+      sections.push(lgSection('⚠️ Risque d\'inondation', [
+        lgPoly('#fecaca','#dc2626', false, 'Risque ÉLEVÉ'),
+        lgPoly('#fed7aa','#ea580c', false, 'Risque MODÉRÉ'),
+        lgPoly('#fef9c3','#ca8a04', true,  'Risque FAIBLE'),
+      ]));
 
-    if (active.includes('Limites administratives')) {
-      html += mlSection('Limites Administratives', [
-        mlLine('#1d4ed8', 2.5, 'Limite région / préfecture', true),
-      ]);
-    }
+    if (active.includes('Limites administratives'))
+      sections.push(lgSection('🗂️ Limites administratives', [
+        lgLine('#1d4ed8', 2.5, true, 'Limite de région / préfecture'),
+      ]));
 
-    if (active.includes('Villes principales')) {
-      html += mlSection('Villes Principales', [
-        mlPointCity('#6d28d9', 16, '★ Capitale (Rabat)'),
-        mlPointCity('#1d4ed8', 12, '● Ville principale'),
-        mlPointCity('#2563eb',  9, '● Ville secondaire'),
-      ]);
-    }
+    if (active.includes('Villes principales'))
+      sections.push(lgSection('🏙️ Villes principales', [
+        lgCity('#6d28d9', 14, '★', 'Capitale — Rabat'),
+        lgCity('#1d4ed8', 10, '●', 'Ville principale (Salé, Kénitra)'),
+        lgCity('#2563eb',  8, '●', 'Ville (Khémisset, Tiflet…)'),
+      ]));
 
-    container.innerHTML = html || '<p class="legend-empty">Aucune carte sélectionnée.</p>';
+    container.innerHTML = sections.length
+      ? '<div class="gis-legend">' + sections.join('') + '</div>'
+      : '<p class="legend-empty">Activez une couche pour voir sa légende.</p>';
   }
 
-  /* legend builders */
-  function mlSection(title, rows) {
-    return '<div class="ml-section"><div class="ml-section-title">' + title + '</div>' + rows.join('') + '</div>';
-  }
-
-  function mlColor(fill, border, dashed, label) {
-    var bd = dashed ? 'border:1.5px dashed ' + border : 'border:1.5px solid ' + border;
-    return '<div class="ml-item">'
-      + '<div class="ml-color" style="background:' + fill + ';' + bd + '"></div>'
-      + '<span class="ml-label">' + label + '</span>'
+  /* ── Legend section wrapper ── */
+  function lgSection(title, rows) {
+    return '<div class="lg-section">'
+      + '<div class="lg-title">' + title + '</div>'
+      + rows.join('')
       + '</div>';
   }
 
-  function mlLine(color, weight, label, dashed) {
-    var s = dashed
-      ? 'height:0;border-top:' + weight + 'px dashed ' + color + ';margin-top:' + Math.max(weight,3) + 'px'
+  /* ── Polygon symbol ── */
+  function lgPoly(fill, border, dashed, label) {
+    var bd = dashed
+      ? 'border:1.5px dashed ' + border
+      : 'border:1.5px solid ' + border;
+    return '<div class="lg-item">'
+      + '<span class="lg-sym-poly" style="background:' + fill + ';' + bd + '"></span>'
+      + '<span class="lg-label">' + label + '</span>'
+      + '</div>';
+  }
+
+  /* ── Line symbol ── */
+  function lgLine(color, weight, dashed, label) {
+    var style = dashed
+      ? 'border-top:' + weight + 'px dashed ' + color + ';height:0;margin-top:' + Math.max(weight,2) + 'px'
       : 'height:' + weight + 'px;background:' + color + ';border-radius:1px';
-    return '<div class="ml-item">'
-      + '<div class="ml-color-line" style="' + s + '"></div>'
-      + '<span class="ml-label">' + label + '</span>'
+    return '<div class="lg-item">'
+      + '<span class="lg-sym-line" style="' + style + '"></span>'
+      + '<span class="lg-label">' + label + '</span>'
       + '</div>';
   }
 
-  function mlPoint(color, label) {
-    return '<div class="ml-item">'
-      + '<div style="width:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-      + '<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:' + color + ';border:2px solid white;box-shadow:0 0 0 1.5px ' + color + '"></span>'
-      + '</div>'
-      + '<span class="ml-label">' + label + '</span>'
+  /* ── Point symbol ── */
+  function lgPoint(color, size, glyph, label) {
+    return '<div class="lg-item">'
+      + '<span class="lg-sym-point" style="width:' + size + 'px;height:' + size + 'px;'
+      + 'background:' + color + ';border-radius:50%;border:2px solid white;'
+      + 'outline:1.5px solid ' + color + ';flex-shrink:0;'
+      + 'display:inline-flex;align-items:center;justify-content:center;'
+      + 'color:white;font-size:' + Math.round(size*0.55) + 'px">' + '</span>'
+      + '<span class="lg-label">' + label + '</span>'
       + '</div>';
   }
 
-  function mlPointCity(color, size, label) {
-    return '<div class="ml-item">'
-      + '<div style="width:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-      + '<span style="display:inline-flex;align-items:center;justify-content:center;width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';border:2px solid white;box-shadow:0 0 0 1.5px ' + color + ';color:white;font-size:' + Math.round(size*0.5) + 'px">' + (size>=14?'★':'') + '</span>'
-      + '</div>'
-      + '<span class="ml-label">' + label + '</span>'
+  /* ── City symbol ── */
+  function lgCity(color, size, glyph, label) {
+    return '<div class="lg-item">'
+      + '<span style="display:inline-flex;align-items:center;justify-content:center;'
+      + 'width:' + size + 'px;height:' + size + 'px;border-radius:50%;'
+      + 'background:' + color + ';border:2px solid white;outline:1.5px solid ' + color + ';'
+      + 'color:white;font-size:' + Math.round(size*0.55) + 'px;flex-shrink:0">'
+      + (size >= 12 ? '★' : '') + '</span>'
+      + '<span class="lg-label">' + label + '</span>'
       + '</div>';
   }
 
   window.updateLegend = updateLegend;
+  /* Call once on first layerReady, then on every change — no duplicates because
+     container.innerHTML is always fully replaced */
   document.addEventListener('layerReady', updateLegend);
+
+  /* ── TABLE SORT ───────────────────────────────────── */
+  document.querySelectorAll('.data-table th').forEach(function (th, idx) {
+    th.addEventListener('click', function () {
+      const tbody = this.closest('table').querySelector('tbody');
+      const rows  = Array.from(tbody.querySelectorAll('tr'));
+      const asc   = !(this.dataset.asc === '1');
+      this.dataset.asc = asc ? '1' : '';
+      rows.sort(function (a, b) {
+        const av = a.querySelectorAll('td')[idx].textContent.trim();
+        const bv = b.querySelectorAll('td')[idx].textContent.trim();
+        const an = parseFloat(av.replace(/\s/g,'').replace(',','.'));
+        const bn = parseFloat(bv.replace(/\s/g,'').replace(',','.'));
+        if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
+        return asc ? av.localeCompare(bv,'fr') : bv.localeCompare(av,'fr');
+      });
+      rows.forEach(function (r) { tbody.appendChild(r); });
+      document.querySelectorAll('.data-table th').forEach(function (t) { t.style.color = ''; });
+      this.style.color = 'var(--accent-water)';
+    });
+  });
 
 }); /* end DOMContentLoaded */

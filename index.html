@@ -1,360 +1,550 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WebSIG — Rabat-Salé-Kénitra</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
-  <link rel="stylesheet" href="css/style.css?v=7"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebSIG — Rabat-Salé-Kénitra | Ressources en eau &amp; Risque inondation</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Source+Sans+Pro:wght@300;400;600&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet 1.9.4 CSS only (no SRI — avoids CDN hash mismatch blocking) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Leaflet.draw CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+
+  <!-- Leaflet MiniMap CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.css" />
+
+  <!-- App styles (v3 — light professional theme) -->
+  <link rel="stylesheet" href="css/style.css?v=6" />
 </head>
 <body>
 
-<!-- LOADING -->
-<div id="loading-spinner">
-  <div class="spinner-content">
-    <svg class="water-drop" viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="dropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#00b4d8"/><stop offset="100%" style="stop-color:#0077b6"/>
-      </linearGradient></defs>
-      <path d="M30 5 C30 5, 5 35, 5 50 C5 65, 16 75, 30 75 C44 75, 55 65, 55 50 C55 35, 30 5, 30 5 Z" fill="url(#dropGrad)" class="drop-path"/>
-    </svg>
-    <p class="spinner-text">Chargement des données...</p>
-    <div class="spinner-bar"><div class="spinner-progress"></div></div>
-  </div>
-</div>
-
-<!-- MAP (full screen) -->
-<div id="map"></div>
-
-<!-- ══ ZOOM CONTROLS — top left ══ -->
-<div id="zoom-ctrl">
-  <button id="btn-zoom-in"  title="Zoom avant">+</button>
-  <button id="btn-zoom-out" title="Zoom arrière">−</button>
-</div>
-
-<!-- ══ LAYERS BUTTON — below zoom ══ -->
-<button id="btn-open-layers" title="Choisir les cartes à afficher">
-  <svg viewBox="0 0 22 22" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="11,2 20,6.5 11,11 2,6.5" fill="currentColor"/>
-    <polyline points="2,11 11,15.5 20,11" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-    <polyline points="2,15.5 11,20 20,15.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-  </svg>
-</button>
-
-<!-- ══ SEARCH — top center ══ -->
-<div id="search-bar">
-  <input type="text" id="search-input" placeholder="🔍  Rechercher un lieu..."/>
-  <button id="search-btn">→</button>
-  <div id="search-results"></div>
-</div>
-
-<!-- ══ RIGHT TOOLS ══ -->
-<div id="right-tools">
-  <button class="rt-btn" id="btn-measure-distance" title="Mesurer distance">📏</button>
-  <button class="rt-btn" id="btn-measure-area"     title="Mesurer surface">⬡</button>
-  <button class="rt-btn" id="btn-clear-measure"    title="Effacer mesures" style="display:none">✕</button>
-  <div class="rt-sep"></div>
-  <button class="rt-btn" id="btn-stats"     title="Statistiques">📊</button>
-  <button class="rt-btn" id="btn-export-png" title="Exporter PNG">📥</button>
-  <button class="rt-btn" id="btn-fullscreen" title="Plein écran">⛶</button>
-  <button class="rt-btn" id="btn-info"       title="À propos">ℹ</button>
-</div>
-
-<!-- ══ THEMATIC LAYERS PANEL (hidden by default) ══ -->
-<div id="layers-panel" style="display:none">
-  <div class="lp-header">
-    <span class="lp-title">Cartes thématiques</span>
-    <button id="close-layers" title="Fermer">✕</button>
-  </div>
-  <div class="lp-scroll">
-
-    <!-- Fond de carte -->
-    <div class="lp-group">Fond de carte</div>
-    <div class="basemap-grid" style="padding:8px 10px 10px">
-      <div class="basemap-card active" data-basemap="OpenStreetMap">
-        <div class="basemap-thumb bm-osm"><span class="basemap-check">✓</span></div>
-        <span class="basemap-name">OpenStreetMap</span>
-      </div>
-      <div class="basemap-card" data-basemap="Satellite">
-        <div class="basemap-thumb bm-sat"><span class="basemap-check">✓</span></div>
-        <span class="basemap-name">Satellite</span>
-      </div>
-      <div class="basemap-card" data-basemap="Terrain">
-        <div class="basemap-thumb bm-terrain"><span class="basemap-check">✓</span></div>
-        <span class="basemap-name">Terrain</span>
-      </div>
-      <div class="basemap-card" data-basemap="CartoDB Dark">
-        <div class="basemap-thumb bm-dark"><span class="basemap-check">✓</span></div>
-        <span class="basemap-name">Nuit</span>
-      </div>
-    </div>
-
-    <!-- Ressources en eau -->
-    <div class="lp-group">💧 Ressources en eau</div>
-
-    <div class="thematic-card active" data-layer="Bassins versants">
-      <div class="tc-bar" style="background:linear-gradient(90deg,#1565c0,#2e7d32,#f9a825,#bf360c,#6a1b9a)"></div>
-      <div class="tc-body">
-        <div class="tc-head">
-          <span class="tc-icon">🗺️</span>
-          <span class="tc-name">Bassins &amp; Sous-bassins</span>
-          <span class="tc-badge"></span>
-        </div>
-        <div class="tc-row">
-          <span class="tc-sw" style="background:#c8e6fa;border:1.5px solid #1565c0"></span>
-          <span class="tc-sw" style="background:#c8efd8;border:1.5px solid #2e7d32"></span>
-          <span class="tc-sw" style="background:#fff9c4;border:1.5px solid #f9a825"></span>
-          <span class="tc-sw" style="background:#fce4d0;border:1.5px solid #bf360c"></span>
-          <span class="tc-sw" style="background:#ead5f5;border:1.5px solid #6a1b9a"></span>
-          <span class="tc-type">Polygones</span>
-        </div>
-      </div>
-      <button class="tc-zoom" data-layer="Bassins versants">⊙</button>
-    </div>
-
-    <div class="thematic-card active" data-layer="Oueds / Rivières">
-      <div class="tc-bar" style="background:linear-gradient(90deg,#0044aa,#0066CC,#4499DD)"></div>
-      <div class="tc-body">
-        <div class="tc-head">
-          <span class="tc-icon">🌊</span>
-          <span class="tc-name">Réseau Hydrographique</span>
-          <span class="tc-badge"></span>
-        </div>
-        <div class="tc-row">
-          <span style="display:inline-block;width:26px;height:5px;border-radius:1px;background:#0066CC"></span>
-          <span style="display:inline-block;width:22px;height:2.5px;border-radius:1px;background:#0066CC;margin-left:2px"></span>
-          <span style="display:inline-block;width:18px;height:1.5px;border-radius:1px;background:#4499DD;margin-left:2px"></span>
-          <span class="tc-type">Lignes 3 niveaux</span>
-        </div>
-      </div>
-      <button class="tc-zoom" data-layer="Oueds / Rivières">⊙</button>
-    </div>
-
-    <div class="thematic-card active" data-layer="Nappes souterraines">
-      <div class="tc-bar" style="background:linear-gradient(90deg,#1d4ed8,#0891b2,#0369a1,#0e7490)"></div>
-      <div class="tc-body">
-        <div class="tc-head">
-          <span class="tc-icon">💧</span>
-          <span class="tc-name">Nappes Souterraines</span>
-          <span class="tc-badge"></span>
-        </div>
-        <div class="tc-row">
-          <span class="tc-sw" style="background:#bfdbfe;border:1.5px dashed #1d4ed8"></span>
-          <span class="tc-sw" style="background:#a5f3fc;border:1.5px dashed #0891b2"></span>
-          <span class="tc-sw" style="background:#bae6fd;border:1.5px dashed #0369a1"></span>
-          <span class="tc-sw" style="background:#cffafe;border:1.5px dashed #0e7490"></span>
-          <span class="tc-type">Gradient bleu–cyan</span>
-        </div>
-      </div>
-      <button class="tc-zoom" data-layer="Nappes souterraines">⊙</button>
-    </div>
-
-    <div class="thematic-card active" data-layer="Barrages">
-      <div class="tc-bar" style="background:#0d47a1"></div>
-      <div class="tc-body">
-        <div class="tc-head">
-          <span class="tc-icon">🏗️</span>
-          <span class="tc-name">Barrages &amp; Retenues</span>
-          <span class="tc-badge"></span>
-        </div>
-        <div class="tc-row">
-          <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#0d47a1;border:2px solid white;outline:1.5px solid #0d47a1"></span>
-          <span style="font-size:11px;color:#475569;margin-left:4px">Barrage opérationnel</span>
-          <span class="tc-type">Points</span>
-        </div>
-      </div>
-      <button class="tc-zoom" data-layer="Barrages">⊙</button>
-    </div>
-
-    <div class="thematic-card active" data-layer="Stations pluviométriques">
-      <div class="tc-bar" style="background:#1565c0"></div>
-      <div class="tc-body">
-        <div class="tc-head">
-          <span class="tc-icon">🌧️</span>
-          <span class="tc-name">Stations Pluviométriques</span>
-          <span class="tc-badge"></span>
-        </div>
-        <div class="tc-row">
-          <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#1565c0;border:2px solid white;outline:1.5px solid #1565c0"></span>
-          <span style="font-size:11px;color:#475569;margin-left:4px">Station de mesure</span>
-          <span class="tc-type">Réseau DMN/ABHS</span>
-        </div>
-      </div>
-      <button class="tc-zoom" data-layer="Stations pluviométriques">⊙</button>
-    </div>
-
-    <!-- Risque -->
-    <div class="lp-group">⚠️ Risque d'inondation</div>
-
-    <div class="thematic-card active" data-layer="Zones de risque">
-      <div class="tc-bar" style="background:linear-gradient(90deg,#dc2626 33%,#ea580c 66%,#ca8a04 100%)"></div>
-      <div class="tc-body">
-        <div class="tc-head">
-          <span class="tc-icon">⚠️</span>
-          <span class="tc-name">Zones à Risque d'Inondation</span>
-          <span class="tc-badge"></span>
-        </div>
-        <div class="tc-row">
-          <span class="tc-sw" style="background:#fecaca;border:1.5px solid #dc2626"></span>
-          <span style="font-size:10px;font-weight:700;color:#dc2626">Élevé</span>
-          <span class="tc-sw" style="background:#fed7aa;border:1.5px solid #ea580c;margin-left:3px"></span>
-          <span style="font-size:10px;font-weight:700;color:#ea580c">Modéré</span>
-          <span class="tc-sw" style="background:#fef9c3;border:1.5px dashed #ca8a04;margin-left:3px"></span>
-          <span style="font-size:10px;font-weight:700;color:#a16207">Faible</span>
-        </div>
-      </div>
-      <button class="tc-zoom" data-layer="Zones de risque">⊙</button>
-    </div>
-
-    <!-- Administratif -->
-    <div class="lp-group">🗂️ Administratif</div>
-
-    <div class="thematic-card active" data-layer="Limites administratives">
-      <div class="tc-bar" style="background:#1d4ed8"></div>
-      <div class="tc-body">
-        <div class="tc-head">
-          <span class="tc-icon">🗂️</span>
-          <span class="tc-name">Découpage Administratif</span>
-          <span class="tc-badge"></span>
-        </div>
-        <div class="tc-row">
-          <span style="display:inline-block;width:30px;height:0;border-top:2.5px dashed #1d4ed8"></span>
-          <span style="font-size:11px;color:#475569;margin-left:5px">Limite région / préfecture</span>
-        </div>
-      </div>
-      <button class="tc-zoom" data-layer="Limites administratives">⊙</button>
-    </div>
-
-    <div class="thematic-card active" data-layer="Villes principales">
-      <div class="tc-bar" style="background:linear-gradient(90deg,#6d28d9,#1d4ed8,#2563eb)"></div>
-      <div class="tc-body">
-        <div class="tc-head">
-          <span class="tc-icon">🏙️</span>
-          <span class="tc-name">Villes Principales RSK</span>
-          <span class="tc-badge"></span>
-        </div>
-        <div class="tc-row">
-          <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#6d28d9;border:2px solid white;outline:1.5px solid #6d28d9;color:white;font-size:7px">★</span>
-          <span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#1d4ed8;border:2px solid white;outline:1.5px solid #1d4ed8;margin-left:4px"></span>
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2563eb;border:2px solid white;outline:1.5px solid #2563eb;margin-left:4px"></span>
-          <span class="tc-type">Centres urbains</span>
-        </div>
-      </div>
-      <button class="tc-zoom" data-layer="Villes principales">⊙</button>
-    </div>
-
-  </div><!-- /lp-scroll -->
-</div><!-- /layers-panel -->
-
-<!-- ══ PROFESSIONAL LEGEND — bottom left (like example) ══ -->
-<div id="map-legend">
-  <div class="ml-title">Légende</div>
-  <div id="legend-content">
-    <p class="legend-empty">Sélectionnez une carte ci-dessus.</p>
-  </div>
-</div>
-
-<!-- ══ STATS PANEL ══ -->
-<div id="stats-panel" style="display:none">
-  <div class="sp-header">
-    <span>📊 Statistiques hydrologiques</span>
-    <button id="close-stats" title="Fermer">✕</button>
-  </div>
-  <div class="sp-body">
-    <div class="panel-tabs">
-      <button class="tab-btn active" data-tab="stats">Statistiques</button>
-      <button class="tab-btn" data-tab="rain">Précipitations</button>
-      <button class="tab-btn" data-tab="about">À propos</button>
-    </div>
-    <div class="tab-content active" id="tab-stats">
-      <div class="stat-cards-grid">
-        <div class="stat-card"><div class="stat-number">3</div><div class="stat-label">Barrages</div></div>
-        <div class="stat-card"><div class="stat-number">1 725</div><div class="stat-label">Mm³ capacité</div></div>
-        <div class="stat-card"><div class="stat-number">847</div><div class="stat-label">km réseau</div></div>
-        <div class="stat-card"><div class="stat-number">5</div><div class="stat-label">Stations</div></div>
-      </div>
-      <div class="chart-block"><h3 class="chart-title">Distribution du risque</h3><div class="chart-wrap"><canvas id="riskPieChart"></canvas></div></div>
-      <div class="chart-block"><h3 class="chart-title">Niveau des barrages</h3><div class="chart-wrap"><canvas id="damLevelChart"></canvas></div></div>
-      <div class="chart-block"><h3 class="chart-title">Bassins versants</h3><div class="chart-wrap"><canvas id="watershedChart"></canvas></div></div>
-    </div>
-    <div class="tab-content" id="tab-rain">
-      <div class="chart-block"><h3 class="chart-title">Précipitations mensuelles (RSK)</h3><div class="chart-wrap"><canvas id="monthlyRainChart"></canvas></div></div>
-      <div class="chart-block"><h3 class="chart-title">Série 2000–2023</h3><div class="chart-wrap tall"><canvas id="annualRainChart"></canvas></div></div>
-      <div class="chart-block">
-        <h3 class="chart-title">Stations pluviométriques</h3>
-        <table class="data-table" id="stations-table">
-          <thead><tr><th>Station</th><th>Altitude (m)</th><th>Moy. (mm)</th><th>Réseau</th></tr></thead>
-          <tbody>
-            <tr><td>Rabat-Météo</td><td>75</td><td>562</td><td>DMN</td></tr>
-            <tr><td>Kénitra</td><td>15</td><td>618</td><td>ABHS</td></tr>
-            <tr><td>Salé</td><td>20</td><td>548</td><td>DMN</td></tr>
-            <tr><td>Tiflet</td><td>290</td><td>498</td><td>ABHS</td></tr>
-            <tr><td>Khémisset</td><td>405</td><td>478</td><td>ABHS</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div class="tab-content" id="tab-about">
-      <div class="about-card"><h4>🎓 Contexte</h4>
-        <table class="about-table">
-          <tr><td>Type</td><td>PFE Master 2</td></tr>
-          <tr><td>Année</td><td>2024–2025</td></tr>
-          <tr><td>Université</td><td>Ibn Tofail — Kénitra</td></tr>
-          <tr><td>Filière</td><td>Géomatique &amp; SIG</td></tr>
-        </table>
-      </div>
-      <div class="about-card"><h4>📦 Sources</h4>
-        <ul class="about-list">
-          <li>ABHS — Agence Bassin Hydraulique Sebou</li>
-          <li>DMN — Direction Météorologie Nationale</li>
-          <li>OpenStreetMap, ESRI</li>
-        </ul>
-      </div>
-      <div class="about-footer">© 2025 — PFE, Université Ibn Tofail, Kénitra</div>
+  <!-- LOADING SPINNER -->
+  <div id="loading-spinner">
+    <div class="spinner-content">
+      <svg class="water-drop" viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="dropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#00b4d8;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#0077b6;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <path d="M30 5 C30 5, 5 35, 5 50 C5 65, 16 75, 30 75 C44 75, 55 65, 55 50 C55 35, 30 5, 30 5 Z"
+              fill="url(#dropGrad)" class="drop-path" />
+        <ellipse cx="22" cy="42" rx="5" ry="8" fill="rgba(255,255,255,0.25)" transform="rotate(-20,22,42)" />
+      </svg>
+      <p class="spinner-text">Chargement...</p>
+      <div class="spinner-bar"><div class="spinner-progress"></div></div>
     </div>
   </div>
-</div>
 
-<!-- ══ COORDINATES BAR ══ -->
-<div id="coords-bar">
-  <span>⊕</span>
-  <span id="coord-lat">—</span>° N,
-  <span id="coord-lon">—</span>° W
-  <span class="cb-sep">|</span>
-  <span id="scale-display">1 : —</span>
-</div>
+  <!-- MAIN APP CONTAINER -->
+  <div id="app-container">
 
-<!-- MEASURE RESULT -->
-<div id="measure-result" style="display:none"></div>
+    <!-- TOP TOOLBAR -->
+    <div id="toolbar">
+      <div class="toolbar-left">
+        <div class="toolbar-brand">
+          <svg class="brand-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#00b4d8"/>
+            <circle cx="12" cy="9" r="2.5" fill="#0d1b2a"/>
+          </svg>
+          <span class="brand-title">WebSIG — <span class="brand-region">Rabat-Salé-Kénitra</span></span>
+        </div>
+      </div>
 
-<!-- INFO MODAL -->
-<div id="info-modal" class="modal-overlay" style="display:none">
-  <div class="modal-box">
-    <button class="modal-close" id="modal-close-btn">✕</button>
-    <h2>WebSIG — Rabat-Salé-Kénitra</h2>
-    <p>Système d'Information Géographique Web pour les ressources en eau et risques d'inondation de la région RSK.</p>
-    <h3>Utilisation</h3>
-    <ul>
-      <li>Cliquez sur l'icône <strong>couches</strong> (gauche) pour choisir les cartes</li>
-      <li>Cliquez sur une carte pour l'activer / désactiver</li>
-      <li>La légende se met à jour automatiquement</li>
-      <li>Cliquez sur les entités de la carte pour leurs attributs</li>
-    </ul>
-    <button class="btn-primary" id="modal-ok-btn">Fermer</button>
+      <div class="toolbar-center">
+        <button id="btn-measure-distance" class="toolbar-btn" title="Mesurer une distance">
+          <span class="btn-icon">📏</span>
+          <span class="btn-label">Distance</span>
+        </button>
+        <button id="btn-measure-area" class="toolbar-btn" title="Mesurer une surface">
+          <span class="btn-icon">⬡</span>
+          <span class="btn-label">Surface</span>
+        </button>
+        <button id="btn-clear-measure" class="toolbar-btn" title="Effacer les mesures" style="display:none;">
+          <span class="btn-icon">✕</span>
+          <span class="btn-label">Effacer</span>
+        </button>
+        <div class="toolbar-separator"></div>
+        <button id="btn-export-png" class="toolbar-btn" title="Exporter la carte en PNG">
+          <span class="btn-icon">📥</span>
+          <span class="btn-label">Export PNG</span>
+        </button>
+        <button id="btn-fullscreen" class="toolbar-btn" title="Plein écran">
+          <span class="btn-icon">⛶</span>
+          <span class="btn-label">Plein écran</span>
+        </button>
+        <div class="toolbar-separator"></div>
+        <button id="btn-info" class="toolbar-btn" title="À propos du projet">
+          <span class="btn-icon">ℹ</span>
+          <span class="btn-label">Info</span>
+        </button>
+      </div>
+
+      <div class="toolbar-right">
+        <div id="coords-display">
+          <span class="coords-label">Lat:</span>
+          <span id="coord-lat">—</span>
+          <span class="coords-label">Lon:</span>
+          <span id="coord-lon">—</span>
+        </div>
+        <button id="btn-mobile-menu" class="toolbar-btn mobile-only" title="Menu">☰</button>
+      </div>
+    </div>
+
+    <!-- MAIN AREA: sidebar + map + right panel -->
+    <div id="main-area">
+
+      <!-- LEFT SIDEBAR -->
+      <div id="sidebar">
+        <button id="sidebar-toggle" title="Réduire le panneau">◀</button>
+
+        <div id="sidebar-content">
+
+          <!-- Header -->
+          <div class="sidebar-header">
+            <div class="sidebar-logo">
+              <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
+                <circle cx="20" cy="20" r="19" fill="#0d1b2a" stroke="#00b4d8" stroke-width="1.5"/>
+                <path d="M20 6 C20 6, 8 18, 8 25 C8 31.6, 13.4 37, 20 37 C26.6 37, 32 31.6, 32 25 C32 18, 20 6, 20 6 Z" fill="#00b4d8" opacity="0.85"/>
+                <path d="M14 23 Q17 20 20 23 Q23 26 26 23" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+              </svg>
+              <div class="sidebar-title">
+                <span class="sidebar-project">WebSIG RSK</span>
+                <span class="sidebar-subtitle">Ressources en eau &amp; Risques</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Search bar -->
+          <div class="search-section">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="search-input" placeholder="Rechercher un lieu..." autocomplete="off" />
+              <button id="search-btn" title="Rechercher">→</button>
+            </div>
+            <div id="search-results"></div>
+          </div>
+
+          <!-- ══ CARTES THÉMATIQUES ══ -->
+          <div class="layers-section">
+            <div class="section-title">Cartes thématiques</div>
+
+            <!-- Fond de carte -->
+            <div class="tc-group-label">🗺️ Fond de carte</div>
+            <div class="basemap-grid" style="padding:8px 10px 10px">
+              <div class="basemap-card active" data-basemap="OpenStreetMap" title="OpenStreetMap">
+                <div class="basemap-thumb bm-osm"><span class="basemap-check">✓</span></div>
+                <span class="basemap-name">OpenStreetMap</span>
+              </div>
+              <div class="basemap-card" data-basemap="Satellite" title="Satellite Esri">
+                <div class="basemap-thumb bm-sat"><span class="basemap-check">✓</span></div>
+                <span class="basemap-name">Satellite</span>
+              </div>
+              <div class="basemap-card" data-basemap="Terrain" title="Terrain Esri">
+                <div class="basemap-thumb bm-terrain"><span class="basemap-check">✓</span></div>
+                <span class="basemap-name">Terrain</span>
+              </div>
+              <div class="basemap-card" data-basemap="CartoDB Dark" title="CartoDB Dark">
+                <div class="basemap-thumb bm-dark"><span class="basemap-check">✓</span></div>
+                <span class="basemap-name">Nuit</span>
+              </div>
+            </div>
+
+            <!-- ── Carte 1 : Bassins & Sous-bassins ── -->
+            <div class="tc-group-label">💧 Ressources en eau</div>
+
+            <div class="thematic-card active" data-layer="Bassins versants">
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#1565c0 0%,#2e7d32 25%,#f9a825 50%,#bf360c 75%,#6a1b9a 100%)"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">🗺️</span>
+                  <span class="tc-name">Bassins &amp; Sous-bassins Versants</span>
+                  <span class="tc-status"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#c8e6fa;border:1.5px solid #1565c0" title="Atlantique"></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#c8efd8;border:1.5px solid #2e7d32" title="Sebou"></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#fff9c4;border:1.5px solid #f9a825" title="Intermédiaire"></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#fce4d0;border:1.5px solid #bf360c" title="Côtier N."></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#ead5f5;border:1.5px solid #6a1b9a" title="Côtier S."></span>
+                  <span class="tc-tag">Polygones classifiés</span>
+                </div>
+              </div>
+              <button class="tc-zoom" data-layer="Bassins versants" title="Centrer">⊙</button>
+            </div>
+
+            <!-- ── Carte 2 : Réseau Hydrographique ── -->
+            <div class="thematic-card active" data-layer="Oueds / Rivières">
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#0044aa,#0066CC,#4499DD)"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">🌊</span>
+                  <span class="tc-name">Réseau Hydrographique — Oueds</span>
+                  <span class="tc-status"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+                  <span style="display:inline-block;width:26px;height:5px;border-radius:1px;background:#0066CC" title="Oued majeur"></span>
+                  <span style="display:inline-block;width:26px;height:2.5px;border-radius:1px;background:#0066CC" title="Oued principal"></span>
+                  <span style="display:inline-block;width:26px;height:1.5px;border-radius:1px;background:#4499DD" title="Oued secondaire"></span>
+                  <span class="tc-tag">Hiérarchie 3 niveaux</span>
+                </div>
+              </div>
+              <button class="tc-zoom" data-layer="Oueds / Rivières" title="Centrer">⊙</button>
+            </div>
+
+            <!-- ── Carte 3 : Nappes Souterraines ── -->
+            <div class="thematic-card active" data-layer="Nappes souterraines">
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#1d4ed8,#0891b2,#0369a1,#0e7490)"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">💧</span>
+                  <span class="tc-name">Nappes Souterraines</span>
+                  <span class="tc-status"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#bfdbfe;border:1.5px dashed #1d4ed8" title="Nappe phréatique"></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#a5f3fc;border:1.5px dashed #0891b2" title="Nappe littorale"></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#bae6fd;border:1.5px dashed #0369a1" title="Nappe alluviale"></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#cffafe;border:1.5px dashed #0e7490" title="Nappe côtière"></span>
+                  <span class="tc-tag">Gradient bleu–cyan</span>
+                </div>
+              </div>
+              <button class="tc-zoom" data-layer="Nappes souterraines" title="Centrer">⊙</button>
+            </div>
+
+            <!-- ── Carte 4 : Barrages ── -->
+            <div class="thematic-card active" data-layer="Barrages">
+              <div class="tc-bar" style="height:5px;background:#0d47a1"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">🏗️</span>
+                  <span class="tc-name">Barrages &amp; Retenues d'eau</span>
+                  <span class="tc-status"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:5px">
+                  <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#0d47a1;border:2px solid white;outline:1.5px solid #0d47a1"></span>
+                  <span style="font-size:11px;color:#475569">Barrage opérationnel</span>
+                  <span class="tc-tag">Points symboles</span>
+                </div>
+              </div>
+              <button class="tc-zoom" data-layer="Barrages" title="Centrer">⊙</button>
+            </div>
+
+            <!-- ── Carte 5 : Stations Pluviométriques ── -->
+            <div class="thematic-card active" data-layer="Stations pluviométriques">
+              <div class="tc-bar" style="height:5px;background:#1565c0"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">🌧️</span>
+                  <span class="tc-name">Stations Pluviométriques</span>
+                  <span class="tc-status"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:5px">
+                  <span style="display:inline-flex;align-items:center;justify-content:center;width:12px;height:12px;border-radius:50%;background:#1565c0;border:2px solid white;outline:1.5px solid #1565c0"></span>
+                  <span style="font-size:11px;color:#475569">Station de mesure</span>
+                  <span class="tc-tag">Réseau DMN / ABHS</span>
+                </div>
+              </div>
+              <button class="tc-zoom" data-layer="Stations pluviométriques" title="Centrer">⊙</button>
+            </div>
+
+            <!-- ── Carte 6 : Risque d'Inondation ── -->
+            <div class="tc-group-label">⚠️ Risque d'inondation</div>
+
+            <div class="thematic-card active" data-layer="Zones de risque">
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#dc2626 33%,#ea580c 66%,#ca8a04 100%)"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">⚠️</span>
+                  <span class="tc-name">Zones à Risque d'Inondation</span>
+                  <span class="tc-status"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#fecaca;border:1.5px solid #dc2626"></span>
+                  <span style="font-size:10px;font-weight:700;color:#dc2626;margin-right:3px">Élevé</span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#fed7aa;border:1.5px solid #ea580c"></span>
+                  <span style="font-size:10px;font-weight:700;color:#ea580c;margin-right:3px">Modéré</span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#fef9c3;border:1.5px dashed #ca8a04"></span>
+                  <span style="font-size:10px;font-weight:700;color:#a16207">Faible</span>
+                </div>
+              </div>
+              <button class="tc-zoom" data-layer="Zones de risque" title="Centrer">⊙</button>
+            </div>
+
+            <!-- ── Carte 7 : Découpage Administratif ── -->
+            <div class="tc-group-label">🗂️ Administratif</div>
+
+            <div class="thematic-card active" data-layer="Limites administratives">
+              <div class="tc-bar" style="height:5px;background:#1d4ed8"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">🗂️</span>
+                  <span class="tc-name">Découpage Administratif</span>
+                  <span class="tc-status"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:5px">
+                  <span style="display:inline-block;width:30px;height:0;border-top:2.5px dashed #1d4ed8"></span>
+                  <span style="font-size:11px;color:#475569">Limite région / préfecture</span>
+                </div>
+              </div>
+              <button class="tc-zoom" data-layer="Limites administratives" title="Centrer">⊙</button>
+            </div>
+
+            <!-- ── Carte 8 : Villes Principales ── -->
+            <div class="thematic-card active" data-layer="Villes principales">
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#6d28d9,#1d4ed8,#2563eb)"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">🏙️</span>
+                  <span class="tc-name">Villes Principales RSK</span>
+                  <span class="tc-status"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:4px">
+                  <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#6d28d9;border:2px solid white;outline:1.5px solid #6d28d9;color:white;font-size:7px">★</span>
+                  <span style="display:inline-flex;width:11px;height:11px;border-radius:50%;background:#1d4ed8;border:2px solid white;outline:1.5px solid #1d4ed8"></span>
+                  <span style="display:inline-flex;width:8px;height:8px;border-radius:50%;background:#2563eb;border:2px solid white;outline:1.5px solid #2563eb"></span>
+                  <span class="tc-tag">Centres urbains</span>
+                </div>
+              </div>
+              <button class="tc-zoom" data-layer="Villes principales" title="Centrer">⊙</button>
+            </div>
+
+          </div><!-- /layers-section -->
+
+          <!-- Dynamic legend -->
+          <div class="legend-section" id="legend-section">
+            <div class="section-title">Légende</div>
+            <div id="legend-content">
+              <p class="legend-empty">Activez une couche pour voir sa légende.</p>
+            </div>
+          </div>
+
+        </div><!-- /sidebar-content -->
+      </div><!-- /sidebar -->
+
+      <!-- MAP -->
+      <div id="map" style="height:calc(100vh - 50px);min-height:400px;flex:1;position:relative;"></div>
+
+      <!-- RIGHT PANEL -->
+      <div id="right-panel">
+        <button id="right-panel-toggle" title="Réduire le panneau">▶</button>
+
+        <div id="right-panel-content">
+          <!-- Tabs -->
+          <div class="panel-tabs">
+            <button class="tab-btn active" data-tab="stats">📊 Statistiques</button>
+            <button class="tab-btn" data-tab="rain">🌧 Précipitations</button>
+            <button class="tab-btn" data-tab="about">ℹ À propos</button>
+          </div>
+
+          <!-- TAB: STATISTIQUES -->
+          <div class="tab-content active" id="tab-stats">
+            <div class="stat-cards-grid">
+              <div class="stat-card">
+                <div class="stat-number" id="stat-dams">3</div>
+                <div class="stat-label">Barrages</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="stat-capacity">1 725</div>
+                <div class="stat-label">Mm³ capacité totale</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="stat-rivers">847</div>
+                <div class="stat-label">km de réseau hydrographique</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="stat-stations">5</div>
+                <div class="stat-label">Stations pluviométriques</div>
+              </div>
+            </div>
+
+            <div class="chart-block">
+              <h3 class="chart-title">Distribution des zones de risque</h3>
+              <div class="chart-wrap">
+                <canvas id="riskPieChart"></canvas>
+              </div>
+              <div class="risk-legend-inline">
+                <span class="risk-dot high"></span> Élevé: 245 km²
+                <span class="risk-dot medium"></span> Moyen: 890 km²
+                <span class="risk-dot low"></span> Faible: 1 340 km²
+              </div>
+            </div>
+
+            <div class="chart-block">
+              <h3 class="chart-title">Niveau actuel des barrages</h3>
+              <div class="chart-wrap">
+                <canvas id="damLevelChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-block">
+              <h3 class="chart-title">Superficie des bassins versants</h3>
+              <div class="chart-wrap">
+                <canvas id="watershedChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: PRÉCIPITATIONS -->
+          <div class="tab-content" id="tab-rain">
+            <div class="chart-block">
+              <h3 class="chart-title">Précipitations moyennes mensuelles (RSK)</h3>
+              <div class="chart-wrap">
+                <canvas id="monthlyRainChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-block">
+              <h3 class="chart-title">Série interannuelle 2000–2023</h3>
+              <div class="chart-wrap tall">
+                <canvas id="annualRainChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-block">
+              <h3 class="chart-title">Précipitations par station (mm/an)</h3>
+              <table class="data-table" id="stations-table">
+                <thead>
+                  <tr>
+                    <th>Station</th>
+                    <th>Altitude (m)</th>
+                    <th>Moy. annuelle (mm)</th>
+                    <th>Réseau</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Rabat-Météo</td><td>75</td><td>562</td><td>DMN</td></tr>
+                  <tr><td>Kénitra</td><td>15</td><td>618</td><td>ABHS</td></tr>
+                  <tr><td>Salé</td><td>20</td><td>548</td><td>DMN</td></tr>
+                  <tr><td>Tiflet</td><td>290</td><td>498</td><td>ABHS</td></tr>
+                  <tr><td>Khémisset</td><td>405</td><td>478</td><td>ABHS</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB: À PROPOS -->
+          <div class="tab-content" id="tab-about">
+            <div class="about-header">
+              <h2>WebSIG — Ressources en eau &amp; Risques d'inondation</h2>
+              <h3>Région Rabat-Salé-Kénitra, Maroc</h3>
+            </div>
+
+            <div class="about-card">
+              <h4>🎓 Contexte académique</h4>
+              <table class="about-table">
+                <tr><td>Type</td><td>Projet de Fin d'Études (PFE) Master 2</td></tr>
+                <tr><td>Année</td><td>2024 – 2025</td></tr>
+                <tr><td>Université</td><td>Université Ibn Tofail — Kénitra</td></tr>
+                <tr><td>Filière</td><td>Géomatique &amp; Systèmes d'Information Géographique</td></tr>
+              </table>
+            </div>
+
+            <div class="about-card">
+              <h4>🎯 Objectifs</h4>
+              <ul class="about-list">
+                <li>Cartographie interactive des ressources en eau de la région RSK</li>
+                <li>Visualisation et analyse des zones à risque d'inondation</li>
+                <li>Intégration de données pluviométriques et hydrologiques</li>
+                <li>Outil d'aide à la décision pour la gestion du risque hydrique</li>
+              </ul>
+            </div>
+
+            <div class="about-card">
+              <h4>🛠️ Technologies</h4>
+              <div class="tech-stack">
+                <span class="tech-badge html">HTML5</span>
+                <span class="tech-badge css">CSS3</span>
+                <span class="tech-badge js">JavaScript ES6</span>
+                <span class="tech-badge leaflet">Leaflet 1.9</span>
+                <span class="tech-badge chartjs">Chart.js 4</span>
+                <span class="tech-badge geojson">GeoJSON</span>
+                <span class="tech-badge nominatim">Nominatim</span>
+              </div>
+            </div>
+
+            <div class="about-card">
+              <h4>📦 Sources de données</h4>
+              <ul class="about-list">
+                <li>Agence du Bassin Hydraulique du Sebou (ABHS)</li>
+                <li>Direction de la Météorologie Nationale (DMN)</li>
+                <li>Haut-Commissariat aux Eaux et Forêts (HCEF)</li>
+                <li>OpenStreetMap Contributors</li>
+                <li>ESRI World Imagery &amp; Topo</li>
+              </ul>
+            </div>
+
+            <div class="about-footer">
+              <p>© 2025 — Projet PFE, Université Ibn Tofail, Kénitra</p>
+            </div>
+          </div>
+
+        </div><!-- /right-panel-content -->
+      </div><!-- /right-panel -->
+
+    </div><!-- /main-area -->
+  </div><!-- /app-container -->
+
+  <!-- INFO MODAL -->
+  <div id="info-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <button class="modal-close" id="modal-close-btn">✕</button>
+      <h2>WebSIG Rabat-Salé-Kénitra</h2>
+      <p>Système d'Information Géographique Web dédié à la gestion des ressources en eau et à la cartographie du risque d'inondation dans la région Rabat-Salé-Kénitra.</p>
+      <h3>Utilisation</h3>
+      <ul>
+        <li><strong>Couches :</strong> cochez les couches dans le panneau gauche</li>
+        <li><strong>Mesure :</strong> utilisez les outils de mesure dans la barre supérieure</li>
+        <li><strong>Export :</strong> exportez la carte en PNG depuis la barre supérieure</li>
+        <li><strong>Recherche :</strong> géocodez un lieu avec la barre de recherche</li>
+        <li><strong>Popup :</strong> cliquez sur une entité pour afficher ses attributs</li>
+      </ul>
+      <h3>Contact</h3>
+      <p>Université Ibn Tofail — Département de Géographie, Kénitra, Maroc.</p>
+      <button class="btn-primary" id="modal-ok-btn">Fermer</button>
+    </div>
   </div>
-</div>
 
-<script>setTimeout(function(){var s=document.getElementById('loading-spinner');if(s)s.style.display='none';},5000);</script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="js/map.js"></script>
-<script src="js/layers.js"></script>
-<script src="js/controls.js"></script>
-<script src="js/charts.js"></script>
+  <!-- MEASUREMENT RESULT TOOLTIP -->
+  <div id="measure-result" style="display:none;"></div>
+
+  <!-- ALL JS at bottom of body: CDN libs first, then app modules -->
+
+  <!-- Leaflet 1.9.4 JS — no integrity hash (prevents SRI blocking) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Leaflet.draw -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+  <!-- Leaflet MiniMap -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- html2canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- SPINNER FAILSAFE -->
+  <script>
+    setTimeout(function () {
+      var s = document.getElementById('loading-spinner');
+      if (s) s.style.display = 'none';
+    }, 4000);
+  </script>
+
+  <!-- APP MODULES -->
+  <script src="js/map.js"></script>
+  <script src="js/layers.js"></script>
+  <script src="js/controls.js"></script>
+  <script src="js/charts.js"></script>
+
 </body>
 </html>
+
