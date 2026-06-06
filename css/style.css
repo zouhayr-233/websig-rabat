@@ -790,18 +790,33 @@ ul { list-style: none; padding: 0; }
   z-index: 5000; pointer-events: none;
 }
 
-/* Admin tooltip label */
-.admin-label {
-  background: rgba(255,255,255,0.92) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 3px !important;
-  box-shadow: var(--shadow-sm) !important;
-  color: var(--text-dark) !important;
-  font-family: 'Rajdhani', sans-serif !important;
-  font-size: 12px !important; font-weight: 700 !important;
-  text-transform: uppercase !important; letter-spacing: 1.5px !important;
+/* Admin tooltip label — kept for safety but not used (no permanent tooltip) */
+.admin-label { display: none !important; }
+
+/* ══ MAP REGION TITLE — floating on map ═════════════ */
+#map-region-title {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 900;
+  background: rgba(255,255,255,0.96);
+  border: 1.5px solid var(--blue-main);
+  border-radius: 20px;
+  padding: 5px 16px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue-dark);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  box-shadow: var(--shadow);
+  pointer-events: none;
+  white-space: nowrap;
 }
-.admin-label::before { display: none !important; }
 
 /* ══ MOBILE ════════════════════════════════════════= */
 .mobile-only { display: none; }
