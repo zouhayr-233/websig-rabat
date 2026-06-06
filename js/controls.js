@@ -238,105 +238,134 @@ document.addEventListener('DOMContentLoaded', function () {
   const mobileMenu = document.getElementById('btn-mobile-menu');
   if (mobileMenu && sidebar) mobileMenu.addEventListener('click', function () { sidebar.classList.toggle('collapsed'); });
 
-  /* ── DYNAMIC LEGEND — single source of truth ─────── */
-  /* Colours match layers.js exactly (no duplicates).   */
+  /* ══════════════════════════════════════════════════
+     PROFESSIONAL GIS LEGEND
+     Colours mirror layers.js exactly.
+     ══════════════════════════════════════════════════ */
   function updateLegend() {
     const container = document.getElementById('legend-content');
     if (!container) return;
     const active = Array.from(
       document.querySelectorAll('.layer-checkbox:checked')
     ).map(function(c){ return c.dataset.layer; });
+
     if (!active.length) {
       container.innerHTML = '<p class="legend-empty">Activez une couche pour voir sa légende.</p>';
       return;
     }
-    let html = '';
+
+    var sections = [];
 
     if (active.includes('Bassins versants'))
-      html += lg('Bassins versants', [
-        {fill:'#c8e6fa', border:'#1565c0', label:'Sous-bassin 1'},
-        {fill:'#c8efd8', border:'#2e7d32', label:'Sous-bassin 2'},
-        {fill:'#fff9c4', border:'#f9a825', label:'Sous-bassin 3'},
-        {fill:'#fce4d0', border:'#bf360c', label:'Sous-bassin 4'},
-        {fill:'#ead5f5', border:'#6a1b9a', label:'Sous-bassin 5'},
-      ], 'polygon');
+      sections.push(lgSection('🗺️ Bassins versants', [
+        lgPoly('#c8e6fa','#1565c0', false, 'Sous-bassin (Atlantique)'),
+        lgPoly('#c8efd8','#2e7d32', false, 'Sous-bassin (Sebou)'),
+        lgPoly('#fff9c4','#f9a825', false, 'Sous-bassin (Intermédiaire)'),
+        lgPoly('#fce4d0','#bf360c', false, 'Sous-bassin (Côtier N.)'),
+        lgPoly('#ead5f5','#6a1b9a', false, 'Sous-bassin (Côtier S.)'),
+      ]));
 
     if (active.includes('Oueds / Rivières'))
-      html += lg('Oueds / Rivières', [
-        {color:'#0d47a1', height:5,   label:'Oued majeur (Sebou, Bou Regreg)'},
-        {color:'#1565c0', height:2.5, label:'Oued principal'},
-        {color:'#64b5f6', height:1.2, label:'Oued secondaire'},
-      ], 'line');
+      sections.push(lgSection('🌊 Oueds / Rivières', [
+        lgLine('#0066CC', 5,   false, 'Oued majeur — Sebou, Bou Regreg'),
+        lgLine('#0066CC', 2.5, false, 'Oued principal'),
+        lgLine('#4499DD', 1.5, false, 'Oued secondaire / affluent'),
+      ]));
 
     if (active.includes('Barrages'))
-      html += lg('Barrages', [{icon:'🏗️', label:'Barrage existant (opérationnel)'}], 'icon');
+      sections.push(lgSection('🏗️ Barrages', [
+        lgPoint('#0d47a1', 12, '⬟', 'Barrage opérationnel'),
+      ]));
 
     if (active.includes('Stations pluviométriques'))
-      html += lg('Stations pluviométriques', [{icon:'🌦', label:'Station pluviométrique'}], 'icon');
+      sections.push(lgSection('🌧️ Stations pluviométriques', [
+        lgPoint('#1565c0', 10, '●', 'Station de mesure'),
+      ]));
 
     if (active.includes('Nappes souterraines'))
-      html += lg('Nappes souterraines', [
-        {fill:'#bfdbfe', border:'#1d4ed8', dashed:true, label:'Nappe souterraine'},
-        {fill:'#a5f3fc', border:'#0891b2', dashed:true, label:'Nappe littorale'},
-        {fill:'#bbf7d0', border:'#15803d', dashed:true, label:'Nappe alluviale'},
-      ], 'polygon');
+      sections.push(lgSection('💧 Nappes souterraines', [
+        lgPoly('#bfdbfe','#1d4ed8', true, 'Nappe phréatique (bleue)'),
+        lgPoly('#a5f3fc','#0891b2', true, 'Nappe littorale (cyan)'),
+        lgPoly('#bae6fd','#0369a1', true, 'Nappe alluviale (bleu ciel)'),
+        lgPoly('#cffafe','#0e7490', true, 'Nappe côtière (cyan pâle)'),
+      ]));
 
     if (active.includes('Zones de risque'))
-      html += lg('Risque inondation (Random Forest)', [
-        {fill:'#ffcdd2', border:'#c62828', label:'Risque élevé'},
-        {fill:'#ffe0b2', border:'#e65100', label:'Risque moyen'},
-        {fill:'#dcedc8', border:'#2e7d32', label:'Risque faible', dashed:true},
-      ], 'polygon');
+      sections.push(lgSection('⚠️ Risque d\'inondation', [
+        lgPoly('#fecaca','#dc2626', false, 'Risque ÉLEVÉ'),
+        lgPoly('#fed7aa','#ea580c', false, 'Risque MODÉRÉ'),
+        lgPoly('#fef9c3','#ca8a04', true,  'Risque FAIBLE'),
+      ]));
 
     if (active.includes('Limites administratives'))
-      html += lg('Limites administratives', [
-        {color:'#1d4ed8', dashed:true, height:2.5, label:'Limite de région / préfecture'},
-      ], 'line');
+      sections.push(lgSection('🗂️ Limites administratives', [
+        lgLine('#1d4ed8', 2.5, true, 'Limite de région / préfecture'),
+      ]));
 
     if (active.includes('Villes principales'))
-      html += lg('Villes principales', [
-        {color:'#6d28d9', size:12, label:'Capitale (Rabat)'},
-        {color:'#1d4ed8', size:9,  label:'Ville principale (Salé, Kénitra)'},
-        {color:'#2563eb', size:7,  label:'Ville secondaire'},
-      ], 'city');
+      sections.push(lgSection('🏙️ Villes principales', [
+        lgCity('#6d28d9', 14, '★', 'Capitale — Rabat'),
+        lgCity('#1d4ed8', 10, '●', 'Ville principale (Salé, Kénitra)'),
+        lgCity('#2563eb',  8, '●', 'Ville (Khémisset, Tiflet…)'),
+      ]));
 
-    container.innerHTML = html || '<p class="legend-empty">Activez une couche pour voir sa légende.</p>';
+    container.innerHTML = sections.length
+      ? '<div class="gis-legend">' + sections.join('') + '</div>'
+      : '<p class="legend-empty">Activez une couche pour voir sa légende.</p>';
   }
 
-  function lg(title, items, type) {
-    const rows = items.map(function(item) {
-      if (type === 'polygon') {
-        const bd = item.border || item.fill;
-        const ds = item.dashed ? 'border:2px dashed '+bd : 'border:2px solid '+bd;
-        return '<div class="legend-item">'
-          + '<span class="legend-color" style="background:' + item.fill + ';' + ds + ';opacity:.85"></span>'
-          + '<span>' + item.label + '</span></div>';
-      }
-      if (type === 'line') {
-        const s = item.dashed
-          ? 'border-top:' + (item.height||2) + 'px dashed ' + item.color + ';height:0'
-          : 'background:' + item.color + ';height:' + (item.height||2) + 'px';
-        return '<div class="legend-item">'
-          + '<span class="legend-line" style="' + s + '"></span>'
-          + '<span>' + item.label + '</span></div>';
-      }
-      if (type === 'icon')
-        return '<div class="legend-item">'
-          + '<span style="font-size:16px;line-height:1">' + item.icon + '</span>'
-          + '<span>' + item.label + '</span></div>';
-      if (type === 'city') {
-        var sz = item.size || 9;
-        return '<div class="legend-item">'
-          + '<span style="display:inline-block;width:' + (sz+4) + 'px;height:' + (sz+4) + 'px;border-radius:50%;'
-          + 'background:' + item.color + ';border:2px solid white;'
-          + 'outline:1.5px solid ' + item.color + ';flex-shrink:0"></span>'
-          + '<span>' + item.label + '</span></div>';
-      }
-      return '';
-    }).join('');
-    return '<div class="legend-group">'
-      + '<div class="legend-group-title">' + title + '</div>'
-      + rows + '</div>';
+  /* ── Legend section wrapper ── */
+  function lgSection(title, rows) {
+    return '<div class="lg-section">'
+      + '<div class="lg-title">' + title + '</div>'
+      + rows.join('')
+      + '</div>';
+  }
+
+  /* ── Polygon symbol ── */
+  function lgPoly(fill, border, dashed, label) {
+    var bd = dashed
+      ? 'border:1.5px dashed ' + border
+      : 'border:1.5px solid ' + border;
+    return '<div class="lg-item">'
+      + '<span class="lg-sym-poly" style="background:' + fill + ';' + bd + '"></span>'
+      + '<span class="lg-label">' + label + '</span>'
+      + '</div>';
+  }
+
+  /* ── Line symbol ── */
+  function lgLine(color, weight, dashed, label) {
+    var style = dashed
+      ? 'border-top:' + weight + 'px dashed ' + color + ';height:0;margin-top:' + Math.max(weight,2) + 'px'
+      : 'height:' + weight + 'px;background:' + color + ';border-radius:1px';
+    return '<div class="lg-item">'
+      + '<span class="lg-sym-line" style="' + style + '"></span>'
+      + '<span class="lg-label">' + label + '</span>'
+      + '</div>';
+  }
+
+  /* ── Point symbol ── */
+  function lgPoint(color, size, glyph, label) {
+    return '<div class="lg-item">'
+      + '<span class="lg-sym-point" style="width:' + size + 'px;height:' + size + 'px;'
+      + 'background:' + color + ';border-radius:50%;border:2px solid white;'
+      + 'outline:1.5px solid ' + color + ';flex-shrink:0;'
+      + 'display:inline-flex;align-items:center;justify-content:center;'
+      + 'color:white;font-size:' + Math.round(size*0.55) + 'px">' + '</span>'
+      + '<span class="lg-label">' + label + '</span>'
+      + '</div>';
+  }
+
+  /* ── City symbol ── */
+  function lgCity(color, size, glyph, label) {
+    return '<div class="lg-item">'
+      + '<span style="display:inline-flex;align-items:center;justify-content:center;'
+      + 'width:' + size + 'px;height:' + size + 'px;border-radius:50%;'
+      + 'background:' + color + ';border:2px solid white;outline:1.5px solid ' + color + ';'
+      + 'color:white;font-size:' + Math.round(size*0.55) + 'px;flex-shrink:0">'
+      + (size >= 12 ? '★' : '') + '</span>'
+      + '<span class="lg-label">' + label + '</span>'
+      + '</div>';
   }
 
   window.updateLegend = updateLegend;

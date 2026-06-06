@@ -206,40 +206,80 @@ function classifyOued(feat) {
   return 'secondary';
 }
 
+/* User-spec colors: #0066CC main, #4499DD secondary */
 var ouedStyles = {
-  principal: { color: '#0d47a1', weight: 5,   opacity: 0.95 },
-  major:     { color: '#1565c0', weight: 2.5,  opacity: 0.88 },
-  secondary: { color: '#64b5f6', weight: 1.2,  opacity: 0.78 }
+  principal: { color: '#0066CC', weight: 5,   opacity: 0.95 },
+  major:     { color: '#0066CC', weight: 2.5,  opacity: 0.88 },
+  secondary: { color: '#4499DD', weight: 1.2,  opacity: 0.78 }
 };
 
 function loadRivers(data) {
-  const lyr = L.geoJSON(data, {
+  /* ── river line layer ── */
+  var riverLines = L.geoJSON(data, {
     style: function(feat) { return ouedStyles[classifyOued(feat)]; },
     onEachFeature: function(feat, l) {
       const p    = feat.properties || {};
       const name = p.name || p.NAME || 'Oued';
       const tier = classifyOued(feat);
       const tierLabels = {
-        principal: 'Oued principal — axe majeur',
+        principal: 'Oued majeur (axe principal)',
         major:     'Oued principal',
-        secondary: 'Oued secondaire'
+        secondary: 'Oued secondaire / affluent'
       };
-      const tierColors = { principal: '#0d47a1', major: '#1565c0', secondary: '#1976d2' };
+      const tierColors = { principal: '#0044AA', major: '#0066CC', secondary: '#3377BB' };
       const len = p.Shape_Leng ? (+p.Shape_Leng * 111).toFixed(1) + ' km (approx.)' : '—';
       l.bindPopup('<div class="popup-content">'
         + popupHeader(tierColors[tier], '🌊', name)
         + '<table>'
         + '<tr><td>Classification</td><td><b>' + tierLabels[tier] + '</b></td></tr>'
-        + '<tr><td>Type</td><td>' + (p.fclass || '—') + '</td></tr>'
-        + '<tr><td>Longueur</td><td>' + len + '</td></tr>'
+        + '<tr><td>Type hydrologique</td><td>' + (p.fclass || '—') + '</td></tr>'
+        + '<tr><td>Longueur estimée</td><td>' + len + '</td></tr>'
         + '</table></div>', { maxWidth: 290 });
       l.on('mouseover', function() {
         const t = classifyOued(this.feature);
-        this.setStyle({ weight: t === 'principal' ? 8 : t === 'major' ? 4.5 : 2.5, opacity: 1 });
+        this.setStyle({ weight: t === 'principal' ? 8 : t === 'major' ? 5 : 3, opacity: 1 });
       });
-      l.on('mouseout', function() { lyr.resetStyle(this); });
+      l.on('mouseout', function() { riverLines.resetStyle(this); });
     }
   });
+
+  /* ── river name labels — deduplicated by name (longest segment) ── */
+  var namedFeats = {};
+  data.features.forEach(function(feat) {
+    var p    = feat.properties || {};
+    var name = (p.name || p.NAME || '').trim();
+    if (!name) return;
+    var tier = classifyOued(feat);
+    if (tier === 'secondary') return;
+    var len  = +(p.Shape_Leng || 0);
+    if (!namedFeats[name] || len > namedFeats[name].len)
+      namedFeats[name] = { feat: feat, len: len, tier: tier };
+  });
+
+  var labelGroup = L.layerGroup();
+  Object.keys(namedFeats).forEach(function(name) {
+    var entry = namedFeats[name];
+    var geom  = entry.feat.geometry;
+    var coords = null;
+    if (geom.type === 'LineString') {
+      coords = geom.coordinates;
+    } else if (geom.type === 'MultiLineString' && geom.coordinates.length) {
+      coords = geom.coordinates.reduce(function(a, b) { return b.length > a.length ? b : a; });
+    }
+    if (!coords || coords.length < 2) return;
+    var mid    = coords[Math.floor(coords.length / 2)];
+    var marker = L.marker([mid[1], mid[0]], {
+      icon: L.divIcon({ className: '', html: '', iconSize: [0, 0], iconAnchor: [0, 0] }),
+      interactive: false
+    });
+    marker.bindTooltip(name, {
+      permanent: true, direction: 'center',
+      className: entry.tier === 'principal' ? 'river-label-main' : 'river-label-major'
+    });
+    labelGroup.addLayer(marker);
+  });
+
+  var lyr = L.featureGroup([riverLines, labelGroup]);
   window.overlayLayers['Oueds / Rivières'] = lyr;
   if (window.map) lyr.addTo(window.map);
   notifyLayerReady('Oueds / Rivières');
@@ -314,9 +354,10 @@ function loadStations(data) {
    Fields: risk_code, risk_level, area_km2, population_exposed
    ══════════════════════════════════════════════════ */
 function loadFloodZones(data) {
-  const fills  = { high: '#fecaca', medium: '#fed7aa', low: '#bbf7d0' };
-  const borders = { high: '#dc2626', medium: '#ea580c', low: '#16a34a' };
-  const hdColors = { high: '#dc2626', medium: '#ea580c', low: '#16a34a' };
+  /* Red / Orange / Yellow — standard GIS risk classification */
+  const fills  = { high: '#fecaca', medium: '#fed7aa', low: '#fef9c3' };
+  const borders = { high: '#dc2626', medium: '#ea580c', low: '#ca8a04' };
+  const hdColors = { high: '#dc2626', medium: '#ea580c', low: '#a16207' };
   const lyr = L.geoJSON(data, {
     style: function(feat) {
       const code = (feat.properties || {}).risk_code || 'low';
@@ -389,12 +430,13 @@ function loadAdmin(data) {
    Fields: Nom_Nappe
    ══════════════════════════════════════════════════ */
 function loadAquifers(data) {
+  /* Blue → cyan gradient — professional hydrogeology convention */
   const aqPalette = [
-    { fill: '#bfdbfe', border: '#1d4ed8' },
-    { fill: '#a5f3fc', border: '#0891b2' },
-    { fill: '#bbf7d0', border: '#15803d' },
-    { fill: '#ddd6fe', border: '#7c3aed' },
-    { fill: '#fde68a', border: '#b45309' },
+    { fill: '#bfdbfe', border: '#1d4ed8' },  /* bleu          */
+    { fill: '#a5f3fc', border: '#0891b2' },  /* cyan          */
+    { fill: '#bae6fd', border: '#0369a1' },  /* bleu ciel     */
+    { fill: '#cffafe', border: '#0e7490' },  /* cyan pâle     */
+    { fill: '#e0f2fe', border: '#0284c7' },  /* bleu très pâle*/
   ];
   const aqMap = {};
   data.features.forEach(function(f, idx) {
@@ -513,8 +555,25 @@ loadAllLayers();
 (function() {
   var s = document.createElement('style');
   s.textContent =
+    /* River name labels — italic, white halo */
+    '.river-label-main{'
+      + 'background:transparent!important;border:none!important;box-shadow:none!important;'
+      + 'color:#003d99!important;font-family:"Source Sans Pro",sans-serif!important;'
+      + 'font-size:11px!important;font-weight:700!important;font-style:italic!important;'
+      + 'white-space:nowrap!important;pointer-events:none!important;'
+      + 'text-shadow:1px 0 3px rgba(255,255,255,0.95),-1px 0 3px rgba(255,255,255,0.95),'
+      +              '0 1px 3px rgba(255,255,255,0.95),0 -1px 3px rgba(255,255,255,0.95)!important;}'
+    + '.river-label-main::before{display:none!important}'
+    + '.river-label-major{'
+      + 'background:transparent!important;border:none!important;box-shadow:none!important;'
+      + 'color:#0055aa!important;font-family:"Source Sans Pro",sans-serif!important;'
+      + 'font-size:10px!important;font-style:italic!important;'
+      + 'white-space:nowrap!important;pointer-events:none!important;'
+      + 'text-shadow:1px 0 2px rgba(255,255,255,0.9),-1px 0 2px rgba(255,255,255,0.9),'
+      +              '0 1px 2px rgba(255,255,255,0.9),0 -1px 2px rgba(255,255,255,0.9)!important;}'
+    + '.river-label-major::before{display:none!important}'
     /* Admin region labels — white bg, blue text */
-    '.admin-label{'
+    + '.admin-label{'
       + 'background:rgba(255,255,255,0.92)!important;'
       + 'border:1.5px solid #1d4ed8!important;'
       + 'border-radius:4px!important;'

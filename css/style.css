@@ -414,18 +414,72 @@ ul { list-style: none; padding: 0; }
 .layer-item:hover .layer-zoom-btn { opacity: 1; }
 .layer-zoom-btn:hover { color: var(--blue-main); }
 
-/* Legend */
-.legend-section { padding: 10px 0; border-top: 1px solid var(--border-light); }
-#legend-content { padding: 4px 12px; }
-.legend-empty { color: var(--text-dim); font-size: 12px; font-style: italic; }
-.legend-group { margin-bottom: 10px; }
+/* ══ PROFESSIONAL GIS LEGEND ═════════════════════════ */
+.legend-section { padding: 10px 0; border-top: 2px solid var(--border); }
+#legend-content { padding: 4px 10px 8px; }
+.legend-empty { color: var(--text-dim); font-size: 12px; font-style: italic; padding: 6px 0; }
+
+/* Legend container */
+.gis-legend { display: flex; flex-direction: column; gap: 0; }
+
+/* Each layer section */
+.lg-section {
+  padding: 7px 0 6px;
+  border-bottom: 1px solid var(--border-light);
+}
+.lg-section:last-child { border-bottom: none; }
+
+/* Layer title row */
+.lg-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px; font-weight: 700;
+  color: var(--blue-dark);
+  text-transform: uppercase; letter-spacing: 0.7px;
+  margin-bottom: 5px;
+  display: flex; align-items: center; gap: 4px;
+}
+
+/* Symbol + label row */
+.lg-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 2px 0; font-size: 11.5px; color: var(--text-body);
+  line-height: 1.3;
+}
+
+/* Polygon symbol — colored rectangle */
+.lg-sym-poly {
+  display: inline-block;
+  width: 22px; height: 13px;
+  border-radius: 2px; flex-shrink: 0;
+  opacity: 0.88;
+}
+
+/* Line symbol — horizontal bar */
+.lg-sym-line {
+  display: inline-block;
+  width: 28px; flex-shrink: 0;
+}
+
+/* Point symbol — circle */
+.lg-sym-point {
+  flex-shrink: 0;
+}
+
+/* Label text */
+.lg-label {
+  flex: 1; color: var(--text-body);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Legacy aliases (used by old code if any) */
+.legend-group { margin-bottom: 8px; }
 .legend-group-title {
   font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
-  color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;
 }
-.legend-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; color: var(--text-body); }
+.legend-item { display: flex; align-items: center; gap: 8px; padding: 2px 0; font-size: 11px; color: var(--text-body); }
 .legend-color { width: 18px; height: 12px; border-radius: 2px; flex-shrink: 0; }
-.legend-line  { width: 24px; height: 3px; flex-shrink: 0; }
+.legend-line  { width: 24px; flex-shrink: 0; }
 .legend-dot   { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 
 /* ══ MAP ════════════════════════════════════════════ */
