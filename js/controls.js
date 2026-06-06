@@ -391,9 +391,13 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   window.updateLegend = updateLegend;
-  /* Call once on first layerReady, then on every change — no duplicates because
-     container.innerHTML is always fully replaced */
-  document.addEventListener('layerReady', updateLegend);
+  /* On first layer load, set the default legend layer and update */
+  document.addEventListener('layerReady', function onFirstLayer(ev) {
+    if (!activeLegendLayer && NO_LEGEND_LAYERS.indexOf(ev.detail.name) === -1) {
+      activeLegendLayer = ev.detail.name;
+    }
+    updateLegend();
+  });
 
   /* ── TABLE SORT ───────────────────────────────────── */
   document.querySelectorAll('.data-table th').forEach(function (th, idx) {
