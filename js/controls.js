@@ -329,7 +329,21 @@ document.addEventListener('DOMContentLoaded', function () {
         lgPoly('#fef9c3','#ca8a04', true,  'Risque FAIBLE'),
       ]));
 
-    /* Limites administratives & Villes — no legend (base layers) */
+    /* Limites admin & Villes — toujours affichées dans chaque légende */
+    var allActive = Array.from(document.querySelectorAll('.thematic-card.active'))
+                        .map(function(c){ return c.dataset.layer; });
+
+    if (allActive.indexOf('Limites administratives') !== -1)
+      sections.push(lgSection('🗂️ Limites administratives', [
+        lgLine('#1d4ed8', 2.5, true, 'Limite de région / préfecture'),
+      ]));
+
+    if (allActive.indexOf('Villes principales') !== -1)
+      sections.push(lgSection('🏙️ Villes principales', [
+        lgCity('#6d28d9', 14, '★', 'Capitale — Rabat'),
+        lgCity('#1d4ed8', 10, '●', 'Ville principale (Salé, Kénitra)'),
+        lgCity('#2563eb',  8, '●', 'Ville (Khémisset, Tiflet…)'),
+      ]));
 
     container.innerHTML = sections.length
       ? '<div class="gis-legend">' + sections.join('') + '</div>'
