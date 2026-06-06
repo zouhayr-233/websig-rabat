@@ -82,27 +82,10 @@ html,body { width:100%; height:100%; overflow:hidden; font-family:'Source Sans P
 #btn-open-layers:hover { background:var(--blue-dark); transform:scale(1.06); }
 #btn-open-layers.active { background:var(--blue-dark); }
 
-/* ══ MAP TITLE CARD — top center ════════════════════ */
-#map-title-card {
-  position:fixed; top:14px; left:50%; transform:translateX(-50%);
-  z-index:900;
-  background:rgba(255,255,255,0.96);
-  border:1.5px solid var(--blue-main);
-  border-radius:20px;
-  padding:5px 16px;
-  display:flex; align-items:center; gap:7px;
-  font-family:'Rajdhani',sans-serif;
-  font-size:14px; font-weight:700;
-  color:var(--blue-dark); letter-spacing:0.5px;
-  box-shadow:var(--shadow);
-  pointer-events:none; white-space:nowrap;
-  text-transform:uppercase;
-}
-
 /* ══ SEARCH BAR — top center ════════════════════════ */
 #search-bar {
-  position:fixed; top:56px; left:50%; transform:translateX(-50%);
-  z-index:900; width:300px; max-width:calc(100vw - 140px);
+  position:fixed; top:16px; left:50%; transform:translateX(-50%);
+  z-index:900; width:320px; max-width:calc(100vw - 140px);
 }
 .search-box-wrap,
 #search-bar { position:relative; }
