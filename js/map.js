@@ -55,33 +55,8 @@ const baseLayers = {
 window.activeBaseLayer = osmLayer;
 
 /* ── 3. Controls ───────────────────────────────────── */
-L.control.zoom({ position: 'topright' }).addTo(map);
-L.control.scale({ position: 'bottomleft', maxWidth: 120, metric: true, imperial: false }).addTo(map);
+/* Zoom handled by custom HTML buttons — no Leaflet zoom control */
 L.control.attribution({ position: 'bottomright', prefix: 'WebSIG RSK | PFE 2025' }).addTo(map);
-
-/* North arrow */
-const NorthArrow = L.Control.extend({
-  options: { position: 'bottomright' },
-  onAdd() {
-    const d = L.DomUtil.create('div', 'leaflet-control-north-arrow leaflet-bar');
-    d.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg">'
-      + '<polygon points="12,2 15,10 12,8 9,10" fill="#00b4d8"/>'
-      + '<polygon points="12,22 15,14 12,16 9,14" fill="#8899aa"/>'
-      + '<text x="12" y="13.5" text-anchor="middle" font-size="5" font-family="sans-serif" font-weight="700" fill="#e0e0e0">N</text>'
-      + '</svg>';
-    L.DomEvent.disableClickPropagation(d);
-    return d;
-  }
-});
-try { new NorthArrow().addTo(map); } catch(e) {}
-
-/* MiniMap — optional */
-try {
-  new L.Control.MiniMap(
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd' }),
-    { position: 'bottomright', width: 110, height: 80, zoomLevelOffset: -6, toggleDisplay: true }
-  ).addTo(map);
-} catch(e) { console.warn('[map] MiniMap unavailable'); }
 
 /* ── 4. Invalidate size — three passes ────────────── */
 setTimeout(function () { map.invalidateSize(); }, 200);
