@@ -1,8 +1,8 @@
 'use strict';
 /* ===================================================
-   WebSIG RSK — layers.js
-   Loads REAL shapefile-derived GeoJSON data.
-   All shapefiles are WGS84 (EPSG:4326) — verified.
+   WebSIG RSK — layers.js v3
+   Professional cartographic symbology.
+   Real shapefile-derived GeoJSON (WGS84 / EPSG:4326).
    =================================================== */
 
 window.overlayLayers = {};
@@ -34,50 +34,95 @@ function hideSpinnerNow() {
   if (s) s.style.display = 'none';
 }
 
-/* ── Custom icons (professional light theme) ─────────── */
+/* ══════════════════════════════════════════════════
+   PROFESSIONAL ICONS
+   ══════════════════════════════════════════════════ */
+
+/* Dam icon — blue background, white trapezoid wall */
 var damIcon = L.divIcon({
   className: '',
-  html: '<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">'
-      + '<circle cx="16" cy="16" r="14" fill="#ffffff" stroke="#1565c0" stroke-width="2.5"/>'
-      + '<rect x="9" y="12" width="14" height="8" rx="1.5" fill="#1565c0"/>'
-      + '<rect x="7" y="19" width="18" height="3.5" rx="1.5" fill="#0d47a1"/>'
-      + '<path d="M10 15.5 Q16 13 22 15.5" stroke="white" stroke-width="1.2" fill="none" opacity="0.7"/>'
+  html: '<svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">'
+      + '<circle cx="19" cy="19" r="17" fill="#0d47a1" stroke="white" stroke-width="2.5"/>'
+      + '<polygon points="11,14 27,14 24.5,24 13.5,24" fill="white" opacity="0.95"/>'
+      + '<rect x="17.5" y="14" width="3" height="10" fill="#64b5f6" opacity="0.7"/>'
+      + '<path d="M8 28 Q12 25 16 28 Q20 31 24 28 Q28 25 30 26" stroke="#64b5f6" stroke-width="1.8" fill="none" stroke-linecap="round"/>'
       + '</svg>',
-  iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -18]
+  iconSize: [38, 38], iconAnchor: [19, 19], popupAnchor: [0, -22]
 });
 
+/* Rain station icon — blue filled circle with drop */
 var stationIcon = L.divIcon({
   className: '',
   html: '<svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">'
-      + '<circle cx="15" cy="15" r="13" fill="#ffffff" stroke="#1976d2" stroke-width="2.5"/>'
-      + '<path d="M12 8C12 8,7 14,7 17C7 19.8,9.2 22,12 22C14.8 22,17 19.8,17 17C17 14,12 8,12 8Z" fill="#42a5f5" opacity="0.85"/>'
-      + '<line x1="20" y1="9"  x2="19" y2="13" stroke="#1976d2" stroke-width="1.5" stroke-linecap="round"/>'
-      + '<line x1="22" y1="13" x2="21" y2="17" stroke="#1976d2" stroke-width="1.5" stroke-linecap="round"/>'
+      + '<circle cx="15" cy="15" r="13" fill="#1976d2" stroke="white" stroke-width="2"/>'
+      + '<path d="M12 8C12 8,7 14,7 17C7 19.8,9.2 22,12 22C14.8 22,17 19.8,17 17C17 14,12 8,12 8Z" fill="white" opacity="0.9"/>'
+      + '<line x1="20" y1="9"  x2="19" y2="13" stroke="white" stroke-width="1.5" stroke-linecap="round"/>'
+      + '<line x1="22" y1="13" x2="21" y2="17" stroke="white" stroke-width="1.5" stroke-linecap="round"/>'
       + '</svg>',
   iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -17]
 });
 
-/* ── Professional risk colours ──────────────────────── */
-function riskColor(code) {
-  if (!code) return '#388e3c';
-  const c = code.toLowerCase();
-  return c.includes('elev') || c.includes('high') || c === '1' ? '#c62828'
-       : c.includes('moyen') || c.includes('med') || c === '2' ? '#e65100'
-       : '#388e3c';
+/* City icons — 3 tiers */
+function makeCityIcon(type) {
+  if (type === 'capital') {
+    return L.divIcon({
+      className: '',
+      html: '<svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">'
+          + '<circle cx="15" cy="15" r="14" fill="#6d28d9" stroke="white" stroke-width="2.5"/>'
+          + '<polygon points="15,5 17,11.5 24,11.5 18.5,15.5 20.5,22 15,18 9.5,22 11.5,15.5 6,11.5 13,11.5" fill="white" opacity="0.95"/>'
+          + '</svg>',
+      iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -17]
+    });
+  }
+  if (type === 'major') {
+    return L.divIcon({
+      className: '',
+      html: '<svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">'
+          + '<circle cx="11" cy="11" r="10" fill="#1d4ed8" stroke="white" stroke-width="2.5"/>'
+          + '<circle cx="11" cy="11" r="4" fill="white"/>'
+          + '</svg>',
+      iconSize: [22, 22], iconAnchor: [11, 11], popupAnchor: [0, -13]
+    });
+  }
+  return L.divIcon({
+    className: '',
+    html: '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">'
+        + '<circle cx="8" cy="8" r="7" fill="#2563eb" stroke="white" stroke-width="2"/>'
+        + '<circle cx="8" cy="8" r="2.5" fill="white"/>'
+        + '</svg>',
+    iconSize: [16, 16], iconAnchor: [8, 8], popupAnchor: [0, -10]
+  });
 }
 
-/* ── Level bar ──────────────────────────────────────── */
+/* ── Risk colour helper ──────────────────────────── */
+function riskColor(code) {
+  if (!code) return '#16a34a';
+  const c = code.toLowerCase();
+  return c.includes('elev') || c.includes('high') || c === '1' ? '#dc2626'
+       : c.includes('moyen') || c.includes('med') || c === '2' ? '#ea580c'
+       : '#16a34a';
+}
+
+/* ── Level fill bar ──────────────────────────────── */
 function levelBar(pct) {
   const c = pct > 70 ? '#1976d2' : pct > 40 ? '#e65100' : '#c62828';
   return '<div class="popup-level-bar">'
-       + '<div class="popup-level-bar-label"><span>Remplissage</span>'
+       + '<div class="popup-level-bar-label"><span>Remplissage actuel</span>'
        + '<span style="color:' + c + ';font-weight:700">' + pct + '%</span></div>'
        + '<div class="popup-level-bar-track">'
        + '<div class="popup-level-bar-fill" style="width:' + pct + '%;background:' + c + '"></div>'
        + '</div></div>';
 }
 
-/* ── Popup chart for stations ───────────────────────── */
+/* ── Popup header helper ─────────────────────────── */
+function popupHeader(color, icon, title) {
+  return '<div class="popup-hd" style="background:' + color + '">'
+       + '<span class="popup-hd-icon">' + icon + '</span>'
+       + '<span class="popup-hd-title">' + title + '</span>'
+       + '</div>';
+}
+
+/* ── Station popup chart ─────────────────────────── */
 var popupChart = null;
 var chartN = 0;
 function renderStationChart(id, months) {
@@ -88,29 +133,25 @@ function renderStationChart(id, months) {
     type: 'bar',
     data: {
       labels: ['J','F','M','A','M','J','J','A','S','O','N','D'],
-      datasets: [{ data: months, backgroundColor: months.map(function(v){ return v>40?'#00b4d8':v>15?'#48cae4':'#caf0f8'; }), borderRadius: 2 }]
+      datasets: [{ data: months, backgroundColor: months.map(function(v){ return v>40?'#0077b6':v>15?'#0096c7':'#90e0ef'; }), borderRadius: 2 }]
     },
     options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-      scales:{ x:{ticks:{color:'#8899aa',font:{size:9}},grid:{display:false}}, y:{ticks:{color:'#8899aa',font:{size:9}},grid:{color:'rgba(136,153,170,0.15)'}} } }
+      scales:{ x:{ticks:{color:'#64748b',font:{size:9}},grid:{display:false}}, y:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'rgba(100,116,139,0.12)'}} } }
   });
 }
 
 /* ══════════════════════════════════════════════════
-   LOADER FUNCTIONS — using REAL shapefile field names
+   1. BASSINS VERSANTS — professional cartographic palette
+   Fields: NomSousBas, CodeSousBas, Superficie, CodeBassin
    ══════════════════════════════════════════════════ */
-
-/* 1. SOUS-BASSINS (SousBassin.shp)
-      Fields: NomSousBas, CodeSousBas, Superficie, CodeBassin */
 function loadWatersheds(data) {
-  /* Distinct pastel palette — professional cartographic colours */
   const palette = [
-    { fill: '#aed6f1', border: '#1565c0' },  /* sky blue    */
-    { fill: '#a9dfbf', border: '#1b5e20' },  /* mint green  */
-    { fill: '#f9e79f', border: '#f57f17' },  /* pale yellow */
-    { fill: '#f5cba7', border: '#bf360c' },  /* peach       */
-    { fill: '#d7bde2', border: '#4a148c' },  /* lavender    */
+    { fill: '#c8e6fa', border: '#1565c0' },
+    { fill: '#c8efd8', border: '#2e7d32' },
+    { fill: '#fff9c4', border: '#f9a825' },
+    { fill: '#fce4d0', border: '#bf360c' },
+    { fill: '#ead5f5', border: '#6a1b9a' },
   ];
-  /* Use stable OBJECTID so resetStyle never changes colour */
   const colorMap = {};
   data.features.forEach(function(f, idx) {
     const id = (f.properties && (f.properties.OBJECTID || f.properties.CodeSousBas)) || idx;
@@ -120,24 +161,26 @@ function loadWatersheds(data) {
     style: function(feature) {
       const id = String((feature.properties && (feature.properties.OBJECTID || feature.properties.CodeSousBas)) || 0);
       const p  = colorMap[id] || palette[0];
-      return { fillColor: p.fill, fillOpacity: 0.45, color: p.border, weight: 1.8 };
+      return { fillColor: p.fill, fillOpacity: 0.50, color: p.border, weight: 2, opacity: 0.85 };
     },
     onEachFeature: function(feat, l) {
-      const p = feat.properties || {};
-      const name = p.NomSousBas || p.name || p.OBJECTID || 'Bassin';
+      const p   = feat.properties || {};
+      const id  = String((p.OBJECTID || p.CodeSousBas) || 0);
+      const cp  = colorMap[id] || palette[0];
+      const name = p.NomSousBas || p.name || 'Bassin';
       const sup  = p.Superficie ? (+p.Superficie).toLocaleString('fr-FR', {maximumFractionDigits:1}) + ' km²' : '—';
       l.bindPopup('<div class="popup-content">'
-        + '<h3>&#x1F3D4; ' + name + '</h3>'
+        + popupHeader(cp.border, '🗺️', name)
         + '<table>'
-        + '<tr><td>Code</td><td>' + (p.CodeSousBas || p.CodeBassin || '—') + '</td></tr>'
+        + '<tr><td>Code sous-bassin</td><td><b>' + (p.CodeSousBas || '—') + '</b></td></tr>'
+        + '<tr><td>Code bassin</td><td>' + (p.CodeBassin || '—') + '</td></tr>'
         + '<tr><td>Superficie</td><td>' + sup + '</td></tr>'
-        + '<tr><td>Bassin</td><td>' + (p.CodeBassin || '—') + '</td></tr>'
-        + '</table></div>', { maxWidth: 280 });
-      l.on('mouseover', function(){ this.setStyle({ fillOpacity: 0.7, weight: 2.5 }); });
-      l.on('mouseout',  function() {
-        const id = String((this.feature.properties && (this.feature.properties.OBJECTID || this.feature.properties.CodeSousBas)) || 0);
-        const p  = colorMap[id] || palette[0];
-        this.setStyle({ fillColor: p.fill, fillOpacity: 0.45, color: p.border, weight: 1.8 });
+        + '</table></div>', { maxWidth: 290 });
+      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.75, weight: 2.8 }); });
+      l.on('mouseout', function() {
+        const rid = String((this.feature.properties && (this.feature.properties.OBJECTID || this.feature.properties.CodeSousBas)) || 0);
+        const rp  = colorMap[rid] || palette[0];
+        this.setStyle({ fillColor: rp.fill, fillOpacity: 0.50, color: rp.border, weight: 2 });
       });
     }
   });
@@ -146,31 +189,55 @@ function loadWatersheds(data) {
   notifyLayerReady('Bassins versants');
 }
 
-/* 2. OUEDS (OUEDS.shp)
-      Fields: name, fclass, Shape_Leng */
+/* ══════════════════════════════════════════════════
+   2. OUEDS — 3-tier classification
+   principal : Sebou, Bou Regreg → thick #0d47a1
+   major     : other main rivers → medium #1565c0
+   secondary : tributaries        → thin   #42a5f5
+   Fields: name, fclass, Shape_Leng
+   ══════════════════════════════════════════════════ */
+function classifyOued(feat) {
+  const p  = feat.properties || {};
+  const n  = (p.name || p.NAME || '').toLowerCase();
+  const fc = (p.fclass || '').toLowerCase();
+  if (n.includes('sebou') || n.includes('bou regreg') || n.includes('bouregreg') || n.includes('bou-regreg'))
+    return 'principal';
+  if (fc === 'river' || fc === 'major' || fc === '') return 'major';
+  return 'secondary';
+}
+
+var ouedStyles = {
+  principal: { color: '#0d47a1', weight: 5,   opacity: 0.95 },
+  major:     { color: '#1565c0', weight: 2.5,  opacity: 0.88 },
+  secondary: { color: '#64b5f6', weight: 1.2,  opacity: 0.78 }
+};
+
 function loadRivers(data) {
   const lyr = L.geoJSON(data, {
-    style: function(feat) {
-      const fc = (feat.properties || {}).fclass || '';
-      const major = fc.includes('river') || fc === '';
-      return {
-        color:   major ? '#1565c0' : '#1976d2',
-        weight:  major ? 2.5 : 1.2,
-        opacity: 0.9
-      };
-    },
+    style: function(feat) { return ouedStyles[classifyOued(feat)]; },
     onEachFeature: function(feat, l) {
-      const p = feat.properties || {};
+      const p    = feat.properties || {};
       const name = p.name || p.NAME || 'Oued';
-      const len  = p.Shape_Leng ? (+p.Shape_Leng * 111).toFixed(1) + ' km (approx)' : '—';
+      const tier = classifyOued(feat);
+      const tierLabels = {
+        principal: 'Oued principal — axe majeur',
+        major:     'Oued principal',
+        secondary: 'Oued secondaire'
+      };
+      const tierColors = { principal: '#0d47a1', major: '#1565c0', secondary: '#1976d2' };
+      const len = p.Shape_Leng ? (+p.Shape_Leng * 111).toFixed(1) + ' km (approx.)' : '—';
       l.bindPopup('<div class="popup-content">'
-        + '<h3>&#x1F30A; ' + name + '</h3>'
+        + popupHeader(tierColors[tier], '🌊', name)
         + '<table>'
+        + '<tr><td>Classification</td><td><b>' + tierLabels[tier] + '</b></td></tr>'
         + '<tr><td>Type</td><td>' + (p.fclass || '—') + '</td></tr>'
         + '<tr><td>Longueur</td><td>' + len + '</td></tr>'
-        + '</table></div>', { maxWidth: 260 });
-      l.on('mouseover', function(){ this.setStyle({ weight: 5, opacity: 1 }); });
-      l.on('mouseout',  function(){ lyr.resetStyle(this); });
+        + '</table></div>', { maxWidth: 290 });
+      l.on('mouseover', function() {
+        const t = classifyOued(this.feature);
+        this.setStyle({ weight: t === 'principal' ? 8 : t === 'major' ? 4.5 : 2.5, opacity: 1 });
+      });
+      l.on('mouseout', function() { lyr.resetStyle(this); });
     }
   });
   window.overlayLayers['Oueds / Rivières'] = lyr;
@@ -178,24 +245,34 @@ function loadRivers(data) {
   notifyLayerReady('Oueds / Rivières');
 }
 
-/* 3. BARRAGES EXISTANTS (BARRAGES_EXISTANTS.shp)
-      Fields: BARRAGE, OUED, Capacité_, ANNEE */
+/* ══════════════════════════════════════════════════
+   3. BARRAGES — professional symbols + rich popups
+   Fields: BARRAGE, OUED, Capacité_, ANNEE, current_level
+   ══════════════════════════════════════════════════ */
 function loadDams(data) {
   const lyr = L.geoJSON(data, {
-    pointToLayer: function(feat, ll) { return L.marker(ll, { icon: damIcon }); },
+    pointToLayer: function(feat, ll) {
+      return L.marker(ll, { icon: damIcon, zIndexOffset: 500 });
+    },
     onEachFeature: function(feat, l) {
-      const p = feat.properties || {};
+      const p    = feat.properties || {};
       const name = p.BARRAGE || p.name || 'Barrage';
       const cap  = p['Capacit\xe9_'] || p.Capacite_ || p['Capacité_'] || '—';
+      const pct  = p.current_level || 75;
       l.bindPopup('<div class="popup-content">'
-        + '<h3>&#x1F3D7; ' + name + '</h3>'
+        + popupHeader('#0d47a1', '🏗️', name)
         + '<table>'
-        + '<tr><td>Oued</td><td>' + (p.OUED || '—') + '</td></tr>'
-        + '<tr><td>Capacité</td><td>' + cap + ' Mm³</td></tr>'
-        + '<tr><td>Année</td><td>' + (p.ANNEE || '—') + '</td></tr>'
+        + '<tr><td>Oued</td><td><b>' + (p.OUED || '—') + '</b></td></tr>'
+        + '<tr><td>Capacité totale</td><td>' + cap + ' Mm³</td></tr>'
+        + '<tr><td>Mise en service</td><td>' + (p.ANNEE || '—') + '</td></tr>'
+        + '<tr><td>Statut</td><td><span class="status-badge operational">● Opérationnel</span></td></tr>'
         + '</table>'
-        + levelBar(p.current_level || 75)
-        + '</div>', { maxWidth: 300 });
+        + levelBar(pct)
+        + '</div>', { maxWidth: 320 });
+      l.bindTooltip(name, {
+        permanent: false, direction: 'top', offset: [0, -20],
+        className: 'dam-tooltip'
+      });
     }
   });
   window.overlayLayers['Barrages'] = lyr;
@@ -203,26 +280,28 @@ function loadDams(data) {
   notifyLayerReady('Barrages');
 }
 
-/* 4. RAIN STATIONS (rain_stations.geojson — kept as demo, no shapefile)
-      Fields: name, altitude, annual_rainfall, network, monthly_data */
+/* ══════════════════════════════════════════════════
+   4. STATIONS PLUVIOMÉTRIQUES
+   Fields: name, altitude, annual_rainfall, network, monthly_data
+   ══════════════════════════════════════════════════ */
 function loadStations(data) {
   const lyr = L.geoJSON(data, {
     pointToLayer: function(feat, ll) { return L.marker(ll, { icon: stationIcon }); },
     onEachFeature: function(feat, l) {
-      const p = feat.properties || {};
+      const p   = feat.properties || {};
       const cid = 'sc-' + (++chartN);
-      l.bindPopup('<div class="popup-content" style="min-width:230px">'
-        + '<h3>&#x1F327; ' + (p.name || 'Station') + '</h3>'
+      l.bindPopup('<div class="popup-content" style="min-width:235px">'
+        + popupHeader('#1565c0', '🌧️', p.name || 'Station')
         + '<table>'
         + '<tr><td>Altitude</td><td>' + (p.altitude || '—') + ' m</td></tr>'
-        + '<tr><td>Précip. annuelle</td><td>' + (p.annual_rainfall || '—') + ' mm</td></tr>'
+        + '<tr><td>Précip. annuelle</td><td><b>' + (p.annual_rainfall || '—') + ' mm</b></td></tr>'
         + '<tr><td>Réseau</td><td>' + (p.network || '—') + '</td></tr>'
         + '</table>'
-        + '<div style="margin-top:8px;font-size:11px;color:#8899aa">Précipitations mensuelles (mm)</div>'
+        + '<div class="chart-subtitle">Précipitations mensuelles (mm)</div>'
         + '<div class="popup-chart-wrap"><canvas id="' + cid + '"></canvas></div>'
-        + '</div>', { maxWidth: 280 });
-      l.on('popupopen', function(){ if (p.monthly_data) setTimeout(function(){ renderStationChart(cid, p.monthly_data); }, 50); });
-      l.on('popupclose', function(){ if (popupChart){ popupChart.destroy(); popupChart = null; } });
+        + '</div>', { maxWidth: 290 });
+      l.on('popupopen',  function() { if (p.monthly_data) setTimeout(function() { renderStationChart(cid, p.monthly_data); }, 50); });
+      l.on('popupclose', function() { if (popupChart) { popupChart.destroy(); popupChart = null; } });
     }
   });
   window.overlayLayers['Stations pluviométriques'] = lyr;
@@ -230,37 +309,41 @@ function loadStations(data) {
   notifyLayerReady('Stations pluviométriques');
 }
 
-/* 5. FLOOD ZONES (flood_zones.geojson — demo, no shapefile source)
-      Fields: risk_code, risk_level, area_km2, population_exposed */
+/* ══════════════════════════════════════════════════
+   5. ZONES INONDATION — risk-coded fill + popup
+   Fields: risk_code, risk_level, area_km2, population_exposed
+   ══════════════════════════════════════════════════ */
 function loadFloodZones(data) {
+  const fills  = { high: '#fecaca', medium: '#fed7aa', low: '#bbf7d0' };
+  const borders = { high: '#dc2626', medium: '#ea580c', low: '#16a34a' };
+  const hdColors = { high: '#dc2626', medium: '#ea580c', low: '#16a34a' };
   const lyr = L.geoJSON(data, {
     style: function(feat) {
-      const code  = (feat.properties || {}).risk_code || 'low';
-      const fills = { high: '#ffcdd2', medium: '#ffe0b2', low: '#dcedc8' };
-      const lines = { high: '#c62828', medium: '#e65100', low: '#2e7d32' };
+      const code = (feat.properties || {}).risk_code || 'low';
       return {
-        fillColor: fills[code] || '#dcedc8',
-        fillOpacity: 0.65,
-        color: lines[code] || '#2e7d32',
-        weight: 1.5,
+        fillColor: fills[code]  || '#bbf7d0',
+        fillOpacity: 0.62,
+        color:     borders[code] || '#16a34a',
+        weight: code === 'high' ? 2 : 1.5,
         dashArray: code === 'low' ? '6,4' : null
       };
     },
     onEachFeature: function(feat, l) {
-      const p = feat.properties || {};
-      const measures = (p.mitigation_measures || []).map(function(m){ return '<li>' + m + '</li>'; }).join('');
+      const p    = feat.properties || {};
+      const code = p.risk_code || 'low';
+      const measures = (p.mitigation_measures || []).map(function(m) { return '<li>' + m + '</li>'; }).join('');
       l.bindPopup('<div class="popup-content">'
-        + '<h3>&#x26A0; ' + (p.name || 'Zone') + '</h3>'
+        + popupHeader(hdColors[code] || '#16a34a', '⚠️', p.name || 'Zone inondation')
         + '<table>'
-        + '<tr><td>Risque</td><td><span class="risk-badge ' + (p.risk_code || 'low') + '">' + (p.risk_level || '—') + '</span></td></tr>'
+        + '<tr><td>Niveau de risque</td><td><span class="risk-badge ' + code + '">' + (p.risk_level || '—') + '</span></td></tr>'
         + '<tr><td>Superficie</td><td>' + (p.area_km2 || '—') + ' km²</td></tr>'
-        + '<tr><td>Pop. exposée</td><td>' + ((p.population_exposed || 0).toLocaleString('fr-FR')) + ' hab.</td></tr>'
+        + '<tr><td>Population exposée</td><td><b>' + ((p.population_exposed || 0).toLocaleString('fr-FR')) + '</b> hab.</td></tr>'
         + '<tr><td>Dernière inondation</td><td>' + (p.last_flood_year || '—') + '</td></tr>'
         + '</table>'
-        + (measures ? '<div class="popup-measures"><div class="popup-measures-title">Mesures</div><ul>' + measures + '</ul></div>' : '')
-        + '</div>', { maxWidth: 300 });
-      l.on('mouseover', function(){ this.setStyle({ fillOpacity: 0.65, weight: 2.5 }); });
-      l.on('mouseout',  function(){ lyr.resetStyle(this); });
+        + (measures ? '<div class="popup-measures"><div class="popup-measures-title">Mesures de prévention</div><ul>' + measures + '</ul></div>' : '')
+        + '</div>', { maxWidth: 320 });
+      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.82, weight: 2.8 }); });
+      l.on('mouseout',  function() { lyr.resetStyle(this); });
     }
   });
   window.overlayLayers['Zones de risque'] = lyr;
@@ -268,24 +351,29 @@ function loadFloodZones(data) {
   notifyLayerReady('Zones de risque');
 }
 
-/* 6. ADMINISTRATIVE — LIMITE REGION (limite-de-région.shp)
-      Fields: Nom_Region, Population, CODE_REGIO */
+/* ══════════════════════════════════════════════════
+   6. LIMITES ADMINISTRATIVES
+   Fields: Nom_Region, Population, CODE_REGIO, Menages
+   ══════════════════════════════════════════════════ */
 function loadAdmin(data) {
   const lyr = L.geoJSON(data, {
     style: function() {
-      return { fillColor: 'transparent', fillOpacity: 0, color: '#0d47a1',
-               weight: 2.5, dashArray: '9,5', opacity: 0.75 };
+      return {
+        fillColor: 'transparent', fillOpacity: 0,
+        color: '#1d4ed8', weight: 3,
+        dashArray: '10,6', opacity: 0.80
+      };
     },
     onEachFeature: function(feat, l) {
-      const p = feat.properties || {};
+      const p    = feat.properties || {};
       const name = p.Nom_Region || p.NOM_REGION || p.name || 'Région RSK';
       l.bindPopup('<div class="popup-content">'
-        + '<h3>&#x1F5FA; ' + name + '</h3>'
+        + popupHeader('#1d4ed8', '🗂️', name)
         + '<table>'
         + '<tr><td>Code région</td><td>' + (p.CODE_REGIO || '—') + '</td></tr>'
-        + '<tr><td>Population</td><td>' + ((+p.Population || 0).toLocaleString('fr-FR')) + ' hab.</td></tr>'
+        + '<tr><td>Population</td><td><b>' + ((+p.Population || 0).toLocaleString('fr-FR')) + '</b> hab.</td></tr>'
         + '<tr><td>Ménages</td><td>' + ((+p.Menages || 0).toLocaleString('fr-FR')) + '</td></tr>'
-        + '</table></div>', { maxWidth: 260 });
+        + '</table></div>', { maxWidth: 270 });
       try {
         l.bindTooltip(name, { permanent: true, direction: 'center', className: 'admin-label' });
       } catch(e) {}
@@ -296,21 +384,41 @@ function loadAdmin(data) {
   notifyLayerReady('Limites administratives');
 }
 
-/* 7. NAPPES (NAPPES.shp)
-      Fields: Nom_Nappe */
+/* ══════════════════════════════════════════════════
+   7. NAPPES SOUTERRAINES — per-nappe color coding
+   Fields: Nom_Nappe
+   ══════════════════════════════════════════════════ */
 function loadAquifers(data) {
+  const aqPalette = [
+    { fill: '#bfdbfe', border: '#1d4ed8' },
+    { fill: '#a5f3fc', border: '#0891b2' },
+    { fill: '#bbf7d0', border: '#15803d' },
+    { fill: '#ddd6fe', border: '#7c3aed' },
+    { fill: '#fde68a', border: '#b45309' },
+  ];
+  const aqMap = {};
+  data.features.forEach(function(f, idx) {
+    const id = (f.properties && f.properties.Nom_Nappe) || String(idx);
+    aqMap[id] = aqPalette[idx % aqPalette.length];
+  });
   const lyr = L.geoJSON(data, {
-    style: function() {
-      return { fillColor: '#bbdefb', fillOpacity: 0.5, color: '#1565c0', weight: 1.5, dashArray: '5,4' };
+    style: function(feat) {
+      const id = (feat.properties && feat.properties.Nom_Nappe) || '0';
+      const cp = aqMap[id] || aqPalette[0];
+      return { fillColor: cp.fill, fillOpacity: 0.55, color: cp.border, weight: 2, dashArray: '7,4' };
     },
     onEachFeature: function(feat, l) {
-      const p = feat.properties || {};
+      const p  = feat.properties || {};
+      const id = p.Nom_Nappe || '0';
+      const cp = aqMap[id] || aqPalette[0];
       l.bindPopup('<div class="popup-content">'
-        + '<h3>&#x1F4A7; ' + (p.Nom_Nappe || 'Nappe') + '</h3>'
-        + '<table><tr><td>Type</td><td>Nappe souterraine</td></tr></table>'
-        + '</div>', { maxWidth: 240 });
-      l.on('mouseover', function(){ this.setStyle({ fillOpacity: 0.5 }); });
-      l.on('mouseout',  function(){ lyr.resetStyle(this); });
+        + popupHeader(cp.border, '💧', p.Nom_Nappe || 'Nappe souterraine')
+        + '<table>'
+        + '<tr><td>Type</td><td>Nappe souterraine libre</td></tr>'
+        + '<tr><td>Nom</td><td><b>' + (p.Nom_Nappe || '—') + '</b></td></tr>'
+        + '</table></div>', { maxWidth: 270 });
+      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.78, weight: 2.5 }); });
+      l.on('mouseout',  function() { lyr.resetStyle(this); });
     }
   });
   window.overlayLayers['Nappes souterraines'] = lyr;
@@ -319,33 +427,137 @@ function loadAquifers(data) {
 }
 
 /* ══════════════════════════════════════════════════
-   MAIN — load real shapefiles, fallback to demo
+   8. VILLES PRINCIPALES — inline data (no fetch)
+   Cities: Rabat, Salé, Kénitra, Khémisset, Tiflet,
+           Sidi Kacem, Sidi Slimane
+   ══════════════════════════════════════════════════ */
+function loadCities() {
+  var data = {
+    type: 'FeatureCollection',
+    features: [
+      { type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-6.8498, 34.0209] },
+        properties: { name: 'Rabat',        type: 'capital',   population: 577827, role: 'Capitale administrative du Maroc', altitude: 75  }},
+      { type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-6.7975, 34.0378] },
+        properties: { name: 'Salé',         type: 'major',     population: 902021, role: 'Préfecture de Salé',                altitude: 20  }},
+      { type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-6.5753, 34.2610] },
+        properties: { name: 'Kénitra',      type: 'major',     population: 431282, role: 'Préfecture de Kénitra',             altitude: 15  }},
+      { type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-6.0667, 33.8240] },
+        properties: { name: 'Khémisset',    type: 'secondary', population: 131542, role: 'Chef-lieu de province',              altitude: 405 }},
+      { type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-6.3082, 33.8942] },
+        properties: { name: 'Tiflet',       type: 'secondary', population: 59478,  role: 'Province de Khémisset',              altitude: 285 }},
+      { type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-5.7084, 34.2213] },
+        properties: { name: 'Sidi Kacem',   type: 'secondary', population: 73000,  role: 'Chef-lieu de province',              altitude: 120 }},
+      { type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-5.9218, 34.2590] },
+        properties: { name: 'Sidi Slimane', type: 'secondary', population: 80000,  role: 'Province de Sidi Kacem',             altitude: 80  }},
+    ]
+  };
+
+  var lyr = L.geoJSON(data, {
+    pointToLayer: function(feat, ll) {
+      return L.marker(ll, { icon: makeCityIcon(feat.properties.type), zIndexOffset: 1000 });
+    },
+    onEachFeature: function(feat, l) {
+      var p = feat.properties;
+      var hdrColor  = p.type === 'capital' ? '#6d28d9' : p.type === 'major' ? '#1d4ed8' : '#2563eb';
+      var typeLabel = p.type === 'capital' ? '★ Capitale' : p.type === 'major' ? 'Ville principale' : 'Ville';
+      l.bindPopup('<div class="popup-content">'
+        + popupHeader(hdrColor, '🏙️', p.name)
+        + '<table>'
+        + '<tr><td>Type</td><td><b>' + typeLabel + '</b></td></tr>'
+        + '<tr><td>Rôle administratif</td><td>' + p.role + '</td></tr>'
+        + '<tr><td>Population</td><td><b>' + p.population.toLocaleString('fr-FR') + '</b> hab.</td></tr>'
+        + '<tr><td>Altitude</td><td>' + p.altitude + ' m</td></tr>'
+        + '</table></div>', { maxWidth: 310 });
+      var ttDir = (p.name === 'Sidi Kacem' || p.name === 'Sidi Slimane') ? 'left' : 'right';
+      l.bindTooltip(p.name, {
+        permanent: true,
+        direction: ttDir,
+        offset: ttDir === 'right' ? [10, 0] : [-10, 0],
+        className: 'city-label city-label-' + p.type
+      });
+    }
+  });
+  window.overlayLayers['Villes principales'] = lyr;
+  if (window.map) lyr.addTo(window.map);
+  notifyLayerReady('Villes principales');
+}
+
+/* ══════════════════════════════════════════════════
+   MAIN — load all layers
    ══════════════════════════════════════════════════ */
 async function loadAllLayers() {
   await Promise.allSettled([
-    /* Real shapefile data */
     loadLayer('watersheds_real.geojson',       loadWatersheds),
     loadLayer('rivers_real.geojson',           loadRivers),
     loadLayer('dams_real.geojson',             loadDams),
     loadLayer('admin_boundaries_real.geojson', loadAdmin),
     loadLayer('aquifers.geojson',              loadAquifers),
-    /* Demo data (no real shapefile source) */
     loadLayer('rain_stations.geojson',         loadStations),
     loadLayer('flood_zones.geojson',           loadFloodZones)
   ]);
+  loadCities();
   console.log('[layers] done. Keys:', Object.keys(window.overlayLayers));
   hideSpinnerNow();
 }
 
 loadAllLayers();
 
-/* Admin label style */
-(function(){
+/* ── Injected styles for labels, popups, tooltips ── */
+(function() {
   var s = document.createElement('style');
-  s.textContent = '.admin-label{background:transparent!important;border:none!important;box-shadow:none!important;'
-    + 'color:rgba(200,220,255,0.85)!important;font-family:Rajdhani,sans-serif!important;'
-    + 'font-size:13px!important;font-weight:700!important;text-transform:uppercase!important;'
-    + 'letter-spacing:1.5px!important;text-shadow:1px 1px 3px #0d1b2a!important;}'
-    + '.admin-label::before{display:none!important}';
+  s.textContent =
+    /* Admin region labels — white bg, blue text */
+    '.admin-label{'
+      + 'background:rgba(255,255,255,0.92)!important;'
+      + 'border:1.5px solid #1d4ed8!important;'
+      + 'border-radius:4px!important;'
+      + 'box-shadow:0 1px 5px rgba(29,78,216,0.22)!important;'
+      + 'padding:2px 7px!important;'
+      + 'color:#1e3a8a!important;'
+      + 'font-family:Rajdhani,sans-serif!important;'
+      + 'font-size:11px!important;font-weight:700!important;'
+      + 'text-transform:uppercase!important;letter-spacing:1px!important;'
+      + 'white-space:nowrap!important;pointer-events:none!important;}'
+    + '.admin-label::before{display:none!important}'
+    /* City labels — text with white halo */
+    + '.city-label{'
+      + 'background:transparent!important;border:none!important;box-shadow:none!important;'
+      + 'font-family:Rajdhani,sans-serif!important;font-weight:700!important;'
+      + 'white-space:nowrap!important;pointer-events:none!important;'
+      + 'text-shadow:1px 1px 0 white,-1px 1px 0 white,1px -1px 0 white,-1px -1px 0 white,'
+      +              '0 1px 3px rgba(255,255,255,0.9)!important;}'
+    + '.city-label::before{display:none!important}'
+    + '.city-label-capital{font-size:14px!important;color:#5b21b6!important;}'
+    + '.city-label-major  {font-size:13px!important;color:#1e3a8a!important;}'
+    + '.city-label-secondary{font-size:11px!important;color:#1e40af!important;}'
+    /* Dam hover tooltip */
+    + '.dam-tooltip{'
+      + 'background:rgba(13,71,161,0.92)!important;border:none!important;'
+      + 'color:white!important;font-family:Rajdhani,sans-serif!important;'
+      + 'font-size:13px!important;font-weight:600!important;'
+      + 'padding:3px 9px!important;border-radius:4px!important;'
+      + 'box-shadow:0 2px 6px rgba(0,0,0,0.2)!important;}'
+    + '.dam-tooltip::before{display:none!important}'
+    /* Popup colored header */
+    + '.popup-hd{'
+      + 'display:flex;align-items:center;gap:8px;'
+      + 'margin:-12px -14px 10px;padding:9px 12px;'
+      + 'border-radius:8px 8px 0 0;'
+      + 'color:white;font-family:Rajdhani,sans-serif;'
+      + 'font-size:15px;font-weight:700;}'
+    + '.popup-hd-icon{font-size:17px;}'
+    + '.popup-hd-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
+    /* Status badge */
+    + '.status-badge.operational{color:#16a34a;font-weight:700;}'
+    + '.status-badge.construction{color:#ea580c;font-weight:700;}'
+    /* Chart subtitle in popups */
+    + '.chart-subtitle{margin-top:8px;font-size:11px;color:#64748b;}';
   document.head.appendChild(s);
 }());

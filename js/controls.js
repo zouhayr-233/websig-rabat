@@ -250,28 +250,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (active.includes('Bassins versants'))
       html += lg('Bassins versants', [
-        {fill:'#aed6f1', border:'#1565c0', label:'Bassin 1'},
-        {fill:'#a9dfbf', border:'#1b5e20', label:'Bassin 2'},
-        {fill:'#f9e79f', border:'#f57f17', label:'Bassin 3'},
-        {fill:'#f5cba7', border:'#bf360c', label:'Bassin 4'},
-        {fill:'#d7bde2', border:'#4a148c', label:'Bassin 5'},
+        {fill:'#c8e6fa', border:'#1565c0', label:'Sous-bassin 1'},
+        {fill:'#c8efd8', border:'#2e7d32', label:'Sous-bassin 2'},
+        {fill:'#fff9c4', border:'#f9a825', label:'Sous-bassin 3'},
+        {fill:'#fce4d0', border:'#bf360c', label:'Sous-bassin 4'},
+        {fill:'#ead5f5', border:'#6a1b9a', label:'Sous-bassin 5'},
       ], 'polygon');
 
     if (active.includes('Oueds / Rivières'))
       html += lg('Oueds / Rivières', [
-        {color:'#1565c0', height:3,   label:'Oued principal'},
-        {color:'#1976d2', height:1.5, label:'Oued secondaire'},
+        {color:'#0d47a1', height:5,   label:'Oued majeur (Sebou, Bou Regreg)'},
+        {color:'#1565c0', height:2.5, label:'Oued principal'},
+        {color:'#64b5f6', height:1.2, label:'Oued secondaire'},
       ], 'line');
 
     if (active.includes('Barrages'))
-      html += lg('Barrages', [{icon:'🏗️', label:'Barrage existant'}], 'icon');
+      html += lg('Barrages', [{icon:'🏗️', label:'Barrage existant (opérationnel)'}], 'icon');
 
     if (active.includes('Stations pluviométriques'))
       html += lg('Stations pluviométriques', [{icon:'🌦', label:'Station pluviométrique'}], 'icon');
 
     if (active.includes('Nappes souterraines'))
       html += lg('Nappes souterraines', [
-        {fill:'#bbdefb', border:'#1565c0', dashed:true, label:'Nappe souterraine'},
+        {fill:'#bfdbfe', border:'#1d4ed8', dashed:true, label:'Nappe souterraine'},
+        {fill:'#a5f3fc', border:'#0891b2', dashed:true, label:'Nappe littorale'},
+        {fill:'#bbf7d0', border:'#15803d', dashed:true, label:'Nappe alluviale'},
       ], 'polygon');
 
     if (active.includes('Zones de risque'))
@@ -283,8 +286,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (active.includes('Limites administratives'))
       html += lg('Limites administratives', [
-        {color:'#0d47a1', dashed:true, height:2, label:'Limite de région'},
+        {color:'#1d4ed8', dashed:true, height:2.5, label:'Limite de région / préfecture'},
       ], 'line');
+
+    if (active.includes('Villes principales'))
+      html += lg('Villes principales', [
+        {color:'#6d28d9', size:12, label:'Capitale (Rabat)'},
+        {color:'#1d4ed8', size:9,  label:'Ville principale (Salé, Kénitra)'},
+        {color:'#2563eb', size:7,  label:'Ville secondaire'},
+      ], 'city');
 
     container.innerHTML = html || '<p class="legend-empty">Activez une couche pour voir sa légende.</p>';
   }
@@ -310,6 +320,14 @@ document.addEventListener('DOMContentLoaded', function () {
         return '<div class="legend-item">'
           + '<span style="font-size:16px;line-height:1">' + item.icon + '</span>'
           + '<span>' + item.label + '</span></div>';
+      if (type === 'city') {
+        var sz = item.size || 9;
+        return '<div class="legend-item">'
+          + '<span style="display:inline-block;width:' + (sz+4) + 'px;height:' + (sz+4) + 'px;border-radius:50%;'
+          + 'background:' + item.color + ';border:2px solid white;'
+          + 'outline:1.5px solid ' + item.color + ';flex-shrink:0"></span>'
+          + '<span>' + item.label + '</span></div>';
+      }
       return '';
     }).join('');
     return '<div class="legend-group">'
