@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.css" />
 
   <!-- App styles (v3 — light professional theme) -->
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=6" />
 </head>
 <body>
 
@@ -160,20 +160,20 @@
             <div class="tc-group-label">💧 Ressources en eau</div>
 
             <div class="thematic-card active" data-layer="Bassins versants">
-              <div class="tc-bar" style="background:linear-gradient(90deg,#1565c0 0%,#2e7d32 25%,#f9a825 50%,#bf360c 75%,#6a1b9a 100%)"></div>
-              <div class="tc-body">
-                <div class="tc-head">
-                  <span class="tc-icon">🗺️</span>
-                  <span class="tc-name">Bassins & Sous-bassins Versants</span>
-                  <span class="tc-status">✓</span>
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#1565c0 0%,#2e7d32 25%,#f9a825 50%,#bf360c 75%,#6a1b9a 100%)"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">🗺️</span>
+                  <span class="tc-name">Bassins &amp; Sous-bassins Versants</span>
+                  <span class="tc-status"></span>
                 </div>
-                <div class="tc-classif">
-                  <span class="tc-sw" style="background:#c8e6fa;border:1.5px solid #1565c0" title="Bassin Atlantique"></span>
-                  <span class="tc-sw" style="background:#c8efd8;border:1.5px solid #2e7d32" title="Bassin Sebou"></span>
-                  <span class="tc-sw" style="background:#fff9c4;border:1.5px solid #f9a825" title="Bassin Intermédiaire"></span>
-                  <span class="tc-sw" style="background:#fce4d0;border:1.5px solid #bf360c" title="Côtier N."></span>
-                  <span class="tc-sw" style="background:#ead5f5;border:1.5px solid #6a1b9a" title="Côtier S."></span>
-                  <span class="tc-tag">Polygones</span>
+                <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#c8e6fa;border:1.5px solid #1565c0" title="Atlantique"></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#c8efd8;border:1.5px solid #2e7d32" title="Sebou"></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#fff9c4;border:1.5px solid #f9a825" title="Intermédiaire"></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#fce4d0;border:1.5px solid #bf360c" title="Côtier N."></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#ead5f5;border:1.5px solid #6a1b9a" title="Côtier S."></span>
+                  <span class="tc-tag">Polygones classifiés</span>
                 </div>
               </div>
               <button class="tc-zoom" data-layer="Bassins versants" title="Centrer">⊙</button>
@@ -181,18 +181,18 @@
 
             <!-- ── Carte 2 : Réseau Hydrographique ── -->
             <div class="thematic-card active" data-layer="Oueds / Rivières">
-              <div class="tc-bar" style="background:linear-gradient(90deg,#0044aa,#0066CC,#4499DD)"></div>
-              <div class="tc-body">
-                <div class="tc-head">
-                  <span class="tc-icon">🌊</span>
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#0044aa,#0066CC,#4499DD)"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">🌊</span>
                   <span class="tc-name">Réseau Hydrographique — Oueds</span>
-                  <span class="tc-status">✓</span>
+                  <span class="tc-status"></span>
                 </div>
-                <div class="tc-classif">
-                  <span class="tc-ln" style="background:#0066CC;height:5px" title="Oued majeur (Sebou, Bou Regreg)"></span>
-                  <span class="tc-ln" style="background:#0066CC;height:2.5px" title="Oued principal"></span>
-                  <span class="tc-ln" style="background:#4499DD;height:1.5px" title="Oued secondaire"></span>
-                  <span class="tc-tag">Lignes hiérarchisées</span>
+                <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+                  <span style="display:inline-block;width:26px;height:5px;border-radius:1px;background:#0066CC" title="Oued majeur"></span>
+                  <span style="display:inline-block;width:26px;height:2.5px;border-radius:1px;background:#0066CC" title="Oued principal"></span>
+                  <span style="display:inline-block;width:26px;height:1.5px;border-radius:1px;background:#4499DD" title="Oued secondaire"></span>
+                  <span class="tc-tag">Hiérarchie 3 niveaux</span>
                 </div>
               </div>
               <button class="tc-zoom" data-layer="Oueds / Rivières" title="Centrer">⊙</button>
@@ -200,18 +200,18 @@
 
             <!-- ── Carte 3 : Nappes Souterraines ── -->
             <div class="thematic-card active" data-layer="Nappes souterraines">
-              <div class="tc-bar" style="background:linear-gradient(90deg,#1d4ed8,#0891b2,#0369a1,#0e7490)"></div>
-              <div class="tc-body">
-                <div class="tc-head">
-                  <span class="tc-icon">💧</span>
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#1d4ed8,#0891b2,#0369a1,#0e7490)"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">💧</span>
                   <span class="tc-name">Nappes Souterraines</span>
-                  <span class="tc-status">✓</span>
+                  <span class="tc-status"></span>
                 </div>
-                <div class="tc-classif">
-                  <span class="tc-sw" style="background:#bfdbfe;border:1.5px dashed #1d4ed8" title="Nappe phréatique"></span>
-                  <span class="tc-sw" style="background:#a5f3fc;border:1.5px dashed #0891b2" title="Nappe littorale"></span>
-                  <span class="tc-sw" style="background:#bae6fd;border:1.5px dashed #0369a1" title="Nappe alluviale"></span>
-                  <span class="tc-sw" style="background:#cffafe;border:1.5px dashed #0e7490" title="Nappe côtière"></span>
+                <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#bfdbfe;border:1.5px dashed #1d4ed8" title="Nappe phréatique"></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#a5f3fc;border:1.5px dashed #0891b2" title="Nappe littorale"></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#bae6fd;border:1.5px dashed #0369a1" title="Nappe alluviale"></span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#cffafe;border:1.5px dashed #0e7490" title="Nappe côtière"></span>
                   <span class="tc-tag">Gradient bleu–cyan</span>
                 </div>
               </div>
@@ -220,16 +220,16 @@
 
             <!-- ── Carte 4 : Barrages ── -->
             <div class="thematic-card active" data-layer="Barrages">
-              <div class="tc-bar" style="background:#0d47a1"></div>
-              <div class="tc-body">
-                <div class="tc-head">
-                  <span class="tc-icon">🏗️</span>
+              <div class="tc-bar" style="height:5px;background:#0d47a1"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">🏗️</span>
                   <span class="tc-name">Barrages &amp; Retenues d'eau</span>
-                  <span class="tc-status">✓</span>
+                  <span class="tc-status"></span>
                 </div>
-                <div class="tc-classif">
-                  <span class="tc-pt" style="background:#0d47a1" title="Barrage existant opérationnel"></span>
-                  <span class="tc-ptlabel">Barrage opérationnel</span>
+                <div style="display:flex;align-items:center;gap:5px">
+                  <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#0d47a1;border:2px solid white;outline:1.5px solid #0d47a1"></span>
+                  <span style="font-size:11px;color:#475569">Barrage opérationnel</span>
                   <span class="tc-tag">Points symboles</span>
                 </div>
               </div>
@@ -238,16 +238,16 @@
 
             <!-- ── Carte 5 : Stations Pluviométriques ── -->
             <div class="thematic-card active" data-layer="Stations pluviométriques">
-              <div class="tc-bar" style="background:#1565c0"></div>
-              <div class="tc-body">
-                <div class="tc-head">
-                  <span class="tc-icon">🌧️</span>
+              <div class="tc-bar" style="height:5px;background:#1565c0"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">🌧️</span>
                   <span class="tc-name">Stations Pluviométriques</span>
-                  <span class="tc-status">✓</span>
+                  <span class="tc-status"></span>
                 </div>
-                <div class="tc-classif">
-                  <span class="tc-pt" style="background:#1565c0" title="Station de mesure"></span>
-                  <span class="tc-ptlabel">Station de mesure</span>
+                <div style="display:flex;align-items:center;gap:5px">
+                  <span style="display:inline-flex;align-items:center;justify-content:center;width:12px;height:12px;border-radius:50%;background:#1565c0;border:2px solid white;outline:1.5px solid #1565c0"></span>
+                  <span style="font-size:11px;color:#475569">Station de mesure</span>
                   <span class="tc-tag">Réseau DMN / ABHS</span>
                 </div>
               </div>
@@ -258,20 +258,20 @@
             <div class="tc-group-label">⚠️ Risque d'inondation</div>
 
             <div class="thematic-card active" data-layer="Zones de risque">
-              <div class="tc-bar" style="background:linear-gradient(90deg,#dc2626 33%,#ea580c 66%,#ca8a04 100%)"></div>
-              <div class="tc-body">
-                <div class="tc-head">
-                  <span class="tc-icon">⚠️</span>
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#dc2626 33%,#ea580c 66%,#ca8a04 100%)"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">⚠️</span>
                   <span class="tc-name">Zones à Risque d'Inondation</span>
-                  <span class="tc-status">✓</span>
+                  <span class="tc-status"></span>
                 </div>
-                <div class="tc-classif">
-                  <span class="tc-sw" style="background:#fecaca;border:1.5px solid #dc2626" title="Risque élevé"></span>
-                  <span class="tc-sw-label" style="color:#dc2626">Élevé</span>
-                  <span class="tc-sw" style="background:#fed7aa;border:1.5px solid #ea580c" title="Risque modéré"></span>
-                  <span class="tc-sw-label" style="color:#ea580c">Modéré</span>
-                  <span class="tc-sw" style="background:#fef9c3;border:1.5px dashed #ca8a04" title="Risque faible"></span>
-                  <span class="tc-sw-label" style="color:#a16207">Faible</span>
+                <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#fecaca;border:1.5px solid #dc2626"></span>
+                  <span style="font-size:10px;font-weight:700;color:#dc2626;margin-right:3px">Élevé</span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#fed7aa;border:1.5px solid #ea580c"></span>
+                  <span style="font-size:10px;font-weight:700;color:#ea580c;margin-right:3px">Modéré</span>
+                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#fef9c3;border:1.5px dashed #ca8a04"></span>
+                  <span style="font-size:10px;font-weight:700;color:#a16207">Faible</span>
                 </div>
               </div>
               <button class="tc-zoom" data-layer="Zones de risque" title="Centrer">⊙</button>
@@ -281,16 +281,16 @@
             <div class="tc-group-label">🗂️ Administratif</div>
 
             <div class="thematic-card active" data-layer="Limites administratives">
-              <div class="tc-bar" style="background:#1d4ed8"></div>
-              <div class="tc-body">
-                <div class="tc-head">
-                  <span class="tc-icon">🗂️</span>
+              <div class="tc-bar" style="height:5px;background:#1d4ed8"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">🗂️</span>
                   <span class="tc-name">Découpage Administratif</span>
-                  <span class="tc-status">✓</span>
+                  <span class="tc-status"></span>
                 </div>
-                <div class="tc-classif">
-                  <span class="tc-ln tc-dashed" style="border-top:2.5px dashed #1d4ed8" title="Limite région"></span>
-                  <span class="tc-ptlabel">Limite région / préfecture</span>
+                <div style="display:flex;align-items:center;gap:5px">
+                  <span style="display:inline-block;width:30px;height:0;border-top:2.5px dashed #1d4ed8"></span>
+                  <span style="font-size:11px;color:#475569">Limite région / préfecture</span>
                 </div>
               </div>
               <button class="tc-zoom" data-layer="Limites administratives" title="Centrer">⊙</button>
@@ -298,17 +298,17 @@
 
             <!-- ── Carte 8 : Villes Principales ── -->
             <div class="thematic-card active" data-layer="Villes principales">
-              <div class="tc-bar" style="background:linear-gradient(90deg,#6d28d9,#1d4ed8,#2563eb)"></div>
-              <div class="tc-body">
-                <div class="tc-head">
-                  <span class="tc-icon">🏙️</span>
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#6d28d9,#1d4ed8,#2563eb)"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-size:14px;flex-shrink:0">🏙️</span>
                   <span class="tc-name">Villes Principales RSK</span>
-                  <span class="tc-status">✓</span>
+                  <span class="tc-status"></span>
                 </div>
-                <div class="tc-classif">
-                  <span class="tc-pt" style="background:#6d28d9;width:14px;height:14px" title="Capitale Rabat">★</span>
-                  <span class="tc-pt" style="background:#1d4ed8;width:10px;height:10px" title="Ville principale"></span>
-                  <span class="tc-pt" style="background:#2563eb;width:7px;height:7px" title="Ville secondaire"></span>
+                <div style="display:flex;align-items:center;gap:4px">
+                  <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#6d28d9;border:2px solid white;outline:1.5px solid #6d28d9;color:white;font-size:7px">★</span>
+                  <span style="display:inline-flex;width:11px;height:11px;border-radius:50%;background:#1d4ed8;border:2px solid white;outline:1.5px solid #1d4ed8"></span>
+                  <span style="display:inline-flex;width:8px;height:8px;border-radius:50%;background:#2563eb;border:2px solid white;outline:1.5px solid #2563eb"></span>
                   <span class="tc-tag">Centres urbains</span>
                 </div>
               </div>
