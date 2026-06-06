@@ -1,419 +1,488 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WebSIG — Rabat-Salé-Kénitra | Ressources en eau &amp; Risques</title>
+  <title>WebSIG — Rabat-Salé-Kénitra | Ressources en eau &amp; Risque inondation</title>
 
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Source+Sans+Pro:wght@300;400;600&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet 1.9.4 CSS only (no SRI — avoids CDN hash mismatch blocking) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Leaflet.draw CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
-  <link rel="stylesheet" href="css/style.css?v=5" />
+
+  <!-- Leaflet MiniMap CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.css" />
+
+  <!-- App styles (v3 — light professional theme) -->
+  <link rel="stylesheet" href="css/style.css?v=4" />
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════
-     LOADING SPINNER
-═══════════════════════════════════════ -->
-<div id="loading-spinner">
-  <div class="spinner-content">
-    <svg class="water-drop" viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="dropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#00b4d8"/>
-          <stop offset="100%" style="stop-color:#0077b6"/>
-        </linearGradient>
-      </defs>
-      <path d="M30 5 C30 5, 5 35, 5 50 C5 65, 16 75, 30 75 C44 75, 55 65, 55 50 C55 35, 30 5, 30 5 Z" fill="url(#dropGrad)" class="drop-path"/>
-      <ellipse cx="22" cy="42" rx="5" ry="8" fill="rgba(255,255,255,0.25)" transform="rotate(-20,22,42)"/>
-    </svg>
-    <p class="spinner-text">Chargement...</p>
-    <div class="spinner-bar"><div class="spinner-progress"></div></div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════
-     MAP (full screen base)
-═══════════════════════════════════════ -->
-<div id="map"></div>
-
-<!-- ═══════════════════════════════════════
-     COMPASS ROSE — top left
-═══════════════════════════════════════ -->
-<div id="compass-rose">
-  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="50" r="48" fill="rgba(255,255,255,0.96)" stroke="#1e3a8a" stroke-width="2"/>
-    <circle cx="50" cy="50" r="34" fill="none" stroke="#d0dff5" stroke-width="1"/>
-    <circle cx="50" cy="50" r="20" fill="none" stroke="#e5eefb" stroke-width="1"/>
-    <!-- diagonal ticks -->
-    <line x1="50" y1="4"  x2="50" y2="16" stroke="#94a3b8" stroke-width="1.2" transform="rotate(45,50,50)"/>
-    <line x1="50" y1="4"  x2="50" y2="16" stroke="#94a3b8" stroke-width="1.2" transform="rotate(135,50,50)"/>
-    <line x1="50" y1="4"  x2="50" y2="16" stroke="#94a3b8" stroke-width="1.2" transform="rotate(225,50,50)"/>
-    <line x1="50" y1="4"  x2="50" y2="16" stroke="#94a3b8" stroke-width="1.2" transform="rotate(315,50,50)"/>
-    <!-- N arrow (red) -->
-    <polygon points="50,7 46,50 50,44 54,50" fill="#dc2626"/>
-    <!-- S arrow (blue) -->
-    <polygon points="50,93 46,50 50,56 54,50" fill="#1e3a8a"/>
-    <!-- E arrow -->
-    <polygon points="93,50 50,46 56,50 50,54" fill="#1e3a8a"/>
-    <!-- W arrow -->
-    <polygon points="7,50 50,46 44,50 50,54" fill="#1e3a8a"/>
-    <!-- center -->
-    <circle cx="50" cy="50" r="5" fill="white" stroke="#1e3a8a" stroke-width="1.5"/>
-    <!-- labels -->
-    <text x="50" y="5.5" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="800" fill="#dc2626" font-family="Rajdhani,sans-serif">N</text>
-    <text x="50" y="96" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#1e3a8a" font-family="Rajdhani,sans-serif">S</text>
-    <text x="96" y="51" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="#1e3a8a" font-family="Rajdhani,sans-serif">E</text>
-    <text x="4"  y="51" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="#1e3a8a" font-family="Rajdhani,sans-serif">W</text>
-  </svg>
-</div>
-
-<!-- ═══════════════════════════════════════
-     TITLE CARD — top center
-═══════════════════════════════════════ -->
-<div id="map-title-card">
-  <div class="mtc-title">WEBSIG — Rabat-Salé-Kénitra</div>
-  <div class="mtc-sub">Ressources en eau &amp; Risques d'inondation</div>
-</div>
-
-<!-- ═══════════════════════════════════════
-     RIGHT TOOL STRIP
-═══════════════════════════════════════ -->
-<div id="tool-strip">
-  <button class="ts-btn" id="btn-layers"   title="Couches cartographiques">
-    <svg viewBox="0 0 20 20" width="18" height="18"><path d="M2 5l8-3 8 3-8 3z" fill="currentColor" opacity=".9"/><path d="M2 10l8-3 8 3-8 3z" fill="currentColor" opacity=".65"/><path d="M2 15l8-3 8 3-8 3z" fill="currentColor" opacity=".4"/></svg>
-  </button>
-  <button class="ts-btn" id="btn-stats"    title="Statistiques hydrologiques">
-    <svg viewBox="0 0 20 20" width="18" height="18"><rect x="2" y="12" width="4" height="6" rx="1" fill="currentColor"/><rect x="8" y="8" width="4" height="10" rx="1" fill="currentColor"/><rect x="14" y="4" width="4" height="14" rx="1" fill="currentColor"/></svg>
-  </button>
-  <div class="ts-sep"></div>
-  <button class="ts-btn" id="btn-zoom-in"  title="Zoom avant">
-    <svg viewBox="0 0 20 20" width="16" height="16"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="2"/><line x1="10" y1="6" x2="10" y2="14" stroke="currentColor" stroke-width="2"/><line x1="6" y1="10" x2="14" y2="10" stroke="currentColor" stroke-width="2"/></svg>
-  </button>
-  <button class="ts-btn" id="btn-zoom-out" title="Zoom arrière">
-    <svg viewBox="0 0 20 20" width="16" height="16"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="2"/><line x1="6" y1="10" x2="14" y2="10" stroke="currentColor" stroke-width="2"/></svg>
-  </button>
-  <div class="ts-sep"></div>
-  <button class="ts-btn" id="btn-search"   title="Rechercher un lieu">
-    <svg viewBox="0 0 20 20" width="16" height="16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="12" x2="17" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-  </button>
-  <div class="ts-sep"></div>
-  <button class="ts-btn" id="btn-measure-distance" title="Mesurer une distance">
-    <svg viewBox="0 0 20 20" width="16" height="16"><line x1="3" y1="17" x2="17" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="17" x2="6" y2="14" stroke="currentColor" stroke-width="1.5"/><line x1="17" y1="3" x2="14" y2="6" stroke="currentColor" stroke-width="1.5"/></svg>
-  </button>
-  <button class="ts-btn" id="btn-measure-area" title="Mesurer une surface">
-    <svg viewBox="0 0 20 20" width="16" height="16"><polygon points="10,2 18,14 2,14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-  </button>
-  <button class="ts-btn" id="btn-clear-measure" title="Effacer mesures" style="display:none">
-    <svg viewBox="0 0 20 20" width="14" height="14"><line x1="3" y1="3" x2="17" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="3" x2="3" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-  </button>
-  <div class="ts-sep"></div>
-  <button class="ts-btn" id="btn-export-png" title="Exporter la carte en PNG">
-    <svg viewBox="0 0 20 20" width="16" height="16"><path d="M10 13V3M6 9l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M3 15v2h14v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
-  </button>
-  <button class="ts-btn" id="btn-fullscreen" title="Plein écran">
-    <svg viewBox="0 0 20 20" width="16" height="16"><path d="M3 3h5M3 3v5M17 3h-5M17 3v5M3 17h5M3 17v-5M17 17h-5M17 17v-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
-  </button>
-  <div class="ts-sep"></div>
-  <button class="ts-btn" id="btn-info" title="À propos">
-    <svg viewBox="0 0 20 20" width="16" height="16"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="2"/><line x1="10" y1="9" x2="10" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="6.5" r="1" fill="currentColor"/></svg>
-  </button>
-</div>
-
-<!-- ═══════════════════════════════════════
-     FLOATING LAYERS PANEL
-═══════════════════════════════════════ -->
-<div id="layers-panel" class="float-panel" style="display:none">
-  <div class="fp-header">
-    <svg viewBox="0 0 20 20" width="16" height="16" style="flex-shrink:0"><path d="M2 5l8-3 8 3-8 3z" fill="white"/><path d="M2 10l8-3 8 3-8 3z" fill="white" opacity=".7"/><path d="M2 15l8-3 8 3-8 3z" fill="white" opacity=".45"/></svg>
-    <span>Couches cartographiques</span>
-    <button class="fp-close" id="close-layers-panel" title="Fermer">✕</button>
-  </div>
-  <div class="fp-body">
-
-    <!-- BASE LAYERS -->
-    <div class="fp-section-title">🗺️ Fond de carte</div>
-    <div class="basemap-grid">
-      <div class="basemap-card active" data-basemap="OpenStreetMap" title="OpenStreetMap">
-        <div class="basemap-thumb bm-osm"><span class="basemap-check">✓</span></div>
-        <span class="basemap-name">OpenStreetMap</span>
-      </div>
-      <div class="basemap-card" data-basemap="Satellite" title="Satellite Esri">
-        <div class="basemap-thumb bm-sat"><span class="basemap-check">✓</span></div>
-        <span class="basemap-name">Satellite</span>
-      </div>
-      <div class="basemap-card" data-basemap="Terrain" title="Terrain Esri">
-        <div class="basemap-thumb bm-terrain"><span class="basemap-check">✓</span></div>
-        <span class="basemap-name">Terrain</span>
-      </div>
-      <div class="basemap-card" data-basemap="CartoDB Dark" title="CartoDB Dark">
-        <div class="basemap-thumb bm-dark"><span class="basemap-check">✓</span></div>
-        <span class="basemap-name">Nuit</span>
-      </div>
+  <!-- LOADING SPINNER -->
+  <div id="loading-spinner">
+    <div class="spinner-content">
+      <svg class="water-drop" viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="dropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#00b4d8;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#0077b6;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <path d="M30 5 C30 5, 5 35, 5 50 C5 65, 16 75, 30 75 C44 75, 55 65, 55 50 C55 35, 30 5, 30 5 Z"
+              fill="url(#dropGrad)" class="drop-path" />
+        <ellipse cx="22" cy="42" rx="5" ry="8" fill="rgba(255,255,255,0.25)" transform="rotate(-20,22,42)" />
+      </svg>
+      <p class="spinner-text">Chargement...</p>
+      <div class="spinner-bar"><div class="spinner-progress"></div></div>
     </div>
-
-    <!-- WATER RESOURCES -->
-    <div class="fp-section-title">💧 Ressources en eau</div>
-    <label class="layer-item">
-      <input type="checkbox" class="layer-checkbox" checked data-layer="Bassins versants" id="cb-watersheds"/>
-      <span class="layer-type-icon">▭</span>
-      <span class="layer-name">Bassins versants</span>
-      <button class="layer-zoom-btn" data-layer="Bassins versants" title="Centrer">⊙</button>
-    </label>
-    <label class="layer-item">
-      <input type="checkbox" class="layer-checkbox" checked data-layer="Oueds / Rivières" id="cb-rivers"/>
-      <span class="layer-type-icon line-icon">—</span>
-      <span class="layer-name">Oueds / Rivières</span>
-      <button class="layer-zoom-btn" data-layer="Oueds / Rivières" title="Centrer">⊙</button>
-    </label>
-    <label class="layer-item">
-      <input type="checkbox" class="layer-checkbox" checked data-layer="Barrages" id="cb-dams"/>
-      <span class="layer-type-icon">⬤</span>
-      <span class="layer-name">Barrages</span>
-      <button class="layer-zoom-btn" data-layer="Barrages" title="Centrer">⊙</button>
-    </label>
-    <label class="layer-item">
-      <input type="checkbox" class="layer-checkbox" checked data-layer="Stations pluviométriques" id="cb-stations"/>
-      <span class="layer-type-icon">⬤</span>
-      <span class="layer-name">Stations pluviométriques</span>
-      <button class="layer-zoom-btn" data-layer="Stations pluviométriques" title="Centrer">⊙</button>
-    </label>
-    <label class="layer-item">
-      <input type="checkbox" class="layer-checkbox" checked data-layer="Nappes souterraines" id="cb-aquifers"/>
-      <span class="layer-type-icon">▭</span>
-      <span class="layer-name">Nappes souterraines</span>
-      <button class="layer-zoom-btn" data-layer="Nappes souterraines" title="Centrer">⊙</button>
-    </label>
-
-    <!-- FLOOD RISK -->
-    <div class="fp-section-title">⚠️ Risque d'inondation</div>
-    <label class="layer-item">
-      <input type="checkbox" class="layer-checkbox" checked data-layer="Zones de risque" id="cb-flood"/>
-      <span class="layer-type-icon risk-icon">▭</span>
-      <span class="layer-name">Zones de risque inondation</span>
-      <button class="layer-zoom-btn" data-layer="Zones de risque" title="Centrer">⊙</button>
-    </label>
-
-    <!-- ADMINISTRATIVE -->
-    <div class="fp-section-title">🗂️ Administratif</div>
-    <label class="layer-item">
-      <input type="checkbox" class="layer-checkbox" checked data-layer="Limites administratives" id="cb-admin"/>
-      <span class="layer-type-icon">⬜</span>
-      <span class="layer-name">Limites administratives</span>
-      <button class="layer-zoom-btn" data-layer="Limites administratives" title="Centrer">⊙</button>
-    </label>
-    <label class="layer-item">
-      <input type="checkbox" class="layer-checkbox" checked data-layer="Villes principales" id="cb-cities"/>
-      <span class="layer-type-icon">⬤</span>
-      <span class="layer-name">Villes principales</span>
-      <button class="layer-zoom-btn" data-layer="Villes principales" title="Centrer">⊙</button>
-    </label>
-
-  </div><!-- /fp-body -->
-</div>
-
-<!-- ═══════════════════════════════════════
-     FLOATING SEARCH PANEL
-═══════════════════════════════════════ -->
-<div id="search-panel" class="float-panel" style="display:none">
-  <div class="fp-header">
-    <svg viewBox="0 0 20 20" width="15" height="15" style="flex-shrink:0"><circle cx="8" cy="8" r="5.5" fill="none" stroke="white" stroke-width="2"/><line x1="12" y1="12" x2="17" y2="17" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
-    <span>Rechercher un lieu</span>
-    <button class="fp-close" id="close-search-panel" title="Fermer">✕</button>
   </div>
-  <div class="fp-body" style="padding:10px">
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="search-input" placeholder="Nom de ville, région..." autocomplete="off"/>
-      <button id="search-btn" title="Rechercher">→</button>
-    </div>
-    <div id="search-results"></div>
-  </div>
-</div>
 
-<!-- ═══════════════════════════════════════
-     FLOATING STATS PANEL
-═══════════════════════════════════════ -->
-<div id="stats-panel" class="float-panel stats-float" style="display:none">
-  <div class="fp-header">
-    <svg viewBox="0 0 20 20" width="15" height="15" style="flex-shrink:0"><rect x="2" y="12" width="4" height="6" rx="1" fill="white"/><rect x="8" y="8" width="4" height="10" rx="1" fill="white"/><rect x="14" y="4" width="4" height="14" rx="1" fill="white"/></svg>
-    <span>Statistiques hydrologiques</span>
-    <button class="fp-close" id="close-stats-panel" title="Fermer">✕</button>
-  </div>
-  <div class="fp-body stats-fp-body">
-    <!-- Tabs -->
-    <div class="panel-tabs">
-      <button class="tab-btn active" data-tab="stats">📊 Statistiques</button>
-      <button class="tab-btn" data-tab="rain">🌧 Précipitations</button>
-      <button class="tab-btn" data-tab="about">ℹ À propos</button>
-    </div>
+  <!-- MAIN APP CONTAINER -->
+  <div id="app-container">
 
-    <!-- TAB STATS -->
-    <div class="tab-content active" id="tab-stats">
-      <div class="stat-cards-grid">
-        <div class="stat-card"><div class="stat-number" id="stat-dams">3</div><div class="stat-label">Barrages</div></div>
-        <div class="stat-card"><div class="stat-number" id="stat-capacity">1 725</div><div class="stat-label">Mm³ capacité</div></div>
-        <div class="stat-card"><div class="stat-number" id="stat-rivers">847</div><div class="stat-label">km réseau hydro.</div></div>
-        <div class="stat-card"><div class="stat-number" id="stat-stations">5</div><div class="stat-label">Stations pluvio.</div></div>
-      </div>
-      <div class="chart-block">
-        <h3 class="chart-title">Distribution des zones de risque</h3>
-        <div class="chart-wrap"><canvas id="riskPieChart"></canvas></div>
-        <div class="risk-legend-inline">
-          <span class="risk-dot high"></span> Élevé: 245 km²
-          <span class="risk-dot medium"></span> Moyen: 890 km²
-          <span class="risk-dot low"></span> Faible: 1 340 km²
+    <!-- TOP TOOLBAR -->
+    <div id="toolbar">
+      <div class="toolbar-left">
+        <div class="toolbar-brand">
+          <svg class="brand-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#00b4d8"/>
+            <circle cx="12" cy="9" r="2.5" fill="#0d1b2a"/>
+          </svg>
+          <span class="brand-title">WebSIG — <span class="brand-region">Rabat-Salé-Kénitra</span></span>
         </div>
       </div>
-      <div class="chart-block">
-        <h3 class="chart-title">Niveau actuel des barrages</h3>
-        <div class="chart-wrap"><canvas id="damLevelChart"></canvas></div>
-      </div>
-      <div class="chart-block">
-        <h3 class="chart-title">Superficie des bassins versants</h3>
-        <div class="chart-wrap"><canvas id="watershedChart"></canvas></div>
-      </div>
-    </div>
 
-    <!-- TAB RAIN -->
-    <div class="tab-content" id="tab-rain">
-      <div class="chart-block">
-        <h3 class="chart-title">Précipitations moyennes mensuelles (RSK)</h3>
-        <div class="chart-wrap"><canvas id="monthlyRainChart"></canvas></div>
+      <div class="toolbar-center">
+        <button id="btn-measure-distance" class="toolbar-btn" title="Mesurer une distance">
+          <span class="btn-icon">📏</span>
+          <span class="btn-label">Distance</span>
+        </button>
+        <button id="btn-measure-area" class="toolbar-btn" title="Mesurer une surface">
+          <span class="btn-icon">⬡</span>
+          <span class="btn-label">Surface</span>
+        </button>
+        <button id="btn-clear-measure" class="toolbar-btn" title="Effacer les mesures" style="display:none;">
+          <span class="btn-icon">✕</span>
+          <span class="btn-label">Effacer</span>
+        </button>
+        <div class="toolbar-separator"></div>
+        <button id="btn-export-png" class="toolbar-btn" title="Exporter la carte en PNG">
+          <span class="btn-icon">📥</span>
+          <span class="btn-label">Export PNG</span>
+        </button>
+        <button id="btn-fullscreen" class="toolbar-btn" title="Plein écran">
+          <span class="btn-icon">⛶</span>
+          <span class="btn-label">Plein écran</span>
+        </button>
+        <div class="toolbar-separator"></div>
+        <button id="btn-info" class="toolbar-btn" title="À propos du projet">
+          <span class="btn-icon">ℹ</span>
+          <span class="btn-label">Info</span>
+        </button>
       </div>
-      <div class="chart-block">
-        <h3 class="chart-title">Série interannuelle 2000–2023</h3>
-        <div class="chart-wrap tall"><canvas id="annualRainChart"></canvas></div>
-      </div>
-      <div class="chart-block">
-        <h3 class="chart-title">Précipitations par station (mm/an)</h3>
-        <table class="data-table" id="stations-table">
-          <thead>
-            <tr><th>Station</th><th>Altitude (m)</th><th>Moy. annuelle (mm)</th><th>Réseau</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Rabat-Météo</td><td>75</td><td>562</td><td>DMN</td></tr>
-            <tr><td>Kénitra</td><td>15</td><td>618</td><td>ABHS</td></tr>
-            <tr><td>Salé</td><td>20</td><td>548</td><td>DMN</td></tr>
-            <tr><td>Tiflet</td><td>290</td><td>498</td><td>ABHS</td></tr>
-            <tr><td>Khémisset</td><td>405</td><td>478</td><td>ABHS</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
 
-    <!-- TAB ABOUT -->
-    <div class="tab-content" id="tab-about">
-      <div class="about-card">
-        <h4>🎓 Contexte académique</h4>
-        <table class="about-table">
-          <tr><td>Type</td><td>PFE Master 2</td></tr>
-          <tr><td>Année</td><td>2024–2025</td></tr>
-          <tr><td>Université</td><td>Université Ibn Tofail — Kénitra</td></tr>
-          <tr><td>Filière</td><td>Géomatique &amp; SIG</td></tr>
-        </table>
-      </div>
-      <div class="about-card">
-        <h4>🎯 Objectifs</h4>
-        <ul class="about-list">
-          <li>Cartographie interactive des ressources en eau RSK</li>
-          <li>Visualisation des zones à risque d'inondation</li>
-          <li>Intégration de données pluviométriques et hydrologiques</li>
-          <li>Outil d'aide à la décision pour la gestion du risque hydrique</li>
-        </ul>
-      </div>
-      <div class="about-card">
-        <h4>🛠️ Technologies</h4>
-        <div class="tech-stack">
-          <span class="tech-badge html">HTML5</span>
-          <span class="tech-badge css">CSS3</span>
-          <span class="tech-badge js">JavaScript ES6</span>
-          <span class="tech-badge leaflet">Leaflet 1.9</span>
-          <span class="tech-badge chartjs">Chart.js 4</span>
-          <span class="tech-badge geojson">GeoJSON</span>
+      <div class="toolbar-right">
+        <div id="coords-display">
+          <span class="coords-label">Lat:</span>
+          <span id="coord-lat">—</span>
+          <span class="coords-label">Lon:</span>
+          <span id="coord-lon">—</span>
         </div>
+        <button id="btn-mobile-menu" class="toolbar-btn mobile-only" title="Menu">☰</button>
       </div>
-      <div class="about-card">
-        <h4>📦 Sources de données</h4>
-        <ul class="about-list">
-          <li>Agence du Bassin Hydraulique du Sebou (ABHS)</li>
-          <li>Direction de la Météorologie Nationale (DMN)</li>
-          <li>OpenStreetMap Contributors</li>
-          <li>ESRI World Imagery &amp; Topo</li>
-        </ul>
-      </div>
-      <div class="about-footer"><p>© 2025 — PFE, Université Ibn Tofail, Kénitra</p></div>
     </div>
 
-  </div><!-- /stats-fp-body -->
-</div>
+    <!-- MAIN AREA: sidebar + map + right panel -->
+    <div id="main-area">
 
-<!-- ═══════════════════════════════════════
-     FLOATING LEGEND — bottom left
-═══════════════════════════════════════ -->
-<div id="float-legend">
-  <div id="float-legend-header">
-    <span class="fl-info">ℹ</span>
-    <span class="fl-title">LÉGENDE</span>
-    <button class="fl-toggle" id="legend-toggle" title="Réduire/Agrandir">∨</button>
+      <!-- LEFT SIDEBAR -->
+      <div id="sidebar">
+        <button id="sidebar-toggle" title="Réduire le panneau">◀</button>
+
+        <div id="sidebar-content">
+
+          <!-- Header -->
+          <div class="sidebar-header">
+            <div class="sidebar-logo">
+              <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
+                <circle cx="20" cy="20" r="19" fill="#0d1b2a" stroke="#00b4d8" stroke-width="1.5"/>
+                <path d="M20 6 C20 6, 8 18, 8 25 C8 31.6, 13.4 37, 20 37 C26.6 37, 32 31.6, 32 25 C32 18, 20 6, 20 6 Z" fill="#00b4d8" opacity="0.85"/>
+                <path d="M14 23 Q17 20 20 23 Q23 26 26 23" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+              </svg>
+              <div class="sidebar-title">
+                <span class="sidebar-project">WebSIG RSK</span>
+                <span class="sidebar-subtitle">Ressources en eau &amp; Risques</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Search bar -->
+          <div class="search-section">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="search-input" placeholder="Rechercher un lieu..." autocomplete="off" />
+              <button id="search-btn" title="Rechercher">→</button>
+            </div>
+            <div id="search-results"></div>
+          </div>
+
+          <!-- Layer groups -->
+          <div class="layers-section">
+            <div class="section-title">Couches cartographiques</div>
+
+            <!-- BASE LAYERS: visual cards -->
+            <div class="layer-group" id="group-base">
+              <div class="layer-group-header" data-group="base">
+                <span class="group-arrow">▼</span>
+                <span class="group-icon">🗺️</span>
+                <span class="group-name">Fond de carte</span>
+              </div>
+              <div class="layer-group-body" id="body-base">
+                <div class="basemap-grid">
+                  <div class="basemap-card active" data-basemap="OpenStreetMap" title="OpenStreetMap">
+                    <div class="basemap-thumb bm-osm">
+                      <span class="basemap-check">✓</span>
+                    </div>
+                    <span class="basemap-name">OpenStreetMap</span>
+                  </div>
+                  <div class="basemap-card" data-basemap="Satellite" title="Satellite Esri">
+                    <div class="basemap-thumb bm-sat">
+                      <span class="basemap-check">✓</span>
+                    </div>
+                    <span class="basemap-name">Satellite</span>
+                  </div>
+                  <div class="basemap-card" data-basemap="Terrain" title="Terrain Esri">
+                    <div class="basemap-thumb bm-terrain">
+                      <span class="basemap-check">✓</span>
+                    </div>
+                    <span class="basemap-name">Terrain</span>
+                  </div>
+                  <div class="basemap-card" data-basemap="CartoDB Dark" title="CartoDB Dark">
+                    <div class="basemap-thumb bm-dark">
+                      <span class="basemap-check">✓</span>
+                    </div>
+                    <span class="basemap-name">Nuit</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- WATER RESOURCES: checkboxes -->
+            <div class="layer-group" id="group-water">
+              <div class="layer-group-header" data-group="water">
+                <span class="group-arrow">▼</span>
+                <span class="group-icon">💧</span>
+                <span class="group-name">Ressources en eau</span>
+              </div>
+              <div class="layer-group-body" id="body-water">
+                <label class="layer-item">
+                  <input type="checkbox" class="layer-checkbox" checked data-layer="Bassins versants" id="cb-watersheds" />
+                  <span class="layer-type-icon">▭</span>
+                  <span class="layer-name">Bassins versants</span>
+                  <button class="layer-zoom-btn" data-layer="Bassins versants" title="Centrer">⊙</button>
+                </label>
+                <label class="layer-item">
+                  <input type="checkbox" class="layer-checkbox" checked data-layer="Oueds / Rivières" id="cb-rivers" />
+                  <span class="layer-type-icon line-icon">—</span>
+                  <span class="layer-name">Oueds / Rivières</span>
+                  <button class="layer-zoom-btn" data-layer="Oueds / Rivières" title="Centrer">⊙</button>
+                </label>
+                <label class="layer-item">
+                  <input type="checkbox" class="layer-checkbox" checked data-layer="Barrages" id="cb-dams" />
+                  <span class="layer-type-icon">⬤</span>
+                  <span class="layer-name">Barrages</span>
+                  <button class="layer-zoom-btn" data-layer="Barrages" title="Centrer">⊙</button>
+                </label>
+                <label class="layer-item">
+                  <input type="checkbox" class="layer-checkbox" checked data-layer="Stations pluviométriques" id="cb-stations" />
+                  <span class="layer-type-icon">⬤</span>
+                  <span class="layer-name">Stations pluviométriques</span>
+                  <button class="layer-zoom-btn" data-layer="Stations pluviométriques" title="Centrer">⊙</button>
+                </label>
+                <label class="layer-item">
+                  <input type="checkbox" class="layer-checkbox" checked data-layer="Nappes souterraines" id="cb-aquifers" />
+                  <span class="layer-type-icon">▭</span>
+                  <span class="layer-name">Nappes souterraines</span>
+                  <button class="layer-zoom-btn" data-layer="Nappes souterraines" title="Centrer">⊙</button>
+                </label>
+              </div>
+            </div>
+
+            <!-- FLOOD RISK: checkboxes -->
+            <div class="layer-group" id="group-risk">
+              <div class="layer-group-header" data-group="risk">
+                <span class="group-arrow">▼</span>
+                <span class="group-icon">⚠️</span>
+                <span class="group-name">Risque d'inondation</span>
+              </div>
+              <div class="layer-group-body" id="body-risk">
+                <label class="layer-item">
+                  <input type="checkbox" class="layer-checkbox" checked data-layer="Zones de risque" id="cb-flood" />
+                  <span class="layer-type-icon risk-icon">▭</span>
+                  <span class="layer-name">Zones de risque inondation</span>
+                  <button class="layer-zoom-btn" data-layer="Zones de risque" title="Centrer">⊙</button>
+                </label>
+              </div>
+            </div>
+
+            <!-- ADMINISTRATIVE: checkboxes -->
+            <div class="layer-group" id="group-admin">
+              <div class="layer-group-header" data-group="admin">
+                <span class="group-arrow">▼</span>
+                <span class="group-icon">🗂️</span>
+                <span class="group-name">Administratif</span>
+              </div>
+              <div class="layer-group-body" id="body-admin">
+                <label class="layer-item">
+                  <input type="checkbox" class="layer-checkbox" checked data-layer="Limites administratives" id="cb-admin" />
+                  <span class="layer-type-icon">⬜</span>
+                  <span class="layer-name">Limites administratives</span>
+                  <button class="layer-zoom-btn" data-layer="Limites administratives" title="Centrer">⊙</button>
+                </label>
+                <label class="layer-item">
+                  <input type="checkbox" class="layer-checkbox" checked data-layer="Villes principales" id="cb-cities" />
+                  <span class="layer-type-icon">⬤</span>
+                  <span class="layer-name">Villes principales</span>
+                  <button class="layer-zoom-btn" data-layer="Villes principales" title="Centrer">⊙</button>
+                </label>
+              </div>
+            </div>
+
+          </div><!-- /layers-section -->
+
+          <!-- Dynamic legend -->
+          <div class="legend-section" id="legend-section">
+            <div class="section-title">Légende</div>
+            <div id="legend-content">
+              <p class="legend-empty">Activez une couche pour voir sa légende.</p>
+            </div>
+          </div>
+
+        </div><!-- /sidebar-content -->
+      </div><!-- /sidebar -->
+
+      <!-- MAP -->
+      <div id="map" style="height:calc(100vh - 50px);min-height:400px;flex:1;position:relative;"></div>
+
+      <!-- RIGHT PANEL -->
+      <div id="right-panel">
+        <button id="right-panel-toggle" title="Réduire le panneau">▶</button>
+
+        <div id="right-panel-content">
+          <!-- Tabs -->
+          <div class="panel-tabs">
+            <button class="tab-btn active" data-tab="stats">📊 Statistiques</button>
+            <button class="tab-btn" data-tab="rain">🌧 Précipitations</button>
+            <button class="tab-btn" data-tab="about">ℹ À propos</button>
+          </div>
+
+          <!-- TAB: STATISTIQUES -->
+          <div class="tab-content active" id="tab-stats">
+            <div class="stat-cards-grid">
+              <div class="stat-card">
+                <div class="stat-number" id="stat-dams">3</div>
+                <div class="stat-label">Barrages</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="stat-capacity">1 725</div>
+                <div class="stat-label">Mm³ capacité totale</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="stat-rivers">847</div>
+                <div class="stat-label">km de réseau hydrographique</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="stat-stations">5</div>
+                <div class="stat-label">Stations pluviométriques</div>
+              </div>
+            </div>
+
+            <div class="chart-block">
+              <h3 class="chart-title">Distribution des zones de risque</h3>
+              <div class="chart-wrap">
+                <canvas id="riskPieChart"></canvas>
+              </div>
+              <div class="risk-legend-inline">
+                <span class="risk-dot high"></span> Élevé: 245 km²
+                <span class="risk-dot medium"></span> Moyen: 890 km²
+                <span class="risk-dot low"></span> Faible: 1 340 km²
+              </div>
+            </div>
+
+            <div class="chart-block">
+              <h3 class="chart-title">Niveau actuel des barrages</h3>
+              <div class="chart-wrap">
+                <canvas id="damLevelChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-block">
+              <h3 class="chart-title">Superficie des bassins versants</h3>
+              <div class="chart-wrap">
+                <canvas id="watershedChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: PRÉCIPITATIONS -->
+          <div class="tab-content" id="tab-rain">
+            <div class="chart-block">
+              <h3 class="chart-title">Précipitations moyennes mensuelles (RSK)</h3>
+              <div class="chart-wrap">
+                <canvas id="monthlyRainChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-block">
+              <h3 class="chart-title">Série interannuelle 2000–2023</h3>
+              <div class="chart-wrap tall">
+                <canvas id="annualRainChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-block">
+              <h3 class="chart-title">Précipitations par station (mm/an)</h3>
+              <table class="data-table" id="stations-table">
+                <thead>
+                  <tr>
+                    <th>Station</th>
+                    <th>Altitude (m)</th>
+                    <th>Moy. annuelle (mm)</th>
+                    <th>Réseau</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Rabat-Météo</td><td>75</td><td>562</td><td>DMN</td></tr>
+                  <tr><td>Kénitra</td><td>15</td><td>618</td><td>ABHS</td></tr>
+                  <tr><td>Salé</td><td>20</td><td>548</td><td>DMN</td></tr>
+                  <tr><td>Tiflet</td><td>290</td><td>498</td><td>ABHS</td></tr>
+                  <tr><td>Khémisset</td><td>405</td><td>478</td><td>ABHS</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB: À PROPOS -->
+          <div class="tab-content" id="tab-about">
+            <div class="about-header">
+              <h2>WebSIG — Ressources en eau &amp; Risques d'inondation</h2>
+              <h3>Région Rabat-Salé-Kénitra, Maroc</h3>
+            </div>
+
+            <div class="about-card">
+              <h4>🎓 Contexte académique</h4>
+              <table class="about-table">
+                <tr><td>Type</td><td>Projet de Fin d'Études (PFE) Master 2</td></tr>
+                <tr><td>Année</td><td>2024 – 2025</td></tr>
+                <tr><td>Université</td><td>Université Ibn Tofail — Kénitra</td></tr>
+                <tr><td>Filière</td><td>Géomatique &amp; Systèmes d'Information Géographique</td></tr>
+              </table>
+            </div>
+
+            <div class="about-card">
+              <h4>🎯 Objectifs</h4>
+              <ul class="about-list">
+                <li>Cartographie interactive des ressources en eau de la région RSK</li>
+                <li>Visualisation et analyse des zones à risque d'inondation</li>
+                <li>Intégration de données pluviométriques et hydrologiques</li>
+                <li>Outil d'aide à la décision pour la gestion du risque hydrique</li>
+              </ul>
+            </div>
+
+            <div class="about-card">
+              <h4>🛠️ Technologies</h4>
+              <div class="tech-stack">
+                <span class="tech-badge html">HTML5</span>
+                <span class="tech-badge css">CSS3</span>
+                <span class="tech-badge js">JavaScript ES6</span>
+                <span class="tech-badge leaflet">Leaflet 1.9</span>
+                <span class="tech-badge chartjs">Chart.js 4</span>
+                <span class="tech-badge geojson">GeoJSON</span>
+                <span class="tech-badge nominatim">Nominatim</span>
+              </div>
+            </div>
+
+            <div class="about-card">
+              <h4>📦 Sources de données</h4>
+              <ul class="about-list">
+                <li>Agence du Bassin Hydraulique du Sebou (ABHS)</li>
+                <li>Direction de la Météorologie Nationale (DMN)</li>
+                <li>Haut-Commissariat aux Eaux et Forêts (HCEF)</li>
+                <li>OpenStreetMap Contributors</li>
+                <li>ESRI World Imagery &amp; Topo</li>
+              </ul>
+            </div>
+
+            <div class="about-footer">
+              <p>© 2025 — Projet PFE, Université Ibn Tofail, Kénitra</p>
+            </div>
+          </div>
+
+        </div><!-- /right-panel-content -->
+      </div><!-- /right-panel -->
+
+    </div><!-- /main-area -->
+  </div><!-- /app-container -->
+
+  <!-- INFO MODAL -->
+  <div id="info-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <button class="modal-close" id="modal-close-btn">✕</button>
+      <h2>WebSIG Rabat-Salé-Kénitra</h2>
+      <p>Système d'Information Géographique Web dédié à la gestion des ressources en eau et à la cartographie du risque d'inondation dans la région Rabat-Salé-Kénitra.</p>
+      <h3>Utilisation</h3>
+      <ul>
+        <li><strong>Couches :</strong> cochez les couches dans le panneau gauche</li>
+        <li><strong>Mesure :</strong> utilisez les outils de mesure dans la barre supérieure</li>
+        <li><strong>Export :</strong> exportez la carte en PNG depuis la barre supérieure</li>
+        <li><strong>Recherche :</strong> géocodez un lieu avec la barre de recherche</li>
+        <li><strong>Popup :</strong> cliquez sur une entité pour afficher ses attributs</li>
+      </ul>
+      <h3>Contact</h3>
+      <p>Université Ibn Tofail — Département de Géographie, Kénitra, Maroc.</p>
+      <button class="btn-primary" id="modal-ok-btn">Fermer</button>
+    </div>
   </div>
-  <div id="legend-content">
-    <p class="legend-empty">Activez une couche pour voir sa légende.</p>
-  </div>
-</div>
 
-<!-- ═══════════════════════════════════════
-     INFO BAR — bottom right
-═══════════════════════════════════════ -->
-<div id="info-bar">
-  <span class="ib-coord">
-    ⊕ <span id="coord-lat">—</span>° N,
-    <span id="coord-lon">—</span>° W
-  </span>
-  <span class="ib-sep">|</span>
-  <span class="ib-scale" id="scale-display">1 : —</span>
-</div>
+  <!-- MEASUREMENT RESULT TOOLTIP -->
+  <div id="measure-result" style="display:none;"></div>
 
-<!-- ═══════════════════════════════════════
-     MEASUREMENT RESULT TOAST
-═══════════════════════════════════════ -->
-<div id="measure-result" style="display:none"></div>
+  <!-- ALL JS at bottom of body: CDN libs first, then app modules -->
 
-<!-- ═══════════════════════════════════════
-     INFO MODAL
-═══════════════════════════════════════ -->
-<div id="info-modal" class="modal-overlay" style="display:none">
-  <div class="modal-box">
-    <button class="modal-close" id="modal-close-btn">✕</button>
-    <h2>WebSIG Rabat-Salé-Kénitra</h2>
-    <p>Système d'Information Géographique Web pour la gestion des ressources en eau et la cartographie du risque d'inondation dans la région Rabat-Salé-Kénitra.</p>
-    <h3>Utilisation</h3>
-    <ul>
-      <li><strong>Couches :</strong> bouton ☰ dans la barre d'outils (droite)</li>
-      <li><strong>Statistiques :</strong> bouton 📊 dans la barre d'outils</li>
-      <li><strong>Mesure :</strong> outils de mesure dans la barre d'outils</li>
-      <li><strong>Recherche :</strong> bouton 🔍 pour géocoder un lieu</li>
-      <li><strong>Popup :</strong> cliquez sur une entité pour ses attributs</li>
-    </ul>
-    <button class="btn-primary" id="modal-ok-btn">Fermer</button>
-  </div>
-</div>
+  <!-- Leaflet 1.9.4 JS — no integrity hash (prevents SRI blocking) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- SPINNER FAILSAFE -->
-<script>setTimeout(function(){var s=document.getElementById('loading-spinner');if(s)s.style.display='none';},5000);</script>
+  <!-- Leaflet.draw -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 
-<!-- CDN LIBRARIES -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Leaflet MiniMap -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.js"></script>
 
-<!-- APP MODULES -->
-<script src="js/map.js"></script>
-<script src="js/layers.js"></script>
-<script src="js/controls.js"></script>
-<script src="js/charts.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- html2canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- SPINNER FAILSAFE -->
+  <script>
+    setTimeout(function () {
+      var s = document.getElementById('loading-spinner');
+      if (s) s.style.display = 'none';
+    }, 4000);
+  </script>
+
+  <!-- APP MODULES -->
+  <script src="js/map.js"></script>
+  <script src="js/layers.js"></script>
+  <script src="js/controls.js"></script>
+  <script src="js/charts.js"></script>
 
 </body>
 </html>
+

@@ -482,13 +482,16 @@ ul { list-style: none; padding: 0; }
 .legend-line  { width: 24px; flex-shrink: 0; }
 .legend-dot   { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 
-/* ══ MAP — full screen ══════════════════════════════ */
+/* ══ MAP ════════════════════════════════════════════ */
 #map {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important; height: 100vh !important;
+  flex: 1 !important;
+  height: calc(100vh - var(--toolbar-h)) !important;
+  min-height: 400px !important;
+  width: auto !important; min-width: 100px !important;
+  position: relative !important;
   z-index: 1 !important;
   background: #e8edf2 !important;
+  overflow: hidden !important;
 }
 
 /* Leaflet popups — clean white */
@@ -739,191 +742,14 @@ ul { list-style: none; padding: 0; }
 }
 .admin-label::before { display: none !important; }
 
-/* ══════════════════════════════════════════════════════
-   FULL-SCREEN CARTOGRAPHIC LAYOUT
-   All panels float above the map as fixed overlays.
-   ══════════════════════════════════════════════════════ */
-
-/* ── Compass rose ───────────────────────────────────── */
-#compass-rose {
-  position: fixed; top: 16px; left: 16px; z-index: 900;
-  width: 80px; height: 80px;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.18));
-}
-
-/* ── Map title card ─────────────────────────────────── */
-#map-title-card {
-  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
-  z-index: 900;
-  background: rgba(255,255,255,0.97);
-  border: 2px solid #1d4ed8;
-  border-radius: 10px;
-  padding: 10px 28px;
-  text-align: center;
-  box-shadow: 0 3px 20px rgba(0,0,0,0.18);
-  pointer-events: none;
-  white-space: nowrap;
-}
-.mtc-title {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 19px; font-weight: 700;
-  color: #1e3a8a; text-transform: uppercase; letter-spacing: 1px;
-}
-.mtc-sub {
-  font-size: 11px; color: #3b82f6; margin-top: 2px;
-  font-family: 'Source Sans Pro', sans-serif;
-}
-
-/* ── Right tool strip ───────────────────────────────── */
-#tool-strip {
-  position: fixed; right: 14px; top: 50%; transform: translateY(-50%);
-  z-index: 900;
-  background: rgba(255,255,255,0.97);
-  border: 1.5px solid rgba(29,78,216,0.22);
-  border-radius: 14px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.16);
-  padding: 8px 7px;
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-}
-.ts-btn {
-  width: 40px; height: 40px; border: none; border-radius: 10px;
-  background: transparent; color: #1e3a8a;
-  cursor: pointer; font-size: 14px;
-  display: flex; align-items: center; justify-content: center;
-  transition: background var(--transition), color var(--transition), transform 0.1s;
-}
-.ts-btn:hover  { background: #dbeafe; color: #1d4ed8; transform: scale(1.08); }
-.ts-btn.active { background: #1d4ed8; color: white; }
-.ts-sep { width: 26px; height: 1px; background: rgba(37,99,235,0.18); margin: 2px 0; }
-
-/* ── Floating panels — shared base ─────────────────── */
-.float-panel {
-  position: fixed; z-index: 910;
-  background: rgba(255,255,255,0.98);
-  border: 1.5px solid rgba(29,78,216,0.22);
-  border-radius: 12px;
-  box-shadow: 0 6px 32px rgba(0,0,0,0.18);
-  display: flex; flex-direction: column;
-  overflow: hidden;
-}
-.fp-header {
-  display: flex; align-items: center; gap: 9px;
-  padding: 11px 14px;
-  background: linear-gradient(90deg, #1d4ed8, #2563eb);
-  color: white;
-  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.8px;
-  flex-shrink: 0;
-}
-.fp-close {
-  margin-left: auto; background: rgba(255,255,255,0.18);
-  border: none; color: white; cursor: pointer;
-  width: 24px; height: 24px; border-radius: 50%; font-size: 12px;
-  display: flex; align-items: center; justify-content: center;
-  transition: background var(--transition);
-}
-.fp-close:hover { background: rgba(255,255,255,0.35); }
-.fp-body { overflow-y: auto; flex: 1; }
-.fp-body::-webkit-scrollbar { width: 4px; }
-.fp-body::-webkit-scrollbar-thumb { background: var(--blue-pale); border-radius: 2px; }
-
-/* ── Layers panel ───────────────────────────────────── */
-#layers-panel {
-  right: 64px; top: 50%; transform: translateY(-50%);
-  width: 272px; max-height: 82vh;
-}
-.fp-section-title {
-  padding: 8px 12px 4px;
-  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
-  color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.2px;
-  background: var(--bg-page); border-bottom: 1px solid var(--border-light);
-  position: sticky; top: 0; z-index: 1;
-}
-/* layer items inside fp-body */
-#layers-panel .basemap-grid { padding: 10px 10px 12px; }
-#layers-panel .layer-item { padding: 5px 14px 5px 20px; }
-
-/* ── Search panel ───────────────────────────────────── */
-#search-panel { right: 64px; top: 16px; width: 300px; }
-
-/* ── Stats panel ────────────────────────────────────── */
-.stats-float {
-  left: 14px; top: 50%; transform: translateY(-50%);
-  width: 340px; max-height: 86vh;
-}
-.stats-fp-body {
-  overflow-y: auto; flex: 1; display: flex; flex-direction: column;
-}
-.stats-fp-body .panel-tabs { flex-shrink: 0; }
-.stats-fp-body .tab-content { padding: 12px; gap: 12px; }
-.stats-fp-body::-webkit-scrollbar { width: 4px; }
-.stats-fp-body::-webkit-scrollbar-thumb { background: var(--blue-pale); border-radius: 2px; }
-
-/* ── Floating legend ────────────────────────────────── */
-#float-legend {
-  position: fixed; left: 14px; bottom: 44px; z-index: 900;
-  background: rgba(255,255,255,0.98);
-  border: 1.5px solid rgba(29,78,216,0.22);
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.16);
-  min-width: 224px; max-width: 272px;
-  overflow: hidden;
-}
-#float-legend-header {
-  display: flex; align-items: center; gap: 8px;
-  padding: 9px 13px;
-  background: linear-gradient(90deg, #1d4ed8, #2563eb);
-  color: white; cursor: pointer;
-  font-family: 'Rajdhani', sans-serif;
-}
-.fl-info  { font-size: 14px; }
-.fl-title { flex: 1; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; }
-.fl-toggle {
-  background: rgba(255,255,255,0.18); border: none; color: white;
-  width: 22px; height: 22px; border-radius: 50%; font-size: 11px;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: transform var(--transition), background var(--transition);
-}
-.fl-toggle:hover { background: rgba(255,255,255,0.3); }
-#float-legend.collapsed .fl-toggle { transform: rotate(-90deg); }
-
-#legend-content {
-  overflow-y: auto; max-height: 42vh;
-  padding: 6px 10px 8px;
-}
-#legend-content::-webkit-scrollbar { width: 3px; }
-#legend-content::-webkit-scrollbar-thumb { background: var(--blue-pale); }
-#float-legend.collapsed #legend-content { display: none; }
-
-/* ── Info bar ────────────────────────────────────────── */
-#info-bar {
-  position: fixed; bottom: 8px; right: 14px; z-index: 900;
-  background: rgba(255,255,255,0.94);
-  border: 1px solid rgba(29,78,216,0.22);
-  border-radius: 8px; padding: 4px 13px;
-  font-family: 'Rajdhani', sans-serif; font-size: 12px;
-  color: #1e3a8a; font-weight: 600;
-  display: flex; align-items: center; gap: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-}
-.ib-coord { color: #1e40af; }
-.ib-sep   { color: rgba(29,78,216,0.3); }
-.ib-scale { color: #1d4ed8; font-weight: 700; }
-
-/* ── Hide old Leaflet default zoom controls ─────────── */
-.leaflet-control-zoom { display: none !important; }
-.leaflet-control-attribution {
-  font-size: 10px !important; background: rgba(255,255,255,0.85) !important;
-}
-
-/* ══ MOBILE ════════════════════════════════════════════ */
+/* ══ MOBILE ════════════════════════════════════════= */
+.mobile-only { display: none; }
 @media (max-width: 768px) {
-  #map-title-card { font-size: 13px; padding: 7px 14px; white-space: normal; text-align: center; max-width: 55vw; }
-  .mtc-title { font-size: 14px; }
-  #compass-rose { width: 58px; height: 58px; }
-  #tool-strip { right: 8px; }
-  .ts-btn { width: 34px; height: 34px; }
-  #layers-panel { right: 52px; width: calc(100vw - 80px); max-height: 70vh; }
-  .stats-float { left: 8px; width: calc(100vw - 70px); }
-  #float-legend { max-width: calc(100vw - 28px); }
+  .mobile-only { display: flex; }
+  .btn-label { display: none; }
+  .brand-region { display: none; }
+  #coords-display { min-width: auto; }
+  #sidebar, #right-panel { position: absolute; top: 0; height: 100%; z-index: 1000; }
+  #sidebar.collapsed, #right-panel.collapsed { width: 0; min-width: 0; }
+  .stat-cards-grid { grid-template-columns: 1fr; }
 }
