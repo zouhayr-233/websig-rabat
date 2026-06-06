@@ -25,10 +25,14 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (e) { console.warn('[controls] toggleLayer:', name, e.message); }
   }
 
-  /* ── BASE LAYER RADIOS ───────────────────────────── */
-  document.querySelectorAll('input[name="base-layer"]').forEach(function (r) {
-    r.addEventListener('change', function () {
-      if (window.switchBaseLayer) window.switchBaseLayer(this.value);
+  /* ── BASE LAYER CARDS ────────────────────────────── */
+  document.querySelectorAll('.basemap-card').forEach(function (card) {
+    card.addEventListener('click', function () {
+      document.querySelectorAll('.basemap-card').forEach(function (c) {
+        c.classList.remove('active');
+      });
+      this.classList.add('active');
+      if (window.switchBaseLayer) window.switchBaseLayer(this.dataset.basemap);
     });
   });
 

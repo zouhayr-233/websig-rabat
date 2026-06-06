@@ -135,34 +135,40 @@
           <div class="layers-section">
             <div class="section-title">Couches cartographiques</div>
 
-            <!-- BASE LAYERS: radio -->
+            <!-- BASE LAYERS: visual cards -->
             <div class="layer-group" id="group-base">
               <div class="layer-group-header" data-group="base">
                 <span class="group-arrow">▼</span>
                 <span class="group-icon">🗺️</span>
-                <span class="group-name">Couches de base</span>
+                <span class="group-name">Fond de carte</span>
               </div>
               <div class="layer-group-body" id="body-base">
-                <label class="layer-item radio-item">
-                  <input type="radio" name="base-layer" value="OpenStreetMap" checked />
-                  <span class="layer-thumb osm"></span>
-                  <span class="layer-name">OpenStreetMap</span>
-                </label>
-                <label class="layer-item radio-item">
-                  <input type="radio" name="base-layer" value="Satellite" />
-                  <span class="layer-thumb sat"></span>
-                  <span class="layer-name">Satellite Esri</span>
-                </label>
-                <label class="layer-item radio-item">
-                  <input type="radio" name="base-layer" value="Terrain" />
-                  <span class="layer-thumb terrain"></span>
-                  <span class="layer-name">Terrain Esri</span>
-                </label>
-                <label class="layer-item radio-item">
-                  <input type="radio" name="base-layer" value="CartoDB Dark" />
-                  <span class="layer-thumb dark"></span>
-                  <span class="layer-name">CartoDB Dark</span>
-                </label>
+                <div class="basemap-grid">
+                  <div class="basemap-card active" data-basemap="OpenStreetMap" title="OpenStreetMap">
+                    <div class="basemap-thumb bm-osm">
+                      <span class="basemap-check">✓</span>
+                    </div>
+                    <span class="basemap-name">OpenStreetMap</span>
+                  </div>
+                  <div class="basemap-card" data-basemap="Satellite" title="Satellite Esri">
+                    <div class="basemap-thumb bm-sat">
+                      <span class="basemap-check">✓</span>
+                    </div>
+                    <span class="basemap-name">Satellite</span>
+                  </div>
+                  <div class="basemap-card" data-basemap="Terrain" title="Terrain Esri">
+                    <div class="basemap-thumb bm-terrain">
+                      <span class="basemap-check">✓</span>
+                    </div>
+                    <span class="basemap-name">Terrain</span>
+                  </div>
+                  <div class="basemap-card" data-basemap="CartoDB Dark" title="CartoDB Dark">
+                    <div class="basemap-thumb bm-dark">
+                      <span class="basemap-check">✓</span>
+                    </div>
+                    <span class="basemap-name">Nuit</span>
+                  </div>
+                </div>
               </div>
             </div>
 
