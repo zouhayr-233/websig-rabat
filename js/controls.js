@@ -36,25 +36,26 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  /* ── OVERLAY CHECKBOXES ──────────────────────────── */
-  document.querySelectorAll('.layer-checkbox').forEach(function (cb) {
-    cb.addEventListener('change', function () {
+  /* ── THEMATIC MAP CARDS ──────────────────────────── */
+  document.querySelectorAll('.thematic-card').forEach(function (card) {
+    card.addEventListener('click', function (e) {
+      /* ignore clicks on the zoom button */
+      if (e.target.classList.contains('tc-zoom')) return;
       const name    = this.dataset.layer;
-      const checked = this.checked;
+      const wasActive = this.classList.contains('active');
+      this.classList.toggle('active');
+      const nowActive = !wasActive;
 
       if (getLayer(name)) {
-        /* Layer already loaded — toggle immediately */
-        toggleLayer(name, checked);
+        toggleLayer(name, nowActive);
         updateLegend();
         return;
       }
-
-      /* Layer not yet loaded — wait for layerReady event */
-      console.log('[controls] waiting for layer:', name);
+      /* layer not yet loaded — wait */
       function handler(e) {
         if (e.detail.name === name) {
           document.removeEventListener('layerReady', handler);
-          if (checked) toggleLayer(name, true);
+          if (nowActive) toggleLayer(name, true);
           updateLegend();
         }
       }
@@ -62,16 +63,15 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  /* ── ZOOM-TO-LAYER BUTTONS ───────────────────────── */
-  document.querySelectorAll('.layer-zoom-btn').forEach(function (btn) {
+  /* ── ZOOM-TO-LAYER BUTTONS (on thematic cards) ───── */
+  document.querySelectorAll('.tc-zoom').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
-      e.preventDefault();
       const lyr = getLayer(this.dataset.layer);
-      if (!lyr || !lyr.getBounds) return;
+      if (!lyr || !window.map) return;
       try {
-        const b = lyr.getBounds();
-        if (b.isValid()) window.map.fitBounds(b, { padding: [30, 30], animate: true });
+        const b = lyr.getBounds ? lyr.getBounds() : null;
+        if (b && b.isValid()) window.map.fitBounds(b, { padding: [30, 30], animate: true });
       } catch (_) {}
     });
   });
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const container = document.getElementById('legend-content');
     if (!container) return;
     const active = Array.from(
-      document.querySelectorAll('.layer-checkbox:checked')
+      document.querySelectorAll('.thematic-card.active')
     ).map(function(c){ return c.dataset.layer; });
 
     if (!active.length) {

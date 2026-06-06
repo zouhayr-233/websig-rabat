@@ -131,126 +131,188 @@
             <div id="search-results"></div>
           </div>
 
-          <!-- Layer groups -->
+          <!-- ══ CARTES THÉMATIQUES ══ -->
           <div class="layers-section">
-            <div class="section-title">Couches cartographiques</div>
+            <div class="section-title">Cartes thématiques</div>
 
-            <!-- BASE LAYERS: visual cards -->
-            <div class="layer-group" id="group-base">
-              <div class="layer-group-header" data-group="base">
-                <span class="group-arrow">▼</span>
-                <span class="group-icon">🗺️</span>
-                <span class="group-name">Fond de carte</span>
+            <!-- Fond de carte -->
+            <div class="tc-group-label">🗺️ Fond de carte</div>
+            <div class="basemap-grid" style="padding:8px 10px 10px">
+              <div class="basemap-card active" data-basemap="OpenStreetMap" title="OpenStreetMap">
+                <div class="basemap-thumb bm-osm"><span class="basemap-check">✓</span></div>
+                <span class="basemap-name">OpenStreetMap</span>
               </div>
-              <div class="layer-group-body" id="body-base">
-                <div class="basemap-grid">
-                  <div class="basemap-card active" data-basemap="OpenStreetMap" title="OpenStreetMap">
-                    <div class="basemap-thumb bm-osm">
-                      <span class="basemap-check">✓</span>
-                    </div>
-                    <span class="basemap-name">OpenStreetMap</span>
-                  </div>
-                  <div class="basemap-card" data-basemap="Satellite" title="Satellite Esri">
-                    <div class="basemap-thumb bm-sat">
-                      <span class="basemap-check">✓</span>
-                    </div>
-                    <span class="basemap-name">Satellite</span>
-                  </div>
-                  <div class="basemap-card" data-basemap="Terrain" title="Terrain Esri">
-                    <div class="basemap-thumb bm-terrain">
-                      <span class="basemap-check">✓</span>
-                    </div>
-                    <span class="basemap-name">Terrain</span>
-                  </div>
-                  <div class="basemap-card" data-basemap="CartoDB Dark" title="CartoDB Dark">
-                    <div class="basemap-thumb bm-dark">
-                      <span class="basemap-check">✓</span>
-                    </div>
-                    <span class="basemap-name">Nuit</span>
-                  </div>
+              <div class="basemap-card" data-basemap="Satellite" title="Satellite Esri">
+                <div class="basemap-thumb bm-sat"><span class="basemap-check">✓</span></div>
+                <span class="basemap-name">Satellite</span>
+              </div>
+              <div class="basemap-card" data-basemap="Terrain" title="Terrain Esri">
+                <div class="basemap-thumb bm-terrain"><span class="basemap-check">✓</span></div>
+                <span class="basemap-name">Terrain</span>
+              </div>
+              <div class="basemap-card" data-basemap="CartoDB Dark" title="CartoDB Dark">
+                <div class="basemap-thumb bm-dark"><span class="basemap-check">✓</span></div>
+                <span class="basemap-name">Nuit</span>
+              </div>
+            </div>
+
+            <!-- ── Carte 1 : Bassins & Sous-bassins ── -->
+            <div class="tc-group-label">💧 Ressources en eau</div>
+
+            <div class="thematic-card active" data-layer="Bassins versants">
+              <div class="tc-bar" style="background:linear-gradient(90deg,#1565c0 0%,#2e7d32 25%,#f9a825 50%,#bf360c 75%,#6a1b9a 100%)"></div>
+              <div class="tc-body">
+                <div class="tc-head">
+                  <span class="tc-icon">🗺️</span>
+                  <span class="tc-name">Bassins & Sous-bassins Versants</span>
+                  <span class="tc-status">✓</span>
+                </div>
+                <div class="tc-classif">
+                  <span class="tc-sw" style="background:#c8e6fa;border:1.5px solid #1565c0" title="Bassin Atlantique"></span>
+                  <span class="tc-sw" style="background:#c8efd8;border:1.5px solid #2e7d32" title="Bassin Sebou"></span>
+                  <span class="tc-sw" style="background:#fff9c4;border:1.5px solid #f9a825" title="Bassin Intermédiaire"></span>
+                  <span class="tc-sw" style="background:#fce4d0;border:1.5px solid #bf360c" title="Côtier N."></span>
+                  <span class="tc-sw" style="background:#ead5f5;border:1.5px solid #6a1b9a" title="Côtier S."></span>
+                  <span class="tc-tag">Polygones</span>
                 </div>
               </div>
+              <button class="tc-zoom" data-layer="Bassins versants" title="Centrer">⊙</button>
             </div>
 
-            <!-- WATER RESOURCES: checkboxes -->
-            <div class="layer-group" id="group-water">
-              <div class="layer-group-header" data-group="water">
-                <span class="group-arrow">▼</span>
-                <span class="group-icon">💧</span>
-                <span class="group-name">Ressources en eau</span>
+            <!-- ── Carte 2 : Réseau Hydrographique ── -->
+            <div class="thematic-card active" data-layer="Oueds / Rivières">
+              <div class="tc-bar" style="background:linear-gradient(90deg,#0044aa,#0066CC,#4499DD)"></div>
+              <div class="tc-body">
+                <div class="tc-head">
+                  <span class="tc-icon">🌊</span>
+                  <span class="tc-name">Réseau Hydrographique — Oueds</span>
+                  <span class="tc-status">✓</span>
+                </div>
+                <div class="tc-classif">
+                  <span class="tc-ln" style="background:#0066CC;height:5px" title="Oued majeur (Sebou, Bou Regreg)"></span>
+                  <span class="tc-ln" style="background:#0066CC;height:2.5px" title="Oued principal"></span>
+                  <span class="tc-ln" style="background:#4499DD;height:1.5px" title="Oued secondaire"></span>
+                  <span class="tc-tag">Lignes hiérarchisées</span>
+                </div>
               </div>
-              <div class="layer-group-body" id="body-water">
-                <label class="layer-item">
-                  <input type="checkbox" class="layer-checkbox" checked data-layer="Bassins versants" id="cb-watersheds" />
-                  <span class="layer-type-icon">▭</span>
-                  <span class="layer-name">Bassins versants</span>
-                  <button class="layer-zoom-btn" data-layer="Bassins versants" title="Centrer">⊙</button>
-                </label>
-                <label class="layer-item">
-                  <input type="checkbox" class="layer-checkbox" checked data-layer="Oueds / Rivières" id="cb-rivers" />
-                  <span class="layer-type-icon line-icon">—</span>
-                  <span class="layer-name">Oueds / Rivières</span>
-                  <button class="layer-zoom-btn" data-layer="Oueds / Rivières" title="Centrer">⊙</button>
-                </label>
-                <label class="layer-item">
-                  <input type="checkbox" class="layer-checkbox" checked data-layer="Barrages" id="cb-dams" />
-                  <span class="layer-type-icon">⬤</span>
-                  <span class="layer-name">Barrages</span>
-                  <button class="layer-zoom-btn" data-layer="Barrages" title="Centrer">⊙</button>
-                </label>
-                <label class="layer-item">
-                  <input type="checkbox" class="layer-checkbox" checked data-layer="Stations pluviométriques" id="cb-stations" />
-                  <span class="layer-type-icon">⬤</span>
-                  <span class="layer-name">Stations pluviométriques</span>
-                  <button class="layer-zoom-btn" data-layer="Stations pluviométriques" title="Centrer">⊙</button>
-                </label>
-                <label class="layer-item">
-                  <input type="checkbox" class="layer-checkbox" checked data-layer="Nappes souterraines" id="cb-aquifers" />
-                  <span class="layer-type-icon">▭</span>
-                  <span class="layer-name">Nappes souterraines</span>
-                  <button class="layer-zoom-btn" data-layer="Nappes souterraines" title="Centrer">⊙</button>
-                </label>
-              </div>
+              <button class="tc-zoom" data-layer="Oueds / Rivières" title="Centrer">⊙</button>
             </div>
 
-            <!-- FLOOD RISK: checkboxes -->
-            <div class="layer-group" id="group-risk">
-              <div class="layer-group-header" data-group="risk">
-                <span class="group-arrow">▼</span>
-                <span class="group-icon">⚠️</span>
-                <span class="group-name">Risque d'inondation</span>
+            <!-- ── Carte 3 : Nappes Souterraines ── -->
+            <div class="thematic-card active" data-layer="Nappes souterraines">
+              <div class="tc-bar" style="background:linear-gradient(90deg,#1d4ed8,#0891b2,#0369a1,#0e7490)"></div>
+              <div class="tc-body">
+                <div class="tc-head">
+                  <span class="tc-icon">💧</span>
+                  <span class="tc-name">Nappes Souterraines</span>
+                  <span class="tc-status">✓</span>
+                </div>
+                <div class="tc-classif">
+                  <span class="tc-sw" style="background:#bfdbfe;border:1.5px dashed #1d4ed8" title="Nappe phréatique"></span>
+                  <span class="tc-sw" style="background:#a5f3fc;border:1.5px dashed #0891b2" title="Nappe littorale"></span>
+                  <span class="tc-sw" style="background:#bae6fd;border:1.5px dashed #0369a1" title="Nappe alluviale"></span>
+                  <span class="tc-sw" style="background:#cffafe;border:1.5px dashed #0e7490" title="Nappe côtière"></span>
+                  <span class="tc-tag">Gradient bleu–cyan</span>
+                </div>
               </div>
-              <div class="layer-group-body" id="body-risk">
-                <label class="layer-item">
-                  <input type="checkbox" class="layer-checkbox" checked data-layer="Zones de risque" id="cb-flood" />
-                  <span class="layer-type-icon risk-icon">▭</span>
-                  <span class="layer-name">Zones de risque inondation</span>
-                  <button class="layer-zoom-btn" data-layer="Zones de risque" title="Centrer">⊙</button>
-                </label>
-              </div>
+              <button class="tc-zoom" data-layer="Nappes souterraines" title="Centrer">⊙</button>
             </div>
 
-            <!-- ADMINISTRATIVE: checkboxes -->
-            <div class="layer-group" id="group-admin">
-              <div class="layer-group-header" data-group="admin">
-                <span class="group-arrow">▼</span>
-                <span class="group-icon">🗂️</span>
-                <span class="group-name">Administratif</span>
+            <!-- ── Carte 4 : Barrages ── -->
+            <div class="thematic-card active" data-layer="Barrages">
+              <div class="tc-bar" style="background:#0d47a1"></div>
+              <div class="tc-body">
+                <div class="tc-head">
+                  <span class="tc-icon">🏗️</span>
+                  <span class="tc-name">Barrages &amp; Retenues d'eau</span>
+                  <span class="tc-status">✓</span>
+                </div>
+                <div class="tc-classif">
+                  <span class="tc-pt" style="background:#0d47a1" title="Barrage existant opérationnel"></span>
+                  <span class="tc-ptlabel">Barrage opérationnel</span>
+                  <span class="tc-tag">Points symboles</span>
+                </div>
               </div>
-              <div class="layer-group-body" id="body-admin">
-                <label class="layer-item">
-                  <input type="checkbox" class="layer-checkbox" checked data-layer="Limites administratives" id="cb-admin" />
-                  <span class="layer-type-icon">⬜</span>
-                  <span class="layer-name">Limites administratives</span>
-                  <button class="layer-zoom-btn" data-layer="Limites administratives" title="Centrer">⊙</button>
-                </label>
-                <label class="layer-item">
-                  <input type="checkbox" class="layer-checkbox" checked data-layer="Villes principales" id="cb-cities" />
-                  <span class="layer-type-icon">⬤</span>
-                  <span class="layer-name">Villes principales</span>
-                  <button class="layer-zoom-btn" data-layer="Villes principales" title="Centrer">⊙</button>
-                </label>
+              <button class="tc-zoom" data-layer="Barrages" title="Centrer">⊙</button>
+            </div>
+
+            <!-- ── Carte 5 : Stations Pluviométriques ── -->
+            <div class="thematic-card active" data-layer="Stations pluviométriques">
+              <div class="tc-bar" style="background:#1565c0"></div>
+              <div class="tc-body">
+                <div class="tc-head">
+                  <span class="tc-icon">🌧️</span>
+                  <span class="tc-name">Stations Pluviométriques</span>
+                  <span class="tc-status">✓</span>
+                </div>
+                <div class="tc-classif">
+                  <span class="tc-pt" style="background:#1565c0" title="Station de mesure"></span>
+                  <span class="tc-ptlabel">Station de mesure</span>
+                  <span class="tc-tag">Réseau DMN / ABHS</span>
+                </div>
               </div>
+              <button class="tc-zoom" data-layer="Stations pluviométriques" title="Centrer">⊙</button>
+            </div>
+
+            <!-- ── Carte 6 : Risque d'Inondation ── -->
+            <div class="tc-group-label">⚠️ Risque d'inondation</div>
+
+            <div class="thematic-card active" data-layer="Zones de risque">
+              <div class="tc-bar" style="background:linear-gradient(90deg,#dc2626 33%,#ea580c 66%,#ca8a04 100%)"></div>
+              <div class="tc-body">
+                <div class="tc-head">
+                  <span class="tc-icon">⚠️</span>
+                  <span class="tc-name">Zones à Risque d'Inondation</span>
+                  <span class="tc-status">✓</span>
+                </div>
+                <div class="tc-classif">
+                  <span class="tc-sw" style="background:#fecaca;border:1.5px solid #dc2626" title="Risque élevé"></span>
+                  <span class="tc-sw-label" style="color:#dc2626">Élevé</span>
+                  <span class="tc-sw" style="background:#fed7aa;border:1.5px solid #ea580c" title="Risque modéré"></span>
+                  <span class="tc-sw-label" style="color:#ea580c">Modéré</span>
+                  <span class="tc-sw" style="background:#fef9c3;border:1.5px dashed #ca8a04" title="Risque faible"></span>
+                  <span class="tc-sw-label" style="color:#a16207">Faible</span>
+                </div>
+              </div>
+              <button class="tc-zoom" data-layer="Zones de risque" title="Centrer">⊙</button>
+            </div>
+
+            <!-- ── Carte 7 : Découpage Administratif ── -->
+            <div class="tc-group-label">🗂️ Administratif</div>
+
+            <div class="thematic-card active" data-layer="Limites administratives">
+              <div class="tc-bar" style="background:#1d4ed8"></div>
+              <div class="tc-body">
+                <div class="tc-head">
+                  <span class="tc-icon">🗂️</span>
+                  <span class="tc-name">Découpage Administratif</span>
+                  <span class="tc-status">✓</span>
+                </div>
+                <div class="tc-classif">
+                  <span class="tc-ln tc-dashed" style="border-top:2.5px dashed #1d4ed8" title="Limite région"></span>
+                  <span class="tc-ptlabel">Limite région / préfecture</span>
+                </div>
+              </div>
+              <button class="tc-zoom" data-layer="Limites administratives" title="Centrer">⊙</button>
+            </div>
+
+            <!-- ── Carte 8 : Villes Principales ── -->
+            <div class="thematic-card active" data-layer="Villes principales">
+              <div class="tc-bar" style="background:linear-gradient(90deg,#6d28d9,#1d4ed8,#2563eb)"></div>
+              <div class="tc-body">
+                <div class="tc-head">
+                  <span class="tc-icon">🏙️</span>
+                  <span class="tc-name">Villes Principales RSK</span>
+                  <span class="tc-status">✓</span>
+                </div>
+                <div class="tc-classif">
+                  <span class="tc-pt" style="background:#6d28d9;width:14px;height:14px" title="Capitale Rabat">★</span>
+                  <span class="tc-pt" style="background:#1d4ed8;width:10px;height:10px" title="Ville principale"></span>
+                  <span class="tc-pt" style="background:#2563eb;width:7px;height:7px" title="Ville secondaire"></span>
+                  <span class="tc-tag">Centres urbains</span>
+                </div>
+              </div>
+              <button class="tc-zoom" data-layer="Villes principales" title="Centrer">⊙</button>
             </div>
 
           </div><!-- /layers-section -->
