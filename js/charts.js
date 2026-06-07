@@ -124,20 +124,28 @@ function renderDamChart(data) {
   var ctx = document.getElementById('damLevelChart');
   if (!ctx) return;
 
-  /* Fallback static */
-  var caps  = [773, 510, 266, 11, 3, 1.3, 1, 0.9, 0.7, 0.2];
-  var names = ['O. El Makhazine','Ouljet Es Soltane','El Kansera',
-               'Sidi Yahya','Rouidat Amont','Aïn Koreima',
-               'Bouknadil','Had Laghoualem','Arid','Aït Lambrabtiya'];
+  /* Keep only the 5 major dams (capacity >= 3 Mm3) for readability */
+  var MAJOR = [
+    { name: 'O. El Makhazine', cap: 773 },
+    { name: 'Ouljet Es Soltane', cap: 510 },
+    { name: 'El Kansera',       cap: 266 },
+    { name: 'Sidi Yahya',       cap: 11  },
+    { name: 'Rouidat Amont',    cap: 3   }
+  ];
 
   if (data && data.dams) {
     var pairs = data.dams.features.map(function (f) {
       return { name: f.properties.BARRAGE || '?', cap: _damCap(f.properties) };
-    });
-    pairs.sort(function (a, b) { return b.cap - a.cap; });
-    names = pairs.map(function (p) { return p.name; });
-    caps  = pairs.map(function (p) { return p.cap; });
+    }).sort(function (a, b) { return b.cap - a.cap; });
+    /* keep top 5 */
+    MAJOR = pairs.slice(0, 5);
   }
+
+  var names = MAJOR.map(function (d) { return d.name; });
+  var caps  = MAJOR.map(function (d) { return d.cap; });
+
+  /* Blue gradient: darkest for largest */
+  var blues = ['#1e40af','#2563eb','#3b82f6','#60a5fa','#93c5fd'];
 
   new Chart(ctx, {
     type: 'bar',
@@ -146,79 +154,91 @@ function renderDamChart(data) {
       datasets: [{
         label: 'Capacité (Mm³)',
         data: caps,
-        backgroundColor: caps.map(function (v) {
-          return v >= 100 ? 'rgba(42,157,143,0.75)' : v >= 10 ? 'rgba(69,123,157,0.75)' : 'rgba(136,153,170,0.55)';
-        }),
-        borderColor: caps.map(function (v) {
-          return v >= 100 ? '#2a9d8f' : v >= 10 ? '#457b9d' : '#8899aa';
-        }),
-        borderWidth: 1, borderRadius: 3
+        backgroundColor: blues,
+        borderColor: blues.map(function(c){ return c; }),
+        borderWidth: 0,
+        borderRadius: 6,
+        borderSkipped: false
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, indexAxis: 'y',
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: function (c) { return ' ' + c.parsed.x + ' Mm³'; } }}
+        tooltip: { callbacks: { label: function (c) { return '  ' + c.parsed.x.toLocaleString('fr-FR') + ' Mm³'; } }}
       },
       scales: {
-        x: { ticks: { color: '#8899aa', callback: function (v) { return v + ' Mm³'; } }, grid: { color: 'rgba(136,153,170,0.15)' } },
-        y: { ticks: { color: '#546e7a', font: { size: 10 } }, grid: { display: false } }
+        x: {
+          ticks: { color: '#64748b', font: { size: 10 },
+                   callback: function (v) { return v >= 1000 ? (v/1000)+'k' : v; } },
+          grid: { color: 'rgba(100,116,139,0.1)' },
+          border: { display: false }
+        },
+        y: {
+          ticks: { color: '#334155', font: { size: 10, weight: '600' } },
+          grid: { display: false },
+          border: { display: false }
+        }
       }
     }
   });
 }
-
-/* ══════════════════════════════════════════════════
-   3. POLAR AREA — Watershed areas
-   ══════════════════════════════════════════════════ */
 function renderWatershedChart(data) {
   var ctx = document.getElementById('watershedChart');
   if (!ctx) return;
 
-  var labels = ['Sebou', 'Côtiers Atlantiques', 'Bouregreg', 'Loukous', 'Drader Souier'];
-  var areas  = [37670, 10118, 10050, 3735, 1669]; /* static fallback */
+  var labels = ['Sebou', 'Cotiers Atl.', 'Bouregreg', 'Loukous', 'Drader Souier'];
+  var areas  = [37670, 10118, 10050, 3735, 1669];
 
   if (data && data.watersheds) {
     var pairs = data.watersheds.features.map(function (f) {
-      var p    = f.properties;
-      var name = p.NomSousBas || p.name || '?';
-      var km2  = Math.round((p.SHAPE_Area || p.Shape_Area || 0) * _KM2_PER_DEG2);
-      return { name: name, km2: km2 };
-    });
-    pairs.sort(function (a, b) { return b.km2 - a.km2; });
+      var p   = f.properties;
+      var km2 = Math.round((p.SHAPE_Area || p.Shape_Area || 0) * _KM2_PER_DEG2);
+      return { name: p.NomSousBas || p.name || '?', km2: km2 };
+    }).sort(function (a, b) { return b.km2 - a.km2; });
     labels = pairs.map(function (p) { return p.name; });
     areas  = pairs.map(function (p) { return p.km2; });
   }
 
-  var colors  = ['rgba(42,157,143,0.75)','rgba(38,70,83,0.75)','rgba(69,123,157,0.75)','rgba(29,53,87,0.75)','rgba(168,218,220,0.75)','rgba(78,205,196,0.75)'];
-  var borders = ['#2a9d8f','#264653','#457b9d','#1d3557','#a8dadc','#4ecdc4'];
+  var blues = ['#1d4ed8','#2563eb','#3b82f6','#60a5fa','#93c5fd'];
 
   new Chart(ctx, {
-    type: 'polarArea',
+    type: 'bar',
     data: {
       labels: labels,
       datasets: [{
+        label: 'Superficie (km²)',
         data: areas,
-        backgroundColor: colors.slice(0, areas.length),
-        borderColor: borders.slice(0, areas.length),
-        borderWidth: 1
+        backgroundColor: blues,
+        borderWidth: 0,
+        borderRadius: 6,
+        borderSkipped: false
       }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#8899aa', font: { size: 10 }, boxWidth: 12, padding: 8 } },
-        tooltip: { callbacks: { label: function (c) { return ' ' + c.label + ' : ' + c.parsed.r.toLocaleString('fr-FR') + ' km²'; } }}
+        legend: { display: false },
+        tooltip: { callbacks: { label: function (c) {
+          return '  ' + c.parsed.x.toLocaleString('fr-FR') + ' km²';
+        }}}
       },
-      scales: { r: { ticks: { display: false }, grid: { color: 'rgba(136,153,170,0.15)' } } }
+      scales: {
+        x: {
+          ticks: { color: '#64748b', font: { size: 10 },
+                   callback: function (v) { return (v/1000).toFixed(0)+'k'; } },
+          grid: { color: 'rgba(100,116,139,0.1)' },
+          border: { display: false }
+        },
+        y: {
+          ticks: { color: '#334155', font: { size: 10, weight: '600' } },
+          grid: { display: false },
+          border: { display: false }
+        }
+      }
     }
   });
 }
-
-/* ══════════════════════════════════════════════════
-   4. BAR — Monthly avg rain (average across stations)
-   ══════════════════════════════════════════════════ */
 function renderMonthlyRain(data) {
   var ctx = document.getElementById('monthlyRainChart');
   if (!ctx) return;
