@@ -256,14 +256,24 @@ function renderAnnualRain() {
   var ctx = document.getElementById('annualRainChart');
   if (!ctx) return;
 
+  /* Annual series 2000-2025 — null = missing data (shown as gap) */
   var years = [];
-  for (var y = 2000; y <= 2023; y++) years.push(String(y));
+  for (var y = 2000; y <= 2025; y++) years.push(String(y));
 
-  var annualData = [432,518,391,612,478,543,389,502,461,678,354,598,512,445,623,387,542,495,618,372,534,481,557,420];
+  var annualData = [
+    432, 518, 391, 612, 478, 543,
+    389, 502, 461, 678, 354, 598,
+    512, 445, 623, 387, 542, 495,
+    618, 372, 534, 481, 557, 420,
+    null, null  /* 2024-2025 : données non disponibles */
+  ];
 
+  /* 5-year moving average (skip nulls) */
   var movAvg = annualData.map(function (_, i, a) {
     if (i < 2 || i > a.length - 3) return null;
-    return Math.round((a[i-2]+a[i-1]+a[i]+a[i+1]+a[i+2]) / 5);
+    var vals = [a[i-2], a[i-1], a[i], a[i+1], a[i+2]];
+    if (vals.some(function(v){ return v === null; })) return null;
+    return Math.round(vals.reduce(function(s,v){ return s+v; }, 0) / 5);
   });
 
   new Chart(ctx, {
@@ -271,13 +281,28 @@ function renderAnnualRain() {
     data: {
       labels: years,
       datasets: [
-        { label: 'Précipitation annuelle (mm)', data: annualData,
-          borderColor: '#00b4d8', backgroundColor: 'rgba(0,180,216,0.08)',
-          borderWidth: 1.5, pointRadius: 3, pointBackgroundColor: '#00b4d8',
-          pointHoverRadius: 5, fill: true, tension: 0.3 },
-        { label: 'Moy. mobile 5 ans', data: movAvg,
-          borderColor: '#f4a261', backgroundColor: 'transparent',
-          borderWidth: 2, borderDash: [5,3], pointRadius: 0, tension: 0.4 }
+        {
+          label: 'Précipitation annuelle (mm)',
+          data: annualData,
+          borderColor: '#00b4d8',
+          backgroundColor: 'rgba(0,180,216,0.08)',
+          borderWidth: 1.5,
+          pointRadius: annualData.map(function(v){ return v !== null ? 3 : 0; }),
+          pointBackgroundColor: '#00b4d8',
+          pointHoverRadius: 5,
+          fill: true, tension: 0.3,
+          spanGaps: false
+        },
+        {
+          label: 'Moy. mobile 5 ans',
+          data: movAvg,
+          borderColor: '#f4a261',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [5,3],
+          pointRadius: 0, tension: 0.4,
+          spanGaps: false
+        }
       ]
     },
     options: {
@@ -286,8 +311,8 @@ function renderAnnualRain() {
       plugins: {
         legend: { position: 'bottom', labels: { color: '#8899aa', font: { size: 10 }, boxWidth: 16, padding: 8 } },
         tooltip: { callbacks: { label: function (c) {
-          if (c.parsed.y === null) return '';
-          return ' ' + c.dataset.label + ' : ' + c.parsed.y + ' mm';
+          if (c.parsed.y === null) return ' ' + c.dataset.label + ' : données manquantes';
+          return ' ' + c.dataset.label + ' : ' + c.parsed.y + ' mm';
         }}}
       },
       scales: {

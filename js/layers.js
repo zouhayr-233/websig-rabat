@@ -404,29 +404,54 @@ function loadFloodZones(data) {
 }
 
 /* ══════════════════════════════════════════════════
-   6. LIMITES ADMINISTRATIVES
-   Fields: Nom_Region, Population, CODE_REGIO, Menages
+   6. LIMITES ADMINISTRATIVES — 6 préfectures/provinces
+   Fields: name, type, population, area_km2, density
    ══════════════════════════════════════════════════ */
+var PREF_PALETTE = [
+  { fill: 'rgba(219,234,254,0.25)', border: '#1d4ed8' },  /* Rabat        — bleu     */
+  { fill: 'rgba(220,252,231,0.25)', border: '#16a34a' },  /* Salé         — vert     */
+  { fill: 'rgba(254,243,199,0.25)', border: '#d97706' },  /* Skhirat-Tém. — ambre    */
+  { fill: 'rgba(243,232,255,0.25)', border: '#7c3aed' },  /* Kénitra      — violet   */
+  { fill: 'rgba(255,237,213,0.25)', border: '#ea580c' },  /* Khémisset    — orange   */
+  { fill: 'rgba(204,251,241,0.25)', border: '#0d9488' },  /* Sidi Kacem   — teal     */
+];
+
 function loadAdmin(data) {
-  const lyr = L.geoJSON(data, {
-    style: function() {
+  var prefMap = {};
+  data.features.forEach(function(f, idx) {
+    var name = (f.properties && f.properties.name) || String(idx);
+    prefMap[name] = PREF_PALETTE[idx % PREF_PALETTE.length];
+  });
+
+  var lyr = L.geoJSON(data, {
+    style: function(feat) {
+      var name = (feat.properties && feat.properties.name) || '';
+      var cp   = prefMap[name] || PREF_PALETTE[0];
       return {
-        fillColor: 'transparent', fillOpacity: 0,
-        color: '#1d4ed8', weight: 3,
-        dashArray: '10,6', opacity: 0.80
+        fillColor: cp.fill, fillOpacity: 1,
+        color: cp.border, weight: 2.5,
+        dashArray: '8,5', opacity: 0.90
       };
     },
     onEachFeature: function(feat, l) {
-      const p    = feat.properties || {};
-      const name = p.Nom_Region || p.NOM_REGION || p.name || 'Région RSK';
+      var p    = feat.properties || {};
+      var name = p.name || 'Préfecture';
+      var cp   = prefMap[name] || PREF_PALETTE[0];
+      var dens = p.density ? (+p.density).toLocaleString('fr-FR') + ' hab/km²' : '—';
       l.bindPopup('<div class="popup-content">'
-        + popupHeader('#1d4ed8', '🗂️', name)
+        + popupHeader(cp.border, '🗂️', name)
         + '<table>'
-        + '<tr><td>Code région</td><td>' + (p.CODE_REGIO || '—') + '</td></tr>'
-        + '<tr><td>Population</td><td><b>' + ((+p.Population || 0).toLocaleString('fr-FR')) + '</b> hab.</td></tr>'
-        + '<tr><td>Ménages</td><td>' + ((+p.Menages || 0).toLocaleString('fr-FR')) + '</td></tr>'
+        + '<tr><td>Type</td><td><b>' + (p.type || '—') + '</b></td></tr>'
+        + '<tr><td>Population</td><td><b>' + ((+p.population || 0).toLocaleString('fr-FR')) + '</b> hab.</td></tr>'
+        + '<tr><td>Superficie</td><td>' + ((+p.area_km2 || 0).toLocaleString('fr-FR')) + ' km²</td></tr>'
+        + '<tr><td>Densité</td><td>' + dens + '</td></tr>'
         + '</table></div>', { maxWidth: 270 });
-      /* Region name shown as map title overlay — no permanent label inside polygon */
+      l.bindTooltip(name, {
+        permanent: true, direction: 'center',
+        className: 'admin-label'
+      });
+      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.6, weight: 3 }); });
+      l.on('mouseout',  function() { lyr.resetStyle(this); });
     }
   });
   window.overlayLayers['Limites administratives'] = lyr;
@@ -488,25 +513,40 @@ function loadCities() {
     features: [
       { type: 'Feature',
         geometry: { type: 'Point', coordinates: [-6.8498, 34.0209] },
-        properties: { name: 'Rabat',        type: 'capital',   population: 577827, role: 'Capitale administrative du Maroc', altitude: 75  }},
+        properties: { name: 'Rabat',           type: 'capital',   population: 577827, role: 'Capitale administrative du Maroc',  altitude: 75  }},
       { type: 'Feature',
         geometry: { type: 'Point', coordinates: [-6.7975, 34.0378] },
-        properties: { name: 'Salé',         type: 'major',     population: 902021, role: 'Préfecture de Salé',                altitude: 20  }},
+        properties: { name: 'Salé',            type: 'major',     population: 902021, role: 'Préfecture de Salé',                altitude: 20  }},
+      { type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-6.9072, 33.9254] },
+        properties: { name: 'Témara',          type: 'major',     population: 320000, role: 'Préfecture Skhirate-Témara',        altitude: 65  }},
       { type: 'Feature',
         geometry: { type: 'Point', coordinates: [-6.5753, 34.2610] },
-        properties: { name: 'Kénitra',      type: 'major',     population: 431282, role: 'Préfecture de Kénitra',             altitude: 15  }},
+        properties: { name: 'Kénitra',         type: 'major',     population: 431282, role: 'Préfecture de Kénitra',             altitude: 15  }},
       { type: 'Feature',
         geometry: { type: 'Point', coordinates: [-6.0667, 33.8240] },
-        properties: { name: 'Khémisset',    type: 'secondary', population: 131542, role: 'Chef-lieu de province',              altitude: 405 }},
+        properties: { name: 'Khémisset',       type: 'secondary', population: 131542, role: 'Chef-lieu de province',             altitude: 405 }},
       { type: 'Feature',
         geometry: { type: 'Point', coordinates: [-6.3082, 33.8942] },
-        properties: { name: 'Tiflet',       type: 'secondary', population: 59478,  role: 'Province de Khémisset',              altitude: 285 }},
+        properties: { name: 'Tiflet',          type: 'secondary', population: 59478,  role: 'Province de Khémisset',             altitude: 285 }},
       { type: 'Feature',
         geometry: { type: 'Point', coordinates: [-5.7084, 34.2213] },
-        properties: { name: 'Sidi Kacem',   type: 'secondary', population: 73000,  role: 'Chef-lieu de province',              altitude: 120 }},
+        properties: { name: 'Sidi Kacem',      type: 'secondary', population: 73000,  role: 'Chef-lieu de province',             altitude: 120 }},
       { type: 'Feature',
         geometry: { type: 'Point', coordinates: [-5.9218, 34.2590] },
-        properties: { name: 'Sidi Slimane', type: 'secondary', population: 80000,  role: 'Province de Sidi Kacem',             altitude: 80  }},
+        properties: { name: 'Sidi Slimane',    type: 'secondary', population: 80000,  role: 'Province de Sidi Kacem',            altitude: 80  }},
+      { type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-7.1200, 33.6190] },
+        properties: { name: 'Benslimane',      type: 'secondary', population: 70000,  role: 'Chef-lieu de province',             altitude: 220 }},
+      { type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-6.0085, 34.6890] },
+        properties: { name: 'Souk El Arbaa',   type: 'secondary', population: 76000,  role: 'Province de Kénitra',               altitude: 20  }},
+      { type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-6.7037, 33.8518] },
+        properties: { name: 'Skhirate',        type: 'secondary', population: 45000,  role: 'Préfecture Skhirate-Témara',        altitude: 30  }},
+      { type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-6.2500, 34.3000] },
+        properties: { name: 'Sidi Yahya',      type: 'secondary', population: 35000,  role: 'Province de Kénitra',               altitude: 40  }},
     ]
   };
 
@@ -548,7 +588,7 @@ async function loadAllLayers() {
     loadLayer('watersheds_real.geojson',       loadWatersheds),
     loadLayer('rivers_real.geojson',           loadRivers),
     loadLayer('dams_real.geojson',             loadDams),
-    loadLayer('admin_boundaries_real.geojson', loadAdmin),
+    loadLayer('admin_boundaries.geojson',      loadAdmin),
     loadLayer('aquifers.geojson',              loadAquifers),
     loadLayer('rain_stations.geojson',         loadStations),
     loadLayer('flood_zones.geojson',           loadFloodZones)
