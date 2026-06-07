@@ -404,54 +404,28 @@ function loadFloodZones(data) {
 }
 
 /* ══════════════════════════════════════════════════
-   6. LIMITES ADMINISTRATIVES — 6 préfectures/provinces
-   Fields: name, type, population, area_km2, density
+   6. LIMITES ADMINISTRATIVES
+   Fields: Nom_Region, Population, CODE_REGIO, Menages
    ══════════════════════════════════════════════════ */
-var PREF_PALETTE = [
-  { fill: 'rgba(219,234,254,0.25)', border: '#1d4ed8' },  /* Rabat        — bleu     */
-  { fill: 'rgba(220,252,231,0.25)', border: '#16a34a' },  /* Salé         — vert     */
-  { fill: 'rgba(254,243,199,0.25)', border: '#d97706' },  /* Skhirat-Tém. — ambre    */
-  { fill: 'rgba(243,232,255,0.25)', border: '#7c3aed' },  /* Kénitra      — violet   */
-  { fill: 'rgba(255,237,213,0.25)', border: '#ea580c' },  /* Khémisset    — orange   */
-  { fill: 'rgba(204,251,241,0.25)', border: '#0d9488' },  /* Sidi Kacem   — teal     */
-];
-
 function loadAdmin(data) {
-  var prefMap = {};
-  data.features.forEach(function(f, idx) {
-    var name = (f.properties && f.properties.name) || String(idx);
-    prefMap[name] = PREF_PALETTE[idx % PREF_PALETTE.length];
-  });
-
-  var lyr = L.geoJSON(data, {
-    style: function(feat) {
-      var name = (feat.properties && feat.properties.name) || '';
-      var cp   = prefMap[name] || PREF_PALETTE[0];
+  const lyr = L.geoJSON(data, {
+    style: function() {
       return {
-        fillColor: cp.fill, fillOpacity: 1,
-        color: cp.border, weight: 2.5,
-        dashArray: '8,5', opacity: 0.90
+        fillColor: 'transparent', fillOpacity: 0,
+        color: '#1d4ed8', weight: 3,
+        dashArray: '10,6', opacity: 0.80
       };
     },
     onEachFeature: function(feat, l) {
-      var p    = feat.properties || {};
-      var name = p.name || 'Préfecture';
-      var cp   = prefMap[name] || PREF_PALETTE[0];
-      var dens = p.density ? (+p.density).toLocaleString('fr-FR') + ' hab/km²' : '—';
+      const p    = feat.properties || {};
+      const name = p.Nom_Region || p.NOM_REGION || p.name || 'Région RSK';
       l.bindPopup('<div class="popup-content">'
-        + popupHeader(cp.border, '🗂️', name)
+        + popupHeader('#1d4ed8', '🗂️', name)
         + '<table>'
-        + '<tr><td>Type</td><td><b>' + (p.type || '—') + '</b></td></tr>'
-        + '<tr><td>Population</td><td><b>' + ((+p.population || 0).toLocaleString('fr-FR')) + '</b> hab.</td></tr>'
-        + '<tr><td>Superficie</td><td>' + ((+p.area_km2 || 0).toLocaleString('fr-FR')) + ' km²</td></tr>'
-        + '<tr><td>Densité</td><td>' + dens + '</td></tr>'
+        + '<tr><td>Code région</td><td>' + (p.CODE_REGIO || p.type || '—') + '</td></tr>'
+        + '<tr><td>Population</td><td><b>' + ((+(p.Population || p.population) || 0).toLocaleString('fr-FR')) + '</b> hab.</td></tr>'
+        + '<tr><td>Superficie</td><td>' + ((+(p.area_km2) || 0).toLocaleString('fr-FR') || '—') + ' km²</td></tr>'
         + '</table></div>', { maxWidth: 270 });
-      l.bindTooltip(name, {
-        permanent: true, direction: 'center',
-        className: 'admin-label'
-      });
-      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.6, weight: 3 }); });
-      l.on('mouseout',  function() { lyr.resetStyle(this); });
     }
   });
   window.overlayLayers['Limites administratives'] = lyr;
