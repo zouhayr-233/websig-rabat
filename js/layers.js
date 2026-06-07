@@ -6,6 +6,7 @@
    =================================================== */
 
 window.overlayLayers = {};
+window.appData = { dams: null, stations: null, watersheds: null, floodZones: null, rivers: null };
 
 /* ── Fetch helper ─────────────────────────────────── */
 async function loadLayer(filename, onLoad) {
@@ -145,6 +146,7 @@ function renderStationChart(id, months) {
    Fields: NomSousBas, CodeSousBas, Superficie, CodeBassin
    ══════════════════════════════════════════════════ */
 function loadWatersheds(data) {
+  window.appData.watersheds = data;
   const palette = [
     { fill: '#c8e6fa', border: '#1565c0' },
     { fill: '#c8efd8', border: '#2e7d32' },
@@ -214,6 +216,7 @@ var ouedStyles = {
 };
 
 function loadRivers(data) {
+  window.appData.rivers = data;
   /* ── river line layer ── */
   var riverLines = L.geoJSON(data, {
     style: function(feat) { return ouedStyles[classifyOued(feat)]; },
@@ -290,6 +293,7 @@ function loadRivers(data) {
    Fields: BARRAGE, OUED, Capacité_, ANNEE, current_level
    ══════════════════════════════════════════════════ */
 function loadDams(data) {
+  window.appData.dams = data;
   const lyr = L.geoJSON(data, {
     pointToLayer: function(feat, ll) {
       return L.marker(ll, { icon: damIcon, zIndexOffset: 500 });
@@ -325,6 +329,7 @@ function loadDams(data) {
    Fields: name, altitude, annual_rainfall, network, monthly_data
    ══════════════════════════════════════════════════ */
 function loadStations(data) {
+  window.appData.stations = data;
   const lyr = L.geoJSON(data, {
     pointToLayer: function(feat, ll) { return L.marker(ll, { icon: stationIcon }); },
     onEachFeature: function(feat, l) {
@@ -354,6 +359,7 @@ function loadStations(data) {
    Fields: risk_code, risk_level, area_km2, population_exposed
    ══════════════════════════════════════════════════ */
 function loadFloodZones(data) {
+  window.appData.floodZones = data;
   /* Red / Orange / Yellow — standard GIS risk classification */
   const fills  = { high: '#fecaca', medium: '#fed7aa', low: '#fef9c3' };
   const borders = { high: '#dc2626', medium: '#ea580c', low: '#ca8a04' };
@@ -544,7 +550,40 @@ async function loadAllLayers() {
   ]);
   loadCities();
   console.log('[layers] done. Keys:', Object.keys(window.overlayLayers));
+  updateStatCards();
+  document.dispatchEvent(new CustomEvent('appDataReady'));
   hideSpinnerNow();
+}
+
+function getDamCapacity(props) {
+  for (var k in props) { if (k.toLowerCase().includes('apacit')) return +props[k] || 0; }
+  return 0;
+}
+
+function updateStatCards() {
+  var d = window.appData;
+
+  if (d.dams) {
+    var feats = d.dams.features;
+    var totalCap = feats.reduce(function(s, f) { return s + getDamCapacity(f.properties); }, 0);
+    var elD = document.getElementById('stat-dams');
+    var elC = document.getElementById('stat-capacity');
+    if (elD) elD.textContent = feats.length;
+    if (elC) elC.textContent = Math.round(totalCap).toLocaleString('fr-FR');
+  }
+
+  if (d.rivers) {
+    var totalKm = d.rivers.features.reduce(function(s, f) {
+      return s + (+(f.properties.Shape_Leng || 0) * 111);
+    }, 0);
+    var elR = document.getElementById('stat-rivers');
+    if (elR) elR.textContent = Math.round(totalKm).toLocaleString('fr-FR');
+  }
+
+  if (d.stations) {
+    var elS = document.getElementById('stat-stations');
+    if (elS) elS.textContent = d.stations.features.length;
+  }
 }
 
 loadAllLayers();
