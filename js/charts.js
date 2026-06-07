@@ -65,7 +65,7 @@ function renderRiskPie(data) {
 
   /* 4 classes fixes — Tres eleve issu de l analyse GIS (Random Forest) */
   var labels  = ['Tres eleve', 'Eleve', 'Modere', 'Faible'];
-  var colors  = ['#dc2626', '#ea580c', '#ca8a04', '#16a34a'];
+  var colors  = ['#e11d48', '#f97316', '#eab308', '#22c55e'];
   var areas   = [185, 2266, 308, 618];
 
   /* Update inline legend */
