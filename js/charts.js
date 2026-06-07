@@ -63,56 +63,49 @@ function renderRiskPie(data) {
   var ctx = document.getElementById('riskPieChart');
   if (!ctx) return;
 
-  var riskData = [2451, 308, 618]; /* static fallback */
+  /* 4 classes matching GIS image: very_high=red high=orange moderate=yellow low=green */
+  var labels  = ['Tres eleve', 'Eleve', 'Modere', 'Faible'];
+  var colors  = ['#dc2626', '#ea580c', '#ca8a04', '#16a34a'];
+  var riskData = [0, 2451, 308, 618];
 
   if (data && data.floodZones) {
-    var totals = { high: 0, medium: 0, low: 0 };
+    var totals = { very_high: 0, high: 0, moderate: 0, low: 0 };
     data.floodZones.features.forEach(function (f) {
-      var code = (f.properties.risk_code || 'low');
-      totals[code] = (totals[code] || 0) + (+f.properties.area_km2 || 0);
+      var code = (f.properties.risk_code || 'low').toLowerCase();
+      if (code === 'very_high') totals.very_high += (+f.properties.area_km2 || 0);
+      else if (code === 'high') totals.high += (+f.properties.area_km2 || 0);
+      else if (code === 'moderate' || code === 'medium') totals.moderate += (+f.properties.area_km2 || 0);
+      else totals.low += (+f.properties.area_km2 || 0);
     });
-    riskData = [
-      Math.round(totals.high),
-      Math.round(totals.medium),
-      Math.round(totals.low)
-    ];
-    /* Update inline legend in HTML */
-    var rl = document.querySelector('.risk-legend-inline');
+    riskData = [Math.round(totals.very_high), Math.round(totals.high), Math.round(totals.moderate), Math.round(totals.low)];
+    var rl = document.getElementById('risk-legend-inline');
     if (rl) {
-      rl.innerHTML =
-        '<span class="risk-dot high"></span> Élevé : ' + riskData[0].toLocaleString('fr-FR') + ' km²'
-        + '&ensp;<span class="risk-dot medium"></span> Moyen : ' + riskData[1].toLocaleString('fr-FR') + ' km²'
-        + '&ensp;<span class="risk-dot low"></span> Faible : '  + riskData[2].toLocaleString('fr-FR') + ' km²';
+      var clrs = ['#dc2626','#ea580c','#ca8a04','#16a34a'];
+      var lbsl = ['Très élevé', 'Élevé', 'Modéré', 'Faible'];
+      rl.innerHTML = riskData.map(function(v,i){
+        return v > 0 ? '<span class="risk-dot" style="background:'+clrs[i]+'"></span> '+lbsl[i]+' : '+v.toLocaleString('fr-FR')+' km²' : '';
+      }).filter(Boolean).join('&ensp;');
     }
+    var fl = {labels:[],colors:[],data:[]};
+    riskData.forEach(function(v,i){ if(v>0){fl.labels.push(labels[i]);fl.colors.push(colors[i]);fl.data.push(v);} });
+    labels = fl.labels; colors = fl.colors; riskData = fl.data;
   }
 
   new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Risque élevé', 'Risque moyen', 'Risque faible'],
-      datasets: [{
-        data: riskData,
-        backgroundColor: ['#c62828', '#e65100', '#2e7d32'],
-        borderColor: '#ffffff',
-        borderWidth: 3,
-        hoverOffset: 8
-      }]
+      labels: labels,
+      datasets: [{ data: riskData, backgroundColor: colors, borderColor: '#ffffff', borderWidth: 3, hoverOffset: 8 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '60%',
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: {
-          label: function (c) { return ' ' + c.label + ' : ' + c.parsed.toLocaleString('fr-FR') + ' km²'; }
-        }}
+        tooltip: { callbacks: { label: function (c) { return ' ' + c.label + ' : ' + c.parsed.toLocaleString('fr-FR') + ' km²'; } }}
       }
     }
   });
 }
-
-/* ══════════════════════════════════════════════════
-   2. HORIZONTAL BAR — Dam capacities
-   ══════════════════════════════════════════════════ */
 function renderDamChart(data) {
   var ctx = document.getElementById('damLevelChart');
   if (!ctx) return;

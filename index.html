@@ -258,7 +258,7 @@
             <div class="tc-group-label">⚠️ Risque d'inondation</div>
 
             <div class="thematic-card active" data-layer="Zones de risque">
-              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#dc2626 33%,#ea580c 66%,#ca8a04 100%)"></div>
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#dc2626 0%,#ea580c 33%,#ca8a04 66%,#16a34a 100%)"></div>
               <div class="tc-body" style="padding:7px 32px 7px 10px">
                 <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
                   <span style="font-size:14px;flex-shrink:0">⚠️</span>
@@ -266,12 +266,14 @@
                   <span class="tc-status"></span>
                 </div>
                 <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
-                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#fecaca;border:1.5px solid #dc2626"></span>
-                  <span style="font-size:10px;font-weight:700;color:#dc2626;margin-right:3px">Élevé</span>
-                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#fed7aa;border:1.5px solid #ea580c"></span>
-                  <span style="font-size:10px;font-weight:700;color:#ea580c;margin-right:3px">Modéré</span>
-                  <span style="display:inline-block;width:18px;height:11px;border-radius:2px;background:#fef9c3;border:1.5px dashed #ca8a04"></span>
-                  <span style="font-size:10px;font-weight:700;color:#a16207">Faible</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#fca5a5;border:1.5px solid #dc2626"></span>
+                  <span style="font-size:9px;font-weight:700;color:#dc2626;margin-right:2px">Très élevé</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#fdba74;border:1.5px solid #ea580c"></span>
+                  <span style="font-size:9px;font-weight:700;color:#ea580c;margin-right:2px">Élevé</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#fef08a;border:1.5px solid #ca8a04"></span>
+                  <span style="font-size:9px;font-weight:700;color:#a16207;margin-right:2px">Modéré</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#bbf7d0;border:1.5px dashed #16a34a"></span>
+                  <span style="font-size:9px;font-weight:700;color:#16a34a">Faible</span>
                 </div>
               </div>
               <button class="tc-zoom" data-layer="Zones de risque" title="Centrer">⊙</button>
@@ -377,10 +379,11 @@
               <div class="chart-wrap">
                 <canvas id="riskPieChart"></canvas>
               </div>
-              <div class="risk-legend-inline">
-                <span class="risk-dot high"></span> Élevé: 2 451 km²
-                <span class="risk-dot medium"></span> Moyen: 308 km²
-                <span class="risk-dot low"></span> Faible: 618 km²
+              <div class="risk-legend-inline" id="risk-legend-inline">
+                <span class="risk-dot" style="background:#dc2626"></span> Très élevé
+                <span class="risk-dot" style="background:#ea580c"></span> Élevé
+                <span class="risk-dot" style="background:#ca8a04"></span> Modéré
+                <span class="risk-dot" style="background:#16a34a"></span> Faible
               </div>
             </div>
 

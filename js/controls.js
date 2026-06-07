@@ -290,9 +290,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (L === 'Zones de risque')
         sections.push(lgSection('⚠️ Risque d\'inondation', [
-          lgPoly('#fecaca','#dc2626', false, 'Risque ÉLEVÉ'),
-          lgPoly('#fed7aa','#ea580c', false, 'Risque MODÉRÉ'),
-          lgPoly('#fef9c3','#ca8a04', true,  'Risque FAIBLE'),
+          lgPoly('#fca5a5','#dc2626', false, 'Très élevé (Very High)'),
+          lgPoly('#fdba74','#ea580c', false, 'Élevé (High)'),
+          lgPoly('#fef08a','#ca8a04', false, 'Modéré (Moderate)'),
+          lgPoly('#bbf7d0','#16a34a', true,  'Faible (Low)'),
         ]));
     });
 

@@ -95,13 +95,19 @@ function makeCityIcon(type) {
   });
 }
 
-/* ── Risk colour helper ──────────────────────────── */
-function riskColor(code) {
-  if (!code) return '#16a34a';
+/* ── Risk colour helpers — 4 classes like GIS output ─
+   very_high: rouge   high: orange  moderate: jaune  low: vert */
+var RISK_FILL   = { very_high:'#fca5a5', high:'#fdba74', moderate:'#fef08a', low:'#bbf7d0' };
+var RISK_BORDER = { very_high:'#dc2626', high:'#ea580c', moderate:'#ca8a04', low:'#16a34a' };
+var RISK_LABEL  = { very_high:'Très élevé', high:'Élevé', moderate:'Modéré', low:'Faible' };
+
+function riskKey(code) {
+  if (!code) return 'low';
   const c = code.toLowerCase();
-  return c.includes('elev') || c.includes('high') || c === '1' ? '#dc2626'
-       : c.includes('moyen') || c.includes('med') || c === '2' ? '#ea580c'
-       : '#16a34a';
+  if (c === 'very_high' || c.includes('very') || c.includes('très')) return 'very_high';
+  if (c === 'high'  || c.includes('elev') || c === '1') return 'high';
+  if (c === 'moderate' || c.includes('moder') || c.includes('moyen') || c === '2') return 'moderate';
+  return 'low';
 }
 
 /* ── Level fill bar ──────────────────────────────── */
@@ -360,36 +366,35 @@ function loadStations(data) {
    ══════════════════════════════════════════════════ */
 function loadFloodZones(data) {
   window.appData.floodZones = data;
-  /* Red / Orange / Yellow — standard GIS risk classification */
-  const fills  = { high: '#fecaca', medium: '#fed7aa', low: '#fef9c3' };
-  const borders = { high: '#dc2626', medium: '#ea580c', low: '#ca8a04' };
-  const hdColors = { high: '#dc2626', medium: '#ea580c', low: '#a16207' };
   const lyr = L.geoJSON(data, {
     style: function(feat) {
-      const code = (feat.properties || {}).risk_code || 'low';
+      const key = riskKey((feat.properties || {}).risk_code);
       return {
-        fillColor: fills[code]  || '#bbf7d0',
-        fillOpacity: 0.62,
-        color:     borders[code] || '#16a34a',
-        weight: code === 'high' ? 2 : 1.5,
-        dashArray: code === 'low' ? '6,4' : null
+        fillColor:   RISK_FILL[key],
+        fillOpacity: key === 'very_high' ? 0.75 : 0.68,
+        color:       RISK_BORDER[key],
+        weight:      key === 'very_high' ? 2.5 : key === 'high' ? 2 : 1.5,
+        dashArray:   key === 'low' ? '6,4' : null,
+        opacity:     0.95
       };
     },
     onEachFeature: function(feat, l) {
       const p    = feat.properties || {};
-      const code = p.risk_code || 'low';
+      const key  = riskKey(p.risk_code);
+      const label = RISK_LABEL[key];
       const measures = (p.mitigation_measures || []).map(function(m) { return '<li>' + m + '</li>'; }).join('');
       l.bindPopup('<div class="popup-content">'
-        + popupHeader(hdColors[code] || '#16a34a', '⚠️', p.name || 'Zone inondation')
+        + popupHeader(RISK_BORDER[key], '⚠️', p.name || 'Zone inondation')
         + '<table>'
-        + '<tr><td>Niveau de risque</td><td><span class="risk-badge ' + code + '">' + (p.risk_level || '—') + '</span></td></tr>'
+        + '<tr><td>Niveau de risque</td><td><span class="risk-badge ' + key + '" style="background:' + RISK_FILL[key] + ';color:' + RISK_BORDER[key] + ';border:1px solid ' + RISK_BORDER[key] + ';padding:2px 7px;border-radius:4px;font-weight:700">' + label + '</span></td></tr>'
         + '<tr><td>Superficie</td><td>' + (p.area_km2 || '—') + ' km²</td></tr>'
         + '<tr><td>Population exposée</td><td><b>' + ((p.population_exposed || 0).toLocaleString('fr-FR')) + '</b> hab.</td></tr>'
         + '<tr><td>Dernière inondation</td><td>' + (p.last_flood_year || '—') + '</td></tr>'
+        + (p.cv_f1 ? '<tr><td>Précision modèle (F1)</td><td><b>' + p.cv_f1 + '</b></td></tr>' : '')
         + '</table>'
         + (measures ? '<div class="popup-measures"><div class="popup-measures-title">Mesures de prévention</div><ul>' + measures + '</ul></div>' : '')
         + '</div>', { maxWidth: 320 });
-      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.82, weight: 2.8 }); });
+      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.88, weight: 3 }); });
       l.on('mouseout',  function() { lyr.resetStyle(this); });
     }
   });
