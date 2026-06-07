@@ -97,9 +97,9 @@ function makeCityIcon(type) {
 
 /* ── Risk colour helpers — 4 classes like GIS output ─
    very_high: rouge   high: orange  moderate: jaune  low: vert */
-/* Saturated GEE-style palette */
-var RISK_FILL   = { very_high:'#e11d48', high:'#f97316', moderate:'#eab308', low:'#22c55e' };
-var RISK_BORDER = { very_high:'#9f1239', high:'#c2410c', moderate:'#854d0e', low:'#15803d' };
+/* Professional cartographic palette — moderate saturation */
+var RISK_FILL   = { very_high:'#ef4444', high:'#f97316', moderate:'#f59e0b', low:'#4ade80' };
+var RISK_BORDER = { very_high:'#b91c1c', high:'#c2410c', moderate:'#b45309', low:'#16a34a' };
 var RISK_LABEL  = { very_high:'Très élevé', high:'Élevé', moderate:'Modéré', low:'Faible' };
 
 function riskKey(code) {

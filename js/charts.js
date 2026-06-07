@@ -63,26 +63,51 @@ function renderRiskPie(data) {
   var ctx = document.getElementById('riskPieChart');
   if (!ctx) return;
 
-  /* 4 classes fixes — Tres eleve issu de l analyse GIS (Random Forest) */
-  var labels  = ['Tres eleve', 'Eleve', 'Modere', 'Faible'];
-  var colors  = ['#e11d48', '#f97316', '#eab308', '#22c55e'];
-  var areas   = [185, 2266, 308, 618];
+  var labels  = ['Très élevé', 'Élevé', 'Modéré', 'Faible'];
+  var colors  = ['#ef4444', '#f97316', '#f59e0b', '#4ade80'];
+  var areas   = [206, 2060, 2679, 4398]; /* real DEM areas — updated dynamically */
+
+  if (data && data.floodZones) {
+    var totals = { very_high: 0, high: 0, moderate: 0, medium: 0, low: 0 };
+    data.floodZones.features.forEach(function (f) {
+      var code = (f.properties.risk_code || 'low').toLowerCase();
+      var area = +f.properties.area_km2 || 0;
+      if (code === 'very_high')                        totals.very_high += area;
+      else if (code === 'high')                        totals.high     += area;
+      else if (code === 'moderate' || code === 'medium') totals.moderate += area;
+      else                                             totals.low      += area;
+    });
+    areas = [
+      Math.round(totals.very_high),
+      Math.round(totals.high),
+      Math.round(totals.moderate),
+      Math.round(totals.low)
+    ];
+  }
 
   /* Update inline legend */
   var rl = document.getElementById('risk-legend-inline');
   if (rl) {
-    var lbsl = ['Très élevé', 'Élevé', 'Modéré', 'Faible'];
-    rl.innerHTML = areas.map(function(v, i) {
-      return '<span class="risk-dot" style="background:' + colors[i] + '"></span> '
-           + lbsl[i] + ' : ' + v.toLocaleString('fr-FR') + ' km²';
-    }).join('&ensp;');
+    rl.innerHTML = labels.map(function(lbl, i) {
+      return areas[i] > 0
+        ? '<span class="risk-dot" style="background:' + colors[i] + '"></span> '
+          + lbl + ' : ' + areas[i].toLocaleString('fr-FR') + ' km²'
+        : '';
+    }).filter(Boolean).join('&ensp;');
   }
+
+  /* Filter zero slices */
+  var fl = { labels: [], colors: [], data: [] };
+  areas.forEach(function (v, i) {
+    if (v > 0) { fl.labels.push(labels[i]); fl.colors.push(colors[i]); fl.data.push(v); }
+  });
 
   new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Très élevé', 'Élevé', 'Modéré', 'Faible'],
-      datasets: [{ data: areas, backgroundColor: colors, borderColor: '#ffffff', borderWidth: 3, hoverOffset: 8 }]
+      labels: fl.labels,
+      datasets: [{ data: fl.data, backgroundColor: fl.colors,
+                   borderColor: '#ffffff', borderWidth: 3, hoverOffset: 8 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '60%',
