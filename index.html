@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.css" />
 
   <!-- App styles -->
-  <link rel="stylesheet" href="css/style.css?v=14" />
+  <link rel="stylesheet" href="css/style.css?v=15" />
 </head>
 <body>
 
@@ -93,7 +93,12 @@
           <span class="coords-label">Lon:</span>
           <span id="coord-lon">—</span>
         </div>
-        <button id="btn-mobile-menu" class="toolbar-btn mobile-only" title="Menu">☰</button>
+        <button id="btn-mobile-stats" class="toolbar-btn mobile-only" title="Statistiques">
+          <span class="btn-icon">📊</span>
+        </button>
+        <button id="btn-mobile-menu" class="toolbar-btn mobile-only" title="Couches">
+          <span class="btn-icon">☰</span>
+        </button>
       </div>
     </div>
 
@@ -159,7 +164,7 @@
             <!-- ── Carte 1 : Bassins & Sous-bassins ── -->
             <div class="tc-group-label">💧 Ressources en eau</div>
 
-            <div class="thematic-card active" data-layer="Bassins versants">
+            <div class="thematic-card" data-layer="Bassins versants">
               <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#1565c0 0%,#2e7d32 25%,#f9a825 50%,#bf360c 75%,#6a1b9a 100%)"></div>
               <div class="tc-body" style="padding:7px 32px 7px 10px">
                 <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
@@ -180,7 +185,7 @@
             </div>
 
             <!-- ── Carte 2 : Réseau Hydrographique ── -->
-            <div class="thematic-card active" data-layer="Oueds / Rivières">
+            <div class="thematic-card" data-layer="Oueds / Rivières">
               <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#0044aa,#0066CC,#4499DD)"></div>
               <div class="tc-body" style="padding:7px 32px 7px 10px">
                 <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
@@ -199,7 +204,7 @@
             </div>
 
             <!-- ── Carte 3 : Nappes Souterraines ── -->
-            <div class="thematic-card active" data-layer="Nappes souterraines">
+            <div class="thematic-card" data-layer="Nappes souterraines">
               <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#1d4ed8,#0891b2,#0369a1,#0e7490)"></div>
               <div class="tc-body" style="padding:7px 32px 7px 10px">
                 <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
@@ -237,7 +242,7 @@
             </div>
 
             <!-- ── Carte 5 : Stations Pluviométriques ── -->
-            <div class="thematic-card active" data-layer="Stations pluviométriques">
+            <div class="thematic-card" data-layer="Stations pluviométriques">
               <div class="tc-bar" style="height:5px;background:#1565c0"></div>
               <div class="tc-body" style="padding:7px 32px 7px 10px">
                 <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
@@ -321,6 +326,9 @@
 
         </div><!-- /sidebar-content -->
       </div><!-- /sidebar -->
+
+      <!-- MOBILE OVERLAY BACKDROP -->
+      <div id="mobile-overlay"></div>
 
       <!-- MAP -->
       <div id="map" style="height:calc(100vh - 50px);min-height:400px;flex:1;position:relative;">
@@ -551,10 +559,10 @@
   </script>
 
   <!-- APP MODULES -->
-  <script src="js/map.js?v=14"></script>
-  <script src="js/layers.js?v=14"></script>
-  <script src="js/controls.js?v=14"></script>
-  <script src="js/charts.js?v=14"></script>
+  <script src="js/map.js?v=15"></script>
+  <script src="js/layers.js?v=15"></script>
+  <script src="js/controls.js?v=15"></script>
+  <script src="js/charts.js?v=15"></script>
 
 </body>
 </html>

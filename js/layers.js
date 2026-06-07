@@ -8,6 +8,12 @@
 window.overlayLayers = {};
 window.appData = { dams: null, stations: null, watersheds: null, floodZones: null, rivers: null };
 
+/* Check if a thematic card is active in the sidebar */
+function isCardActive(layerName) {
+  var card = document.querySelector('.thematic-card[data-layer="' + layerName + '"]');
+  return card ? card.classList.contains('active') : false;
+}
+
 /* ── Fetch helper ─────────────────────────────────── */
 async function loadLayer(filename, onLoad) {
   const url = 'data/' + filename;
@@ -194,7 +200,7 @@ function loadWatersheds(data) {
     }
   });
   window.overlayLayers['Bassins versants'] = lyr;
-  if (window.map) lyr.addTo(window.map);
+  if (window.map && isCardActive('Bassins versants')) lyr.addTo(window.map);
   notifyLayerReady('Bassins versants');
 }
 
@@ -291,7 +297,7 @@ function loadRivers(data) {
 
   var lyr = L.featureGroup([riverLines, labelGroup]);
   window.overlayLayers['Oueds / Rivières'] = lyr;
-  if (window.map) lyr.addTo(window.map);
+  if (window.map && isCardActive('Oueds / Rivières')) lyr.addTo(window.map);
   notifyLayerReady('Oueds / Rivières');
 }
 
@@ -327,7 +333,7 @@ function loadDams(data) {
     }
   });
   window.overlayLayers['Barrages'] = lyr;
-  if (window.map) lyr.addTo(window.map);
+  if (window.map && isCardActive('Barrages')) lyr.addTo(window.map);
   notifyLayerReady('Barrages');
 }
 
@@ -357,7 +363,7 @@ function loadStations(data) {
     }
   });
   window.overlayLayers['Stations pluviométriques'] = lyr;
-  if (window.map) lyr.addTo(window.map);
+  if (window.map && isCardActive('Stations pluviométriques')) lyr.addTo(window.map);
   notifyLayerReady('Stations pluviométriques');
 }
 
@@ -401,7 +407,7 @@ function loadFloodZones(data) {
     }
   });
   window.overlayLayers['Zones de risque'] = lyr;
-  if (window.map) lyr.addTo(window.map);
+  if (window.map && isCardActive('Zones de risque')) lyr.addTo(window.map);
   notifyLayerReady('Zones de risque');
 }
 
@@ -431,7 +437,7 @@ function loadAdmin(data) {
     }
   });
   window.overlayLayers['Limites administratives'] = lyr;
-  if (window.map) lyr.addTo(window.map);
+  if (window.map && isCardActive('Limites administratives')) lyr.addTo(window.map);
   notifyLayerReady('Limites administratives');
 }
 
@@ -474,7 +480,7 @@ function loadAquifers(data) {
     }
   });
   window.overlayLayers['Nappes souterraines'] = lyr;
-  if (window.map) lyr.addTo(window.map);
+  if (window.map && isCardActive('Nappes souterraines')) lyr.addTo(window.map);
   notifyLayerReady('Nappes souterraines');
 }
 
@@ -552,7 +558,7 @@ function loadCities() {
     }
   });
   window.overlayLayers['Villes principales'] = lyr;
-  if (window.map) lyr.addTo(window.map);
+  if (window.map && isCardActive('Villes principales')) lyr.addTo(window.map);
   notifyLayerReady('Villes principales');
 }
 

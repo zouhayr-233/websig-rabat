@@ -235,9 +235,60 @@ document.addEventListener('DOMContentLoaded', function () {
   const btnMO = document.getElementById('modal-ok-btn');    if (btnMO) btnMO.addEventListener('click', closeInfoModal);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeInfoModal(); });
 
-  /* ── MOBILE HAMBURGER ────────────────────────────── */
-  const mobileMenu = document.getElementById('btn-mobile-menu');
-  if (mobileMenu && sidebar) mobileMenu.addEventListener('click', function () { sidebar.classList.toggle('collapsed'); });
+  /* ══ MOBILE PANEL MANAGEMENT ════════════════════════
+     Sidebar  → slides from left  (☰ button)
+     RightPanel → slides from right (📊 button)
+     Backdrop → closes any open panel on tap
+     ═════════════════════════════════════════════════ */
+  var mobileOverlay = document.getElementById('mobile-overlay');
+
+  function isMobile() { return window.innerWidth <= 768; }
+
+  function openMobilePanel(panel) {
+    closeMobilePanels(false);
+    if (panel) panel.classList.add('mobile-open');
+    if (mobileOverlay) mobileOverlay.classList.add('visible');
+    if (window.map) window.map.invalidateSize();
+  }
+
+  function closeMobilePanels(doInvalidate) {
+    if (sidebar)     sidebar.classList.remove('mobile-open');
+    if (rightPanel)  rightPanel.classList.remove('mobile-open');
+    if (mobileOverlay) mobileOverlay.classList.remove('visible');
+    if (doInvalidate !== false)
+      setTimeout(function () { if (window.map) window.map.invalidateSize(); }, 300);
+  }
+
+  /* Hamburger — toggle sidebar */
+  var mobileMenu = document.getElementById('btn-mobile-menu');
+  if (mobileMenu) {
+    mobileMenu.addEventListener('click', function () {
+      if (isMobile()) {
+        sidebar && sidebar.classList.contains('mobile-open')
+          ? closeMobilePanels() : openMobilePanel(sidebar);
+      } else {
+        if (sidebar) {
+          sidebar.classList.toggle('collapsed');
+          sidebarToggle && (sidebarToggle.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀');
+          setTimeout(function () { if (window.map) window.map.invalidateSize(); }, 320);
+        }
+      }
+    });
+  }
+
+  /* Stats button — toggle right panel */
+  var mobileStats = document.getElementById('btn-mobile-stats');
+  if (mobileStats) {
+    mobileStats.addEventListener('click', function () {
+      rightPanel && rightPanel.classList.contains('mobile-open')
+        ? closeMobilePanels() : openMobilePanel(rightPanel);
+    });
+  }
+
+  /* Backdrop tap → close all */
+  if (mobileOverlay) {
+    mobileOverlay.addEventListener('click', function () { closeMobilePanels(); });
+  }
 
   /* ══════════════════════════════════════════════════
      PROFESSIONAL GIS LEGEND — all active layers shown

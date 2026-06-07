@@ -871,12 +871,91 @@ ul { list-style: none; padding: 0; }
 
 /* ══ MOBILE ════════════════════════════════════════= */
 .mobile-only { display: none; }
+
+/* Mobile backdrop */
+#mobile-overlay {
+  display: none;
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.42);
+  z-index: 1050; cursor: pointer;
+}
+#mobile-overlay.visible { display: block; }
+
 @media (max-width: 768px) {
-  .mobile-only { display: flex; }
+  /* Show mobile buttons */
+  .mobile-only { display: flex !important; }
+
+  /* Toolbar compact */
+  #toolbar { padding: 0 8px; gap: 4px; }
   .btn-label { display: none; }
   .brand-region { display: none; }
-  #coords-display { min-width: auto; }
-  #sidebar, #right-panel { position: absolute; top: 0; height: 100%; z-index: 1000; }
-  #sidebar.collapsed, #right-panel.collapsed { width: 0; min-width: 0; }
+  #coords-display { display: none; }
+  .toolbar-separator { display: none; }
+
+  /* Hide desktop-only toolbar buttons */
+  #btn-measure-distance, #btn-measure-area,
+  #btn-clear-measure, #btn-export-png,
+  #btn-fullscreen, #btn-info { display: none; }
+
+  /* #main-area is the positioning parent */
+  #main-area { position: relative; overflow: hidden; }
+
+  /* Map fills full area */
+  #map { width: 100% !important; flex: 1; }
+
+  /* ── Sidebar: slides from left as overlay ── */
+  #sidebar {
+    position: absolute !important;
+    top: 0 !important; left: 0 !important;
+    height: 100% !important;
+    width: min(88vw, 310px) !important;
+    min-width: 0 !important;
+    transform: translateX(-100%);
+    transition: transform 0.28s ease;
+    z-index: 1100 !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.28);
+  }
+  #sidebar.mobile-open { transform: translateX(0) !important; }
+  /* override desktop collapsed */
+  #sidebar.collapsed { width: min(88vw, 310px) !important; transform: translateX(-100%) !important; }
+  #sidebar-toggle { display: none !important; }
+
+  /* ── Right panel: slides from right as overlay ── */
+  #right-panel {
+    position: absolute !important;
+    top: 0 !important; right: 0 !important;
+    height: 100% !important;
+    width: min(92vw, 370px) !important;
+    min-width: 0 !important;
+    transform: translateX(100%);
+    transition: transform 0.28s ease;
+    z-index: 1100 !important;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.28);
+  }
+  #right-panel.mobile-open { transform: translateX(0) !important; }
+  #right-panel.collapsed { width: min(92vw, 370px) !important; transform: translateX(100%) !important; }
+  #right-panel-toggle { display: none !important; }
+
+  /* Floating legend: smaller */
+  #map-legend-float { max-width: 175px; bottom: 48px; left: 8px; font-size: 11px; }
+  #legend-content { max-height: 32vh; }
+
+  /* Region title: compact */
+  #map-region-title { font-size: 10px; padding: 3px 10px; top: 8px; }
+
+  /* Stats grid: 2 columns on tablet */
+  .stat-cards-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Hide minimap on mobile */
+  .leaflet-control-minimap { display: none !important; }
+
+  /* Chart heights reduced */
+  .chart-wrap { height: 150px; }
+  .chart-wrap.tall { height: 170px; }
+}
+
+@media (max-width: 480px) {
   .stat-cards-grid { grid-template-columns: 1fr; }
+  #map-region-title { display: none; }
+  #map-legend-float { max-width: 155px; bottom: 44px; }
 }
