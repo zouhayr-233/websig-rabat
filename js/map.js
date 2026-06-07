@@ -89,6 +89,17 @@ setTimeout(function () { map.invalidateSize(); }, 600);
 setTimeout(function () { map.invalidateSize(); }, 1500);
 map.whenReady(function () { map.invalidateSize(); });
 
+/* ── 4b. Prevent Leaflet from capturing events on overlaid UI elements ── */
+setTimeout(function () {
+  var legend = document.getElementById('map-legend-float');
+  var title  = document.getElementById('map-region-title');
+  [legend, title].forEach(function (el) {
+    if (!el) return;
+    L.DomEvent.disableClickPropagation(el);
+    L.DomEvent.disableScrollPropagation(el);
+  });
+}, 500);
+
 /* ── 5. Coordinates display ────────────────────────── */
 map.on('mousemove', function (e) {
   const la = document.getElementById('coord-lat');

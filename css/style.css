@@ -804,8 +804,11 @@ ul { list-style: none; padding: 0; }
   box-shadow: 0 2px 16px rgba(0,0,0,0.18);
   border: 1px solid rgba(0,0,0,0.08);
   min-width: 200px;
-  max-width: 250px;
+  max-width: 260px;
   pointer-events: auto;
+  user-select: none;
+  /* Prevent map from zooming when scrolling legend */
+  touch-action: pan-y;
 }
 .mlf-title {
   padding: 9px 14px 7px;
