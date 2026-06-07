@@ -316,9 +316,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (L === 'Oueds / Rivières')
         sections.push(lgSection('🌊 Oueds / Rivières', [
-          lgLine('#0066CC', 5,   false, 'Oued majeur — Sebou, Bou Regreg'),
-          lgLine('#0066CC', 2.5, false, 'Oued principal'),
-          lgLine('#4499DD', 1.5, false, 'Oued secondaire / affluent'),
+          lgLine('#0d47a1', 4.5, false, 'Oued majeur — Sebou, Bou Regreg'),
+          lgLine('#1565c0', 2.2, false, 'Oued principal'),
+          lgLine('#42a5f5', 1.0, false, 'Oued secondaire / affluent'),
         ]));
 
       if (L === 'Barrages')

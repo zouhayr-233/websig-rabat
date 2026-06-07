@@ -17,8 +17,8 @@ if (typeof L === 'undefined') {
    handles the conversion automatically.
    ─────────────────────────────────────────────────── */
 const map = L.map('map', {
-  center: [34.05, -6.55],
-  zoom: 10,
+  center: [34.10, -6.40],
+  zoom: 9,
   zoomControl: false
 });
 

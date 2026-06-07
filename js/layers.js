@@ -221,11 +221,11 @@ function classifyOued(feat) {
   return 'secondary';
 }
 
-/* User-spec colors: #0066CC main, #4499DD secondary */
+/* Professional river palette — deep blue gradient */
 var ouedStyles = {
-  principal: { color: '#0066CC', weight: 5,   opacity: 0.95 },
-  major:     { color: '#0066CC', weight: 2.5,  opacity: 0.88 },
-  secondary: { color: '#4499DD', weight: 1.2,  opacity: 0.78 }
+  principal: { color: '#0d47a1', weight: 4.5, opacity: 1,    lineCap: 'round', lineJoin: 'round' },
+  major:     { color: '#1565c0', weight: 2.2, opacity: 0.92, lineCap: 'round', lineJoin: 'round' },
+  secondary: { color: '#42a5f5', weight: 1.0, opacity: 0.70, lineCap: 'round', lineJoin: 'round' }
 };
 
 function loadRivers(data) {
@@ -253,7 +253,8 @@ function loadRivers(data) {
         + '</table></div>', { maxWidth: 290 });
       l.on('mouseover', function() {
         const t = classifyOued(this.feature);
-        this.setStyle({ weight: t === 'principal' ? 8 : t === 'major' ? 5 : 3, opacity: 1 });
+        this.setStyle({ weight: t === 'principal' ? 7 : t === 'major' ? 4 : 2, opacity: 1,
+                        color: t === 'principal' ? '#0a3d8f' : t === 'major' ? '#1048a0' : '#1e88e5' });
       });
       l.on('mouseout', function() { riverLines.resetStyle(this); });
     }
