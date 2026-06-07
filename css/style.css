@@ -900,9 +900,9 @@ ul { list-style: none; padding: 0; }
   #app-container { padding-top: var(--toolbar-h); }
 
   .btn-label { display: none; }
-  /* Show WebSIG brand text on mobile (short version) */
-  .brand-region { display: none; }
-  .brand-title { font-size: 13px !important; }
+  /* Show full brand on mobile */
+  .brand-region { display: inline !important; }
+  .brand-title { font-size: 12px !important; white-space: nowrap; }
   #coords-display { display: none; }
   .toolbar-separator { display: none; }
 
