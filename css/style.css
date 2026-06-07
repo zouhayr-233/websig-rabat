@@ -888,10 +888,21 @@ ul { list-style: none; padding: 0; }
   /* Show mobile buttons */
   .mobile-only { display: flex !important; }
 
-  /* Toolbar compact */
-  #toolbar { padding: 0 8px; gap: 4px; }
+  /* ── Toolbar: FIXED at top so it never disappears when zooming ── */
+  #toolbar {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 2000 !important;
+    padding: 0 8px; gap: 4px;
+    height: var(--toolbar-h);
+  }
+  /* Push app container down by toolbar height */
+  #app-container { padding-top: var(--toolbar-h); }
+
   .btn-label { display: none; }
+  /* Show WebSIG brand text on mobile (short version) */
   .brand-region { display: none; }
+  .brand-title { font-size: 13px !important; }
   #coords-display { display: none; }
   .toolbar-separator { display: none; }
 
@@ -900,11 +911,18 @@ ul { list-style: none; padding: 0; }
   #btn-clear-measure, #btn-export-png,
   #btn-fullscreen, #btn-info { display: none; }
 
-  /* #main-area is the positioning parent */
-  #main-area { position: relative; overflow: hidden; }
+  /* Stats + Layers buttons always visible — large tap targets */
+  #btn-mobile-stats, #btn-mobile-menu {
+    padding: 8px 14px !important;
+    font-size: 16px !important;
+    min-width: 44px; min-height: 44px;
+  }
+
+  /* #main-area fills remaining screen */
+  #main-area { position: relative; overflow: hidden; height: calc(100vh - var(--toolbar-h)); }
 
   /* Map fills full area */
-  #map { width: 100% !important; flex: 1; }
+  #map { width: 100% !important; flex: 1; height: 100% !important; }
 
   /* ── Sidebar: slides from left as overlay ── */
   #sidebar {

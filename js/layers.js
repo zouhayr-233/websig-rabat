@@ -585,6 +585,18 @@ async function loadAllLayers() {
   console.log('[layers] done. Keys:', Object.keys(window.overlayLayers));
   updateStatCards();
   document.dispatchEvent(new CustomEvent('appDataReady'));
+
+  /* ── Z-order fix: flood zones drawn last so they cover rivers.
+     Bring rivers, dams, cities to front after everything loads. ── */
+  setTimeout(function () {
+    ['Oueds / Rivières', 'Barrages', 'Stations pluviémétriques', 'Villes principales'].forEach(function (name) {
+      var lyr = window.overlayLayers[name];
+      if (lyr && window.map && window.map.hasLayer(lyr)) {
+        try { lyr.bringToFront(); } catch (e) {}
+      }
+    });
+  }, 400);
+
   hideSpinnerNow();
 }
 
