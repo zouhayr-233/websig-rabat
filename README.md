@@ -141,11 +141,12 @@ Les données GeoJSON sont des données de référence basées sur :
 | | |
 |---|---|
 | **Type** | Projet de Fin d'Études (PFE) Master 2 |
-| **Année** | 2024 – 2025 |
+| **Année** | 2024 – 2026 |
 | **Université** | Université Ibn Tofail, Kénitra |
+| **Faculté** | Faculté des Sciences, Kénitra |
 | **Filière** | Géomatique & Systèmes d'Information Géographique |
 | **Email** | zouhayr.aanzoul@uit.ac.ma |
 
 ---
 
-© 2025 — Université Ibn Tofail, Faculté des Sciences, Kénitra, Maroc.
+© 2026 — Université Ibn Tofail, Faculté des Sciences, Kénitra, Maroc.
