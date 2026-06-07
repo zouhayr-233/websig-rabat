@@ -64,7 +64,7 @@ function renderRiskPie(data) {
   if (!ctx) return;
 
   var labels  = ['Très élevé', 'Élevé', 'Modéré', 'Faible'];
-  var colors  = ['#ef4444', '#f97316', '#f59e0b', '#4ade80'];
+  var colors  = ['#ef4444', '#f97316', '#fde047', '#4ade80'];
   var areas   = [206, 2060, 2679, 4398]; /* real DEM areas — updated dynamically */
 
   if (data && data.floodZones) {

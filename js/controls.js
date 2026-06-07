@@ -343,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function () {
         sections.push(lgSection('⚠️ Risque d\'inondation', [
           lgPoly('#ef4444','#b91c1c', false, 'Très élevé — corridors des oueds'),
           lgPoly('#f97316','#c2410c', false, 'Élevé — plaines inondables'),
-          lgPoly('#f59e0b','#b45309', false, 'Modéré — zones de transition'),
+          lgPoly('#fde047','#a16207', false, 'Modéré — zones de transition'),
           lgPoly('#4ade80','#16a34a', false, 'Faible — zones périphériques'),
         ]));
     });
