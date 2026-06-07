@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
       data: {
         labels: ['Risque élevé', 'Risque moyen', 'Risque faible'],
         datasets: [{
-          data: [245, 890, 1340],
+          data: [2451, 308, 618],
           backgroundColor: ['#c62828', '#e65100', '#2e7d32'],
           borderColor: '#ffffff',
           borderWidth: 3,
@@ -66,24 +66,27 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  /* --- Horizontal bar: Dam fill levels --- */
+  /* --- Horizontal bar: Dam capacities (real data) --- */
   const damLevelCtx = document.getElementById('damLevelChart');
   if (damLevelCtx) {
-    const levels = [78, 62, 85];
+    const capacities = [773, 510, 266, 11, 3, 1.3, 1, 0.9, 0.7, 0.2];
+    const damNames   = ['O. El Makhazine','Ouljet Es Soltane','El Kansera',
+                        'Sidi Yahya','Rouidat Amont','Aïn Koreima',
+                        'Bouknadil','Had Laghoualem','Arid','Aït Lambrabtiya'];
     new Chart(damLevelCtx, {
       type: 'bar',
       data: {
-        labels: ['SMBA', 'Sidi Châhed', 'Al Wahda'],
+        labels: damNames,
         datasets: [{
-          label: 'Niveau (%)',
-          data: levels,
-          backgroundColor: levels.map(function (v) {
-            return v >= 70 ? 'rgba(42,157,143,0.75)'
-              : v >= 40 ? 'rgba(244,162,97,0.75)'
-              : 'rgba(230,57,70,0.75)';
+          label: 'Capacité (Mm³)',
+          data: capacities,
+          backgroundColor: capacities.map(function (v) {
+            return v >= 100 ? 'rgba(42,157,143,0.75)'
+              : v >= 10  ? 'rgba(69,123,157,0.75)'
+              : 'rgba(136,153,170,0.55)';
           }),
-          borderColor: levels.map(function (v) {
-            return v >= 70 ? '#2a9d8f' : v >= 40 ? '#f4a261' : '#e63946';
+          borderColor: capacities.map(function (v) {
+            return v >= 100 ? '#2a9d8f' : v >= 10 ? '#457b9d' : '#8899aa';
           }),
           borderWidth: 1,
           borderRadius: 3
@@ -97,19 +100,17 @@ document.addEventListener('DOMContentLoaded', function () {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: function (ctx) { return ' ' + ctx.parsed.x + '%'; }
+              label: function (ctx) { return ' ' + ctx.parsed.x + ' Mm³'; }
             }
           }
         },
         scales: {
           x: {
-            min: 0,
-            max: 100,
-            ticks: { color: '#8899aa', callback: function (v) { return v + '%'; } },
+            ticks: { color: '#8899aa', callback: function (v) { return v + ' Mm³'; } },
             grid: { color: 'rgba(136,153,170,0.15)' }
           },
           y: {
-            ticks: { color: '#e0e0e0' },
+            ticks: { color: '#546e7a', font: { size: 10 } },
             grid: { display: false }
           }
         }
@@ -117,22 +118,23 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  /* --- Polar area: Watershed areas --- */
+  /* --- Polar area: Watershed areas (real data from SHAPE_Area) --- */
   const watershedCtx = document.getElementById('watershedChart');
   if (watershedCtx) {
     new Chart(watershedCtx, {
       type: 'polarArea',
       data: {
-        labels: ['Bou Regreg', 'Sebou', 'Côtier Nord', 'Côtier Sud'],
+        labels: ['Sebou', 'Côtiers Atlantiques', 'Bouregreg', 'Loukous', 'Drader Souier'],
         datasets: [{
-          data: [6000, 40000, 1200, 800],
+          data: [37670, 10118, 10050, 3735, 1669],
           backgroundColor: [
-            'rgba(38,70,83,0.75)',
             'rgba(42,157,143,0.75)',
+            'rgba(38,70,83,0.75)',
             'rgba(69,123,157,0.75)',
-            'rgba(29,53,87,0.75)'
+            'rgba(29,53,87,0.75)',
+            'rgba(168,218,220,0.75)'
           ],
-          borderColor: ['#264653', '#2a9d8f', '#457b9d', '#1d3557'],
+          borderColor: ['#2a9d8f', '#264653', '#457b9d', '#1d3557', '#a8dadc'],
           borderWidth: 1
         }]
       },
