@@ -97,6 +97,8 @@ setTimeout(function () {
     if (!el) return;
     L.DomEvent.disableClickPropagation(el);
     L.DomEvent.disableScrollPropagation(el);
+    /* Mobile: stop touch events from reaching Leaflet map handlers */
+    L.DomEvent.on(el, 'touchstart touchmove touchend', L.DomEvent.stopPropagation);
   });
 }, 500);
 
