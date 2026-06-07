@@ -370,20 +370,17 @@ function loadStations(data) {
 
 /* ══════════════════════════════════════════════════
    5. ZONES INONDATION — GEE-style homogeneous render
-   Background = RSK region filled with Faible color
-   Flood zones rendered on top → no blank areas
+   No visible borders, solid fills — looks like raster
    ══════════════════════════════════════════════════ */
 function loadFloodZones(data) {
   window.appData.floodZones = data;
-
-  /* ── Flood polygons layer ── */
-  const floodLyr = L.geoJSON(data, {
+  const lyr = L.geoJSON(data, {
     style: function(feat) {
       const key = riskKey((feat.properties || {}).risk_code);
       return {
         fillColor:   RISK_FILL[key],
         fillOpacity: 0.82,
-        color:       RISK_FILL[key],
+        color:       RISK_FILL[key],   /* border = same as fill → invisible seams */
         weight:      0.3,
         dashArray:   null,
         opacity:     0.4
@@ -407,36 +404,11 @@ function loadFloodZones(data) {
       l.on('mouseover', function() {
         this.setStyle({ fillOpacity: 0.95, weight: 1.5, color: RISK_BORDER[riskKey(this.feature.properties.risk_code)] });
       });
-      l.on('mouseout', function() { floodLyr.resetStyle(this); });
+      l.on('mouseout', function() { lyr.resetStyle(this); });
     }
   });
-
-  /* ── Group: background (Faible) + flood zones on top ── */
-  var group = L.layerGroup([floodLyr]);
-
-  /* Fetch RSK region boundary → render as Faible background fill */
-  fetch('data/admin_boundaries_real.geojson')
-    .then(function(r) { return r.json(); })
-    .then(function(adminData) {
-      var bgLyr = L.geoJSON(adminData, {
-        style: function() {
-          return {
-            fillColor:   RISK_FILL['low'],
-            fillOpacity: 0.82,
-            color:       RISK_FILL['low'],
-            weight:      0.3,
-            opacity:     0.4
-          };
-        },
-        interactive: false   /* don't capture clicks — let flood zones handle popups */
-      });
-      group.addLayer(bgLyr);
-      bgLyr.bringToBack();  /* ensure it stays below flood zones */
-    })
-    .catch(function() {});  /* silent fail — map still works without background */
-
-  window.overlayLayers['Zones de risque'] = group;
-  if (window.map && isCardActive('Zones de risque')) group.addTo(window.map);
+  window.overlayLayers['Zones de risque'] = lyr;
+  if (window.map && isCardActive('Zones de risque')) lyr.addTo(window.map);
   notifyLayerReady('Zones de risque');
 }
 
