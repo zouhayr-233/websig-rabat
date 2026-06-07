@@ -8,10 +8,15 @@
 window.overlayLayers = {};
 window.appData = { dams: null, stations: null, watersheds: null, floodZones: null, rivers: null };
 
-/* Check if a thematic card is active in the sidebar */
+/* Check if a thematic card is active — uses getAttribute to avoid encoding issues */
 function isCardActive(layerName) {
-  var card = document.querySelector('.thematic-card[data-layer="' + layerName + '"]');
-  return card ? card.classList.contains('active') : false;
+  var cards = document.querySelectorAll('.thematic-card');
+  for (var i = 0; i < cards.length; i++) {
+    if (cards[i].getAttribute('data-layer') === layerName) {
+      return cards[i].classList.contains('active');
+    }
+  }
+  return false; /* card not found = inactive */
 }
 
 /* ── Fetch helper ─────────────────────────────────── */
