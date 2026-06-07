@@ -70,6 +70,7 @@ function renderRiskPie(data) {
   if (data && data.floodZones) {
     var totals = { very_high: 0, high: 0, moderate: 0, medium: 0, low: 0 };
     data.floodZones.features.forEach(function (f) {
+      if (f.properties.background) return; /* skip RSK background feature */
       var code = (f.properties.risk_code || 'low').toLowerCase();
       var area = +f.properties.area_km2 || 0;
       if (code === 'very_high')                        totals.very_high += area;
