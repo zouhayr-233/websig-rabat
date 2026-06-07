@@ -562,7 +562,7 @@ async function loadAllLayers() {
     loadLayer('watersheds_real.geojson',       loadWatersheds),
     loadLayer('rivers_real.geojson',           loadRivers),
     loadLayer('dams_real.geojson',             loadDams),
-    loadLayer('admin_boundaries.geojson',      loadAdmin),
+    loadLayer('admin_boundaries_real.geojson', loadAdmin),
     loadLayer('aquifers.geojson',              loadAquifers),
     loadLayer('rain_stations.geojson',         loadStations),
     loadLayer('flood_zones.geojson',           loadFloodZones)
