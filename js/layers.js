@@ -361,8 +361,8 @@ function loadStations(data) {
 }
 
 /* ══════════════════════════════════════════════════
-   5. ZONES INONDATION — risk-coded fill + popup
-   Fields: risk_code, risk_level, area_km2, population_exposed
+   5. ZONES INONDATION — GEE-style homogeneous render
+   No visible borders, solid fills — looks like raster
    ══════════════════════════════════════════════════ */
 function loadFloodZones(data) {
   window.appData.floodZones = data;
@@ -371,31 +371,32 @@ function loadFloodZones(data) {
       const key = riskKey((feat.properties || {}).risk_code);
       return {
         fillColor:   RISK_FILL[key],
-        fillOpacity: key === 'very_high' ? 0.75 : 0.68,
-        color:       RISK_BORDER[key],
-        weight:      key === 'very_high' ? 2.5 : key === 'high' ? 2 : 1.5,
-        dashArray:   key === 'low' ? '6,4' : null,
-        opacity:     0.95
+        fillOpacity: 0.82,
+        color:       RISK_FILL[key],   /* border = same as fill → invisible seams */
+        weight:      0.3,
+        dashArray:   null,
+        opacity:     0.4
       };
     },
     onEachFeature: function(feat, l) {
-      const p    = feat.properties || {};
-      const key  = riskKey(p.risk_code);
+      const p     = feat.properties || {};
+      const key   = riskKey(p.risk_code);
       const label = RISK_LABEL[key];
       const measures = (p.mitigation_measures || []).map(function(m) { return '<li>' + m + '</li>'; }).join('');
       l.bindPopup('<div class="popup-content">'
         + popupHeader(RISK_BORDER[key], '⚠️', p.name || 'Zone inondation')
         + '<table>'
-        + '<tr><td>Niveau de risque</td><td><span class="risk-badge ' + key + '" style="background:' + RISK_FILL[key] + ';color:' + RISK_BORDER[key] + ';border:1px solid ' + RISK_BORDER[key] + ';padding:2px 7px;border-radius:4px;font-weight:700">' + label + '</span></td></tr>'
+        + '<tr><td>Niveau de risque</td><td><span style="background:' + RISK_FILL[key] + ';color:' + RISK_BORDER[key] + ';border:1px solid ' + RISK_BORDER[key] + ';padding:2px 8px;border-radius:4px;font-weight:700">' + label + '</span></td></tr>'
         + '<tr><td>Superficie</td><td>' + (p.area_km2 || '—') + ' km²</td></tr>'
-        + '<tr><td>Population exposée</td><td><b>' + ((p.population_exposed || 0).toLocaleString('fr-FR')) + '</b> hab.</td></tr>'
         + '<tr><td>Dernière inondation</td><td>' + (p.last_flood_year || '—') + '</td></tr>'
         + (p.cv_f1 ? '<tr><td>Précision modèle (F1)</td><td><b>' + p.cv_f1 + '</b></td></tr>' : '')
         + '</table>'
         + (measures ? '<div class="popup-measures"><div class="popup-measures-title">Mesures de prévention</div><ul>' + measures + '</ul></div>' : '')
-        + '</div>', { maxWidth: 320 });
-      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.88, weight: 3 }); });
-      l.on('mouseout',  function() { lyr.resetStyle(this); });
+        + '</div>', { maxWidth: 300 });
+      l.on('mouseover', function() {
+        this.setStyle({ fillOpacity: 0.95, weight: 1.5, color: RISK_BORDER[riskKey(this.feature.properties.risk_code)] });
+      });
+      l.on('mouseout', function() { lyr.resetStyle(this); });
     }
   });
   window.overlayLayers['Zones de risque'] = lyr;
@@ -565,7 +566,7 @@ async function loadAllLayers() {
     loadLayer('admin_boundaries_real.geojson', loadAdmin),
     loadLayer('aquifers.geojson',              loadAquifers),
     loadLayer('rain_stations.geojson',         loadStations),
-    loadLayer('flood_zones.geojson',           loadFloodZones)
+    loadLayer('flood_zones_dem_simple.geojson', loadFloodZones)
   ]);
   loadCities();
   console.log('[layers] done. Keys:', Object.keys(window.overlayLayers));
