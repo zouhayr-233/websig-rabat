@@ -106,6 +106,32 @@ function makeCityIcon(type) {
   });
 }
 
+/* ══════════════════════════════════════════════════
+   OUED CLASSIFICATION — length-based + name overrides
+   principal : Sebou, Bou Regreg, Ouargha, Rdate + len ≥ 0.45°
+   major     : len 0.09–0.45° (≈ 10–50 km individual segment)
+   secondary : len < 0.09° + dissolved DEM networks (grid_code)
+   ══════════════════════════════════════════════════ */
+function classifyOued(feat) {
+  const p  = feat.properties || {};
+  const n  = (p.name || p.NAME || '').toLowerCase();
+  const len = +(p.Shape_Leng || 0);
+
+  /* Diss dissolved-network features — always secondary (background drainage) */
+  if (p.grid_code != null) return 'secondary';
+
+  /* Force-principal by name for key regional rivers */
+  if (n.includes('sebou') ||
+      n.includes('bou regreg') || n.includes('bouregreg') || n.includes('bou-regreg') ||
+      n.includes('ouargha') || n.includes('rdate'))
+    return 'principal';
+
+  /* Length-based tiers (Shape_Leng in degrees, 1° ≈ 111 km) */
+  if (len >= 0.45) return 'principal';   /* ≥ ~50 km */
+  if (len >= 0.09) return 'major';       /* ≥ ~10 km */
+  return 'secondary';
+}
+
 /* ── Risk colour helpers — 4 classes like GIS output ─
    very_high: rouge   high: orange  moderate: jaune  low: vert */
 /* Professional cartographic palette — moderate saturation */
@@ -210,27 +236,15 @@ function loadWatersheds(data) {
 }
 
 /* ══════════════════════════════════════════════════
-   2. OUEDS — 3-tier classification
-   principal : Sebou, Bou Regreg → thick #0d47a1
-   major     : other main rivers → medium #1565c0
-   secondary : tributaries        → thin   #42a5f5
-   Fields: name, fclass, Shape_Leng
+   2. OUEDS — length-based 3-tier classification
+   Fields: name, fclass, Shape_Leng, grid_code
    ══════════════════════════════════════════════════ */
-function classifyOued(feat) {
-  const p  = feat.properties || {};
-  const n  = (p.name || p.NAME || '').toLowerCase();
-  const fc = (p.fclass || '').toLowerCase();
-  if (n.includes('sebou') || n.includes('bou regreg') || n.includes('bouregreg') || n.includes('bou-regreg'))
-    return 'principal';
-  if (fc === 'river' || fc === 'major' || fc === '') return 'major';
-  return 'secondary';
-}
 
-/* Professional river palette — deep blue gradient */
+/* River palette — clear visual hierarchy */
 var ouedStyles = {
-  principal: { color: '#0d47a1', weight: 4.5, opacity: 1,    lineCap: 'round', lineJoin: 'round' },
-  major:     { color: '#1565c0', weight: 2.2, opacity: 0.92, lineCap: 'round', lineJoin: 'round' },
-  secondary: { color: '#42a5f5', weight: 1.0, opacity: 0.70, lineCap: 'round', lineJoin: 'round' }
+  principal: { color: '#0d47a1', weight: 4.0, opacity: 1,    lineCap: 'round', lineJoin: 'round' },
+  major:     { color: '#1976d2', weight: 1.8, opacity: 0.88, lineCap: 'round', lineJoin: 'round' },
+  secondary: { color: '#90caf9', weight: 0.6, opacity: 0.50, lineCap: 'round', lineJoin: 'round' }
 };
 
 function loadRivers(data) {
@@ -258,8 +272,8 @@ function loadRivers(data) {
         + '</table></div>', { maxWidth: 290 });
       l.on('mouseover', function() {
         const t = classifyOued(this.feature);
-        this.setStyle({ weight: t === 'principal' ? 7 : t === 'major' ? 4 : 2, opacity: 1,
-                        color: t === 'principal' ? '#0a3d8f' : t === 'major' ? '#1048a0' : '#1e88e5' });
+        this.setStyle({ weight: t === 'principal' ? 6 : t === 'major' ? 3.5 : 1.5, opacity: 1,
+                        color: t === 'principal' ? '#0a3d8f' : t === 'major' ? '#1048a0' : '#42a5f5' });
       });
       l.on('mouseout', function() { riverLines.resetStyle(this); });
     }
@@ -445,8 +459,8 @@ function loadAdmin(data) {
     style: function() {
       return {
         fillColor: 'transparent', fillOpacity: 0,
-        color: '#1d4ed8', weight: 3,
-        dashArray: '10,6', opacity: 0.80
+        color: '#000000', weight: 2.5,
+        opacity: 1
       };
     },
     onEachFeature: function(feat, l) {
