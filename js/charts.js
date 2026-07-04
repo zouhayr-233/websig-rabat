@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  /* Annual rain chart doesn't depend on GeoJSON — render immediately */
+  /* Annual rain chart: fetch real data from precip_report.json */
   renderAnnualRain();
 
   /* Wait for GeoJSON layers to finish loading */
@@ -235,13 +235,28 @@ function renderWatershedChart(data) {
     }
   });
 }
-function renderMonthlyRain(data) {
+async function renderMonthlyRain(data) {
   var ctx = document.getElementById('monthlyRainChart');
   if (!ctx) return;
 
   var monthly = [65, 58, 52, 38, 22, 8, 2, 4, 18, 42, 68, 72]; /* fallback */
 
-  if (data && data.stations && data.stations.features.length) {
+  /* Prefer regional means from precip_report.json (12 NASA POWER grid points) */
+  var loadedFromReport = false;
+  try {
+    var res = await fetch('data/precip_report.json');
+    if (res.ok) {
+      var report = await res.json();
+      if (report.monthly_means_mm) {
+        var keys = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        monthly = keys.map(function (k) { return Math.round(report.monthly_means_mm[k] || 0); });
+        loadedFromReport = true;
+      }
+    }
+  } catch (e) { /* fallback below */ }
+
+  /* Secondary fallback: average station monthly_data */
+  if (!loadedFromReport && data && data.stations && data.stations.features.length) {
     var n = data.stations.features.length;
     monthly = new Array(12).fill(0);
     data.stations.features.forEach(function (f) {
@@ -280,23 +295,30 @@ function renderMonthlyRain(data) {
 }
 
 /* ══════════════════════════════════════════════════
-   5. LINE — Annual rainfall series 2000–2023 (fixed DMN series)
+   5. LINE — Annual rainfall series 2000–2025 (NASA POWER real data)
    ══════════════════════════════════════════════════ */
-function renderAnnualRain() {
+async function renderAnnualRain() {
   var ctx = document.getElementById('annualRainChart');
   if (!ctx) return;
 
-  /* Annual series 2000-2025 — null = missing data (shown as gap) */
   var years = [];
   for (var y = 2000; y <= 2025; y++) years.push(String(y));
 
-  var annualData = [
-    432, 518, 391, 612, 478, 543,   /* 2000-2005 */
-    389, 502, 461, 678, 354, 598,   /* 2006-2011 */
-    512, 445, 623, 387, 542, 495,   /* 2012-2017 */
-    618, 372, 534, 481, 557, 420,   /* 2018-2023 */
-    398, 452                         /* 2024-2025 */
-  ];
+  /* Fallback static series (approximate) */
+  var annualData = [510,399,615,625,474,329,535,437,716,775,1033,689,558,601,642,324,605,363,990,319,542,473,370,264,388,null];
+
+  /* Load real regional means from precip_report.json */
+  try {
+    var res = await fetch('data/precip_report.json');
+    if (res.ok) {
+      var report = await res.json();
+      if (report.annual_series && report.annual_series.length) {
+        var yearMap = {};
+        report.annual_series.forEach(function (entry) { yearMap[entry.year] = Math.round(entry.mean_mm); });
+        annualData = years.map(function (y) { return yearMap[+y] !== undefined ? yearMap[+y] : null; });
+      }
+    }
+  } catch (e) { /* use fallback */ }
 
   /* 5-year moving average (skip nulls) */
   var movAvg = annualData.map(function (_, i, a) {

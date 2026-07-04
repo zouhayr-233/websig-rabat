@@ -349,6 +349,25 @@ function loadDams(data) {
    ══════════════════════════════════════════════════ */
 function loadStations(data) {
   window.appData.stations = data;
+
+  /* Populate stations table with real data */
+  var tbody = document.querySelector('#stations-table tbody');
+  if (tbody && data.features && data.features.length) {
+    tbody.innerHTML = '';
+    data.features
+      .slice()
+      .sort(function(a, b) { return (b.properties.annual_rainfall||0) - (a.properties.annual_rainfall||0); })
+      .forEach(function(f) {
+        var p = f.properties || {};
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + (p.name||'—') + '</td>'
+                     + '<td>' + (p.altitude||'—') + '</td>'
+                     + '<td>' + Math.round(p.annual_rainfall||0) + '</td>'
+                     + '<td>' + (p.network||'—') + '</td>';
+        tbody.appendChild(tr);
+      });
+  }
+
   const lyr = L.geoJSON(data, {
     pointToLayer: function(feat, ll) { return L.marker(ll, { icon: stationIcon }); },
     onEachFeature: function(feat, l) {
@@ -578,8 +597,8 @@ async function loadAllLayers() {
     loadLayer('dams_real.geojson',             loadDams),
     loadLayer('admin_boundaries_real.geojson', loadAdmin),
     loadLayer('aquifers.geojson',              loadAquifers),
-    loadLayer('rain_stations.geojson',         loadStations),
-    loadLayer('flood_zones_dem_simple.geojson', loadFloodZones)
+    loadLayer('rain_stations_real.geojson',     loadStations),
+    loadLayer('flood_zones.geojson',            loadFloodZones)
   ]);
   loadCities();
   console.log('[layers] done. Keys:', Object.keys(window.overlayLayers));
