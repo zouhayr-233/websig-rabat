@@ -793,12 +793,12 @@ ul { list-style: none; padding: 0; }
 /* Admin tooltip label — kept for safety but not used (no permanent tooltip) */
 .admin-label { display: none !important; }
 
-/* ══ MAP EXPAND BUTTON — top-right corner of map ══ */
+/* ══ MAP EXPAND BUTTON — below zoom controls (top-right) ══ */
 #btn-map-expand {
   position: absolute;
-  top: 10px;
+  top: 82px;        /* below Leaflet +/- zoom buttons (~70px) */
   right: 10px;
-  z-index: 1000;
+  z-index: 1001;
   background: rgba(255,255,255,0.95);
   border: 1px solid #bbb;
   border-radius: 4px;
