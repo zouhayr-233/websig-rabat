@@ -316,9 +316,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (L === 'Oueds / Rivières')
         sections.push(lgSection('🌊 Oueds / Rivières', [
-          lgLine('#0d47a1', 4.5, false, 'Oued majeur — Sebou, Bou Regreg'),
-          lgLine('#1565c0', 2.2, false, 'Oued principal'),
-          lgLine('#42a5f5', 1.0, false, 'Oued secondaire / affluent'),
+          lgLine('#0d47a1', 4, false, 'Principal — Sebou, Bou Regreg…'),
+          lgLine('#7bafd4', 2, false, 'Majeur — 10–50 km'),
+          lgLine('#5b9bc8', 1, false, 'Secondaire / réseau DEM'),
         ]));
 
       if (L === 'Barrages')
@@ -353,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var villsActive = document.querySelector('.thematic-card.active[data-layer="Villes principales"]');
     if (adminActive)
       sections.push(lgSection('🗂️ Limites administratives', [
-        lgLine('#1d4ed8', 2.5, true, 'Limite de région / préfecture'),
+        lgLine('#000000', 2.5, false, 'Limite de région RSK'),
       ]));
     if (villsActive)
       sections.push(lgSection('🏙️ Villes principales', [
