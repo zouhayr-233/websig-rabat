@@ -383,8 +383,8 @@ document.addEventListener('DOMContentLoaded', function () {
       if (L === 'Oueds / Rivières')
         sections.push(lgSection('🌊 Oueds / Rivières', [
           lgLine('#0d47a1', 3.5, false, 'Principal — Sebou, Bou Regreg, Tanoubert, Beht, Grou…'),
-          lgLine('#7bafd4', 1.8, false, 'Majeur — ≥ 28 km'),
-          lgLine('#5b9bc8', 0.9, false, 'Secondaire / réseau DEM'),
+          lgLine('#2980b9', 2.2, false, 'Majeur — ≥ 28 km'),
+          lgLine('#5b9bc8', 1.3, false, 'Secondaire / réseau DEM'),
         ]));
 
       if (L === 'Barrages')
