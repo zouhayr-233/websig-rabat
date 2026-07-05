@@ -207,17 +207,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     handle.addEventListener('mousedown', onDown);
 
-    /* Touch support */
+    /* Touch support — preventDefault on real event stops page scroll during drag */
     handle.addEventListener('touchstart', function (e) {
+      e.preventDefault();
       var t = e.touches[0];
       onDown({ clientX: t.clientX, clientY: t.clientY, preventDefault: function(){} });
     }, { passive: false });
     document.addEventListener('touchmove', function (e) {
       if (!dragging) return;
+      e.preventDefault();
       var t = e.touches[0];
       onMove({ clientX: t.clientX, clientY: t.clientY });
     }, { passive: false });
     document.addEventListener('touchend', onUp);
+    document.addEventListener('touchcancel', onUp);
   }());
 
   /* ── MEASURE TOOLS ───────────────────────────────── */
