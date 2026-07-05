@@ -144,6 +144,30 @@ function renderDamChart(data) {
   var caps  = MAJOR.map(function (d) { return d.cap; });
   var blues = ['#1e40af','#2563eb','#3b82f6','#60a5fa','#93c5fd'];
 
+  /* Inline plugin: draw capacity values at the end of each bar */
+  var barLabelPlugin = {
+    id: 'barLabels',
+    afterDatasetsDraw: function (chart) {
+      var ctx = chart.ctx;
+      var meta = chart.getDatasetMeta(0);
+      var dataset = chart.data.datasets[0];
+      meta.data.forEach(function (bar, i) {
+        var val = dataset.data[i];
+        if (!val) return;
+        var lbl = val >= 1 ? Math.round(val).toLocaleString('fr-FR') + ' Mm³' : val.toFixed(1) + ' Mm³';
+        ctx.save();
+        ctx.font = 'bold 9px "Source Sans Pro",sans-serif';
+        ctx.textBaseline = 'middle';
+        /* place label right of bar tip; if bar is too short, still show after */
+        var xPos = Math.max(bar.x, chart.chartArea.left) + 5;
+        ctx.fillStyle = '#334155';
+        ctx.textAlign = 'left';
+        ctx.fillText(lbl, xPos, bar.y);
+        ctx.restore();
+      });
+    }
+  };
+
   new Chart(ctx, {
     type: 'bar',
     data: {
@@ -159,6 +183,7 @@ function renderDamChart(data) {
     },
     options: {
       responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      layout: { padding: { right: 60 } },
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: { label: function (c) { return '  ' + c.parsed.x.toLocaleString('fr-FR') + ' Mm³'; } }}
@@ -176,7 +201,8 @@ function renderDamChart(data) {
           border: { display: false }
         }
       }
-    }
+    },
+    plugins: [barLabelPlugin]
   });
 }
 function renderWatershedChart(data) {
