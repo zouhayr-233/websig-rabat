@@ -224,6 +224,19 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('touchcancel', onUp, { capture: true });
   }());
 
+  /* ── ORIENTATION CHANGE — auto-close panels on landscape ── */
+  window.addEventListener('orientationchange', function () {
+    setTimeout(function () {
+      var sidebar    = document.getElementById('sidebar');
+      var rightPanel = document.getElementById('right-panel');
+      var overlay    = document.getElementById('mobile-overlay');
+      if (sidebar)    sidebar.classList.remove('mobile-open');
+      if (rightPanel) rightPanel.classList.remove('mobile-open');
+      if (overlay)    overlay.classList.remove('active');
+      if (window.map) window.map.invalidateSize();
+    }, 350);
+  });
+
   /* ── MEASURE TOOLS ───────────────────────────────── */
   let measureGroup = null;
   let measureMode = null;

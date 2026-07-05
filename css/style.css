@@ -1040,3 +1040,29 @@ body.map-expanded #right-panel { display: none !important; }
   #map-region-title { display: none; }
   #map-legend-float { max-width: 155px; bottom: 44px; }
 }
+
+/* ── LANDSCAPE PHONE — panels narrower, toolbar compact ── */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+  /* Shrink toolbar to free vertical space */
+  #toolbar { height: 36px !important; padding: 0 6px !important; }
+  #app-container { padding-top: 36px !important; }
+  #main-area { height: calc(100vh - 36px) !important; }
+
+  /* Panels: narrower so at least 40% of screen stays as map */
+  #sidebar {
+    width: min(52vw, 240px) !important;
+  }
+  #sidebar.collapsed { width: min(52vw, 240px) !important; transform: translateX(-100%) !important; }
+
+  #right-panel {
+    width: min(58vw, 280px) !important;
+  }
+  #right-panel.collapsed { width: min(58vw, 280px) !important; transform: translateX(100%) !important; }
+
+  /* Legend even more compact */
+  #map-legend-float { width: 120px; bottom: 28px; font-size: 8px; }
+  #legend-content { max-height: 40vh; }
+
+  /* Expand button closer to zoom */
+  #btn-map-expand { top: 70px; }
+}
