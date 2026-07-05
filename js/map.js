@@ -126,31 +126,57 @@ window.addEventListener('load',     function () { setTimeout(hideSpinner, 1500);
 setTimeout(hideSpinner, 5000);
 
 /* ── 7. Geocoder ───────────────────────────────────── */
+/* RSK bounding box for bounded search */
+var RSK_BBOX = '33.16,-7.13,35.02,-5.31';
+
+function removeSearchMarker() {
+  if (window._sm) { map.removeLayer(window._sm); window._sm = null; }
+}
+window.removeSearchMarker = removeSearchMarker;
+
 function searchLocation(query) {
   if (!query || query.trim().length < 2) return;
   const div = document.getElementById('search-results');
   if (div) div.innerHTML = '<div class="search-result-item">Recherche...</div>';
-  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=ma&q=' + encodeURIComponent(query),
-    { headers: { 'Accept-Language': 'fr' } })
+  /* bounded=1 + viewbox restrict results to RSK area first, fallback to all Morocco */
+  var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=8'
+    + '&countrycodes=ma&addressdetails=1'
+    + '&viewbox=' + RSK_BBOX + '&bounded=0'
+    + '&q=' + encodeURIComponent(query);
+  fetch(url, { headers: { 'Accept-Language': 'fr' } })
     .then(function (r) { return r.json(); })
     .then(function (data) {
       if (!div) return;
       div.innerHTML = '';
       if (!data.length) { div.innerHTML = '<div class="search-result-item" style="color:var(--text-dim)">Aucun résultat.</div>'; return; }
+      /* Sort: items inside RSK bbox first */
+      data.sort(function (a, b) {
+        function inRSK(d) { var lat=+d.lat, lon=+d.lon; return lat>=33.16&&lat<=35.02&&lon>=-7.13&&lon<=-5.31; }
+        return (inRSK(b)?1:0) - (inRSK(a)?1:0);
+      });
       data.forEach(function (item) {
         const el = document.createElement('div');
         el.className = 'search-result-item';
-        el.textContent = item.display_name;
+        var addr = item.address || {};
+        var shortName = addr.city || addr.town || addr.village || addr.county || item.display_name.split(',')[0];
+        var detail = [addr.state, addr.country].filter(Boolean).join(', ');
+        el.innerHTML = '<b style="font-size:12px">' + shortName + '</b>'
+          + (detail ? '<br><span style="font-size:10px;color:#666">' + detail + '</span>' : '');
         el.onclick = function () {
-          map.setView([+item.lat, +item.lon], 13, { animate: true });
-          if (window._sm) map.removeLayer(window._sm);
-          var popup = L.popup({ maxWidth: 280 })
-            .setContent('<div style="font-size:12px;max-width:240px;word-break:break-word">'
-              + item.display_name
-              + '<br><button onclick="if(window._sm){window.map.removeLayer(window._sm);window._sm=null;}" '
-              + 'style="margin-top:6px;padding:2px 10px;background:#ef4444;color:white;border:none;border-radius:3px;cursor:pointer;font-size:11px">✕ Supprimer cette marque</button>'
-              + '</div>');
-          window._sm = L.marker([+item.lat, +item.lon]).addTo(map).bindPopup(popup).openPopup();
+          map.setView([+item.lat, +item.lon], 14, { animate: true });
+          removeSearchMarker();
+          var btn = document.createElement('button');
+          btn.textContent = '✕ Supprimer cette marque';
+          btn.style.cssText = 'margin-top:6px;padding:3px 10px;background:#ef4444;color:white;border:none;border-radius:3px;cursor:pointer;font-size:11px;display:block';
+          btn.addEventListener('click', function () { removeSearchMarker(); });
+          var content = document.createElement('div');
+          content.style.cssText = 'font-size:12px;max-width:260px;word-break:break-word';
+          content.textContent = item.display_name;
+          content.appendChild(btn);
+          window._sm = L.marker([+item.lat, +item.lon])
+            .addTo(map)
+            .bindPopup(L.popup({ maxWidth: 300 }).setContent(content))
+            .openPopup();
           div.innerHTML = '';
         };
         div.appendChild(el);
