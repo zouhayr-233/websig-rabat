@@ -1017,7 +1017,7 @@ body.map-expanded #right-panel { display: none !important; }
   /* Floating legend: smaller on mobile */
   #map-legend-float { width: 145px; bottom: 48px; left: 8px; font-size: 9px; }
   #legend-content { max-height: 28vh; }
-  #btn-map-expand { top: 8px; right: 8px; width: 26px; height: 26px; }
+  #btn-map-expand { top: 80px; right: 8px; width: 32px; height: 32px; }
   /* Larger touch target for legend resize handle on mobile */
   #legend-resize-handle { width: 44px; height: 44px; }
 
