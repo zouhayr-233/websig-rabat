@@ -123,7 +123,7 @@ function classifyOued(feat) {
   /* Force-principal by name for key regional rivers */
   if (n.includes('sebou') ||
       n.includes('bou regreg') || n.includes('bouregreg') || n.includes('bou-regreg') ||
-      n.includes('ouargha') || n.includes('rdate') || n.includes('tanoubert') || n.includes('beht'))
+      n.includes('ouargha') || n.includes('rdate') || n.includes('tanoubert') || n.includes('beht') || n.includes('grou'))
     return 'principal';
 
   /* Length-based tiers (Shape_Leng in degrees, 1° ≈ 111 km) */
