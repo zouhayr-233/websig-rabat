@@ -242,9 +242,9 @@ function loadWatersheds(data) {
 
 /* River palette — clear visual hierarchy */
 var ouedStyles = {
-  principal: { color: '#0d47a1', weight: 3.5, opacity: 1,    lineCap: 'round', lineJoin: 'round' },
-  major:     { color: '#2980b9', weight: 2.2, opacity: 0.90, lineCap: 'round', lineJoin: 'round' },
-  secondary: { color: '#5b9bc8', weight: 1.3, opacity: 0.82, lineCap: 'round', lineJoin: 'round' }
+  principal: { color: '#0d47a1', weight: 3.5, opacity: 1,   lineCap: 'round', lineJoin: 'round' },
+  major:     { color: '#1565c0', weight: 2.4, opacity: 1,   lineCap: 'round', lineJoin: 'round' },
+  secondary: { color: '#2196f3', weight: 1.5, opacity: 1,   lineCap: 'round', lineJoin: 'round' }
 };
 
 function loadRivers(data) {
