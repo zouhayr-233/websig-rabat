@@ -144,7 +144,13 @@ function searchLocation(query) {
         el.onclick = function () {
           map.setView([+item.lat, +item.lon], 13, { animate: true });
           if (window._sm) map.removeLayer(window._sm);
-          window._sm = L.marker([+item.lat, +item.lon]).addTo(map).bindPopup(item.display_name).openPopup();
+          var popup = L.popup({ maxWidth: 280 })
+            .setContent('<div style="font-size:12px;max-width:240px;word-break:break-word">'
+              + item.display_name
+              + '<br><button onclick="if(window._sm){window.map.removeLayer(window._sm);window._sm=null;}" '
+              + 'style="margin-top:6px;padding:2px 10px;background:#ef4444;color:white;border:none;border-radius:3px;cursor:pointer;font-size:11px">✕ Supprimer cette marque</button>'
+              + '</div>');
+          window._sm = L.marker([+item.lat, +item.lon]).addTo(map).bindPopup(popup).openPopup();
           div.innerHTML = '';
         };
         div.appendChild(el);

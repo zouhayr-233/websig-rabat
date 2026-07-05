@@ -872,12 +872,16 @@ body.map-expanded #right-panel { display: none !important; }
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   cursor: se-resize;
-  background: linear-gradient(135deg, transparent 40%, #bbb 40%, #bbb 55%, transparent 55%,
-              transparent 65%, #bbb 65%, #bbb 80%, transparent 80%);
+  z-index: 10;
+  background:
+    linear-gradient(135deg, transparent 33%, #999 33%, #999 45%, transparent 45%),
+    linear-gradient(135deg, transparent 55%, #999 55%, #999 67%, transparent 67%),
+    linear-gradient(135deg, transparent 77%, #999 77%, #999 89%, transparent 89%);
   border-radius: 0 0 4px 0;
+  flex-shrink: 0;
 }
 
 /* Compact GIS legend — QGIS/ArcGIS style */
