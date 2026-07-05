@@ -154,6 +154,72 @@ document.addEventListener('DOMContentLoaded', function () {
   const btnInfo = document.getElementById('btn-info');
   if (btnInfo) btnInfo.addEventListener('click', openInfoModal);
 
+  /* ── MAP EXPAND BUTTON ───────────────────────────── */
+  var mapExpanded = false;
+  var btnMapExpand = document.getElementById('btn-map-expand');
+  if (btnMapExpand) {
+    btnMapExpand.addEventListener('click', function () {
+      mapExpanded = !mapExpanded;
+      document.body.classList.toggle('map-expanded', mapExpanded);
+      var ei = document.getElementById('expand-icon');
+      var ci = document.getElementById('collapse-icon');
+      if (ei) ei.style.display = mapExpanded ? 'none' : '';
+      if (ci) ci.style.display = mapExpanded ? ''     : 'none';
+      btnMapExpand.title = mapExpanded ? 'Réduire la carte' : 'Agrandir la carte';
+      /* Let Leaflet know the map container changed size */
+      setTimeout(function () { if (window.map) window.map.invalidateSize(); }, 200);
+    });
+  }
+
+  /* ── LEGEND DRAG-RESIZE ──────────────────────────── */
+  (function () {
+    var legend  = document.getElementById('map-legend-float');
+    var handle  = document.getElementById('legend-resize-handle');
+    var content = document.getElementById('legend-content');
+    if (!legend || !handle) return;
+
+    var dragging = false, startX, startY, startW, startH;
+
+    function onDown(e) {
+      e.preventDefault();
+      dragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startW = legend.offsetWidth;
+      startH = content.offsetHeight;
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup',   onUp);
+    }
+
+    function onMove(e) {
+      if (!dragging) return;
+      var newW = Math.max(120, Math.min(400, startW + e.clientX - startX));
+      var newH = Math.max(40,  Math.min(window.innerHeight * 0.75, startH + e.clientY - startY));
+      legend.style.width    = newW + 'px';
+      content.style.maxHeight = newH + 'px';
+    }
+
+    function onUp() {
+      dragging = false;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+    }
+
+    handle.addEventListener('mousedown', onDown);
+
+    /* Touch support */
+    handle.addEventListener('touchstart', function (e) {
+      var t = e.touches[0];
+      onDown({ clientX: t.clientX, clientY: t.clientY, preventDefault: function(){} });
+    }, { passive: false });
+    document.addEventListener('touchmove', function (e) {
+      if (!dragging) return;
+      var t = e.touches[0];
+      onMove({ clientX: t.clientX, clientY: t.clientY });
+    }, { passive: false });
+    document.addEventListener('touchend', onUp);
+  }());
+
   /* ── MEASURE TOOLS ───────────────────────────────── */
   let measureGroup = null;
   let measureMode = null;
