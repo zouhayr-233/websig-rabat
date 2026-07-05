@@ -126,9 +126,9 @@ function classifyOued(feat) {
       n.includes('ouargha') || n.includes('rdate') || n.includes('tanoubert') || n.includes('beht') || n.includes('grou'))
     return 'principal';
 
-  /* Length-based tiers (Shape_Leng in degrees, 1° ≈ 111 km) */
-  if (len >= 0.45) return 'principal';   /* ≥ ~50 km */
-  if (len >= 0.25) return 'major';       /* ≥ ~28 km */
+  /* Length-based tiers — unnamed rivers cannot be principal */
+  if (len >= 0.45) return n ? 'principal' : 'secondary';  /* ≥ ~50 km, named only */
+  if (len >= 0.25) return 'major';                        /* ≥ ~28 km */
   return 'secondary';
 }
 
