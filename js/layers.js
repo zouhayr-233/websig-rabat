@@ -123,12 +123,12 @@ function classifyOued(feat) {
   /* Force-principal by name for key regional rivers */
   if (n.includes('sebou') ||
       n.includes('bou regreg') || n.includes('bouregreg') || n.includes('bou-regreg') ||
-      n.includes('ouargha') || n.includes('rdate'))
+      n.includes('ouargha') || n.includes('rdate') || n.includes('tanoubert'))
     return 'principal';
 
   /* Length-based tiers (Shape_Leng in degrees, 1° ≈ 111 km) */
   if (len >= 0.45) return 'principal';   /* ≥ ~50 km */
-  if (len >= 0.09) return 'major';       /* ≥ ~10 km */
+  if (len >= 0.25) return 'major';       /* ≥ ~28 km */
   return 'secondary';
 }
 
@@ -242,9 +242,9 @@ function loadWatersheds(data) {
 
 /* River palette — clear visual hierarchy */
 var ouedStyles = {
-  principal: { color: '#0d47a1', weight: 4.0, opacity: 1,    lineCap: 'round', lineJoin: 'round' },
-  major:     { color: '#7bafd4', weight: 1.8, opacity: 0.75, lineCap: 'round', lineJoin: 'round' },
-  secondary: { color: '#5b9bc8', weight: 0.9, opacity: 0.62, lineCap: 'round', lineJoin: 'round' }
+  principal: { color: '#0d47a1', weight: 3.5, opacity: 1,    lineCap: 'round', lineJoin: 'round' },
+  major:     { color: '#6099be', weight: 1.4, opacity: 0.58, lineCap: 'round', lineJoin: 'round' },
+  secondary: { color: '#a0c4d8', weight: 0.7, opacity: 0.42, lineCap: 'round', lineJoin: 'round' }
 };
 
 function loadRivers(data) {
