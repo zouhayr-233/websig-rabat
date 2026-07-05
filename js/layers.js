@@ -257,8 +257,8 @@ function loadRivers(data) {
       const name = p.name || p.NAME || 'Oued';
       const tier = classifyOued(feat);
       const tierLabels = {
-        principal: 'Oued majeur (axe principal)',
-        major:     'Oued principal',
+        principal: 'Oued principal (grand axe)',
+        major:     'Oued majeur',
         secondary: 'Oued secondaire / affluent'
       };
       const tierColors = { principal: '#0044AA', major: '#0066CC', secondary: '#3377BB' };
