@@ -224,17 +224,24 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('touchcancel', onUp, { capture: true });
   }());
 
-  /* ── ORIENTATION CHANGE — auto-close panels on landscape ── */
-  window.addEventListener('orientationchange', function () {
+  /* ── ORIENTATION CHANGE — close panels when switching to landscape ──
+     Uses resize (more reliable than orientationchange on Android/iOS) */
+  var _lastLandscape = window.innerWidth > window.innerHeight;
+  window.addEventListener('resize', function () {
+    var nowLandscape = window.innerWidth > window.innerHeight;
+    if (nowLandscape === _lastLandscape) return;   /* width/height ratio unchanged */
+    _lastLandscape = nowLandscape;
+    /* Close both sliding panels */
+    var sidebar    = document.getElementById('sidebar');
+    var rightPanel = document.getElementById('right-panel');
+    var overlay    = document.getElementById('mobile-overlay');
+    if (sidebar)    sidebar.classList.remove('mobile-open');
+    if (rightPanel) rightPanel.classList.remove('mobile-open');
+    if (overlay)    overlay.classList.remove('active');
+    /* Let the browser finish reflowing before telling Leaflet */
     setTimeout(function () {
-      var sidebar    = document.getElementById('sidebar');
-      var rightPanel = document.getElementById('right-panel');
-      var overlay    = document.getElementById('mobile-overlay');
-      if (sidebar)    sidebar.classList.remove('mobile-open');
-      if (rightPanel) rightPanel.classList.remove('mobile-open');
-      if (overlay)    overlay.classList.remove('active');
       if (window.map) window.map.invalidateSize();
-    }, 350);
+    }, 400);
   });
 
   /* ── MEASURE TOOLS ───────────────────────────────── */

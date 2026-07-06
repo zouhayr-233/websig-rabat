@@ -1041,28 +1041,25 @@ body.map-expanded #right-panel { display: none !important; }
   #map-legend-float { max-width: 155px; bottom: 44px; }
 }
 
-/* ── LANDSCAPE PHONE — panels narrower, toolbar compact ── */
-@media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
-  /* Shrink toolbar to free vertical space */
-  #toolbar { height: 36px !important; padding: 0 6px !important; }
+/* ── LANDSCAPE PHONE — compact toolbar, narrower panels ── */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Override CSS variable so all calc() expressions update automatically */
+  :root { --toolbar-h: 36px; }
+
+  #toolbar { height: 36px !important; min-height: 36px !important; padding: 0 6px !important; }
   #app-container { padding-top: 36px !important; }
-  #main-area { height: calc(100vh - 36px) !important; }
+  #main-area { height: calc(100dvh - 36px) !important; }
+  #map { height: calc(100dvh - 36px) !important; }
 
-  /* Panels: narrower so at least 40% of screen stays as map */
-  #sidebar {
-    width: min(52vw, 240px) !important;
-  }
-  #sidebar.collapsed { width: min(52vw, 240px) !important; transform: translateX(-100%) !important; }
+  /* Panels narrower — map keeps ≥ 40% width even when open */
+  #sidebar       { width: min(50vw, 240px) !important; }
+  #sidebar.collapsed { width: min(50vw, 240px) !important; transform: translateX(-100%) !important; }
+  #right-panel   { width: min(55vw, 270px) !important; }
+  #right-panel.collapsed { width: min(55vw, 270px) !important; transform: translateX(100%) !important; }
 
-  #right-panel {
-    width: min(58vw, 280px) !important;
-  }
-  #right-panel.collapsed { width: min(58vw, 280px) !important; transform: translateX(100%) !important; }
-
-  /* Legend even more compact */
-  #map-legend-float { width: 120px; bottom: 28px; font-size: 8px; }
-  #legend-content { max-height: 40vh; }
-
-  /* Expand button closer to zoom */
-  #btn-map-expand { top: 70px; }
+  /* Legend compact */
+  #map-legend-float { width: 115px !important; bottom: 24px !important; font-size: 8px !important; }
+  #legend-content   { max-height: 38vh !important; }
+  #btn-map-expand   { top: 66px !important; }
+  #map-region-title { display: none !important; }
 }
