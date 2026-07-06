@@ -46,7 +46,7 @@
   --transition:    0.22s ease;
 }
 
-/* ══ RESET ═══════════════════════════════════════════ */
+/* �?�? RESET �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
@@ -60,7 +60,7 @@ html, body {
 a { color: var(--blue-main); text-decoration: none; }
 ul { list-style: none; padding: 0; }
 
-/* ══ LOADING SPINNER ═════════════════════════════════ */
+/* �?�? LOADING SPINNER �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */
 #loading-spinner {
   position: fixed; top: 0; left: 0;
   width: 100%; height: 100%;
@@ -107,14 +107,14 @@ ul { list-style: none; padding: 0; }
   100% { transform: translateX(350%); }
 }
 
-/* ══ APP CONTAINER ═══════════════════════════════════ */
+/* �?�? APP CONTAINER �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */
 #app-container {
   display: flex !important; flex-direction: column !important;
   width: 100vw !important; height: 100vh !important;
   overflow: hidden !important;
 }
 
-/* ══ TOOLBAR ════════════════════════════════════════ */
+/* �?�? TOOLBAR �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */
 #toolbar {
   display: flex; align-items: center; justify-content: space-between;
   height: var(--toolbar-h); min-height: var(--toolbar-h);
@@ -172,7 +172,7 @@ ul { list-style: none; padding: 0; }
 .coords-label { color: #bfdbfe; font-size: 11px; text-transform: uppercase; }
 #coord-lat, #coord-lon { color: #ffffff; font-weight: 700; min-width: 62px; }
 
-/* ══ MAIN AREA ══════════════════════════════════════ */
+/* �?�? MAIN AREA �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */
 #main-area {
   display: flex !important; flex-direction: row !important;
   flex: 1 !important;
@@ -181,7 +181,7 @@ ul { list-style: none; padding: 0; }
   overflow: hidden !important;
 }
 
-/* ══ SIDEBAR ════════════════════════════════════════ */
+/* �?�? SIDEBAR �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */
 #sidebar {
   position: relative;
   width: var(--sidebar-w); min-width: var(--sidebar-w);
@@ -414,8 +414,8 @@ ul { list-style: none; padding: 0; }
 .layer-item:hover .layer-zoom-btn { opacity: 1; }
 .layer-zoom-btn:hover { color: var(--blue-main); }
 
-/* ══ PROFESSIONAL GIS LEGEND ═════════════════════════ */
-/* ══ THEMATIC MAP CARDS ══════════════════════════════ */
+/* �?�? PROFESSIONAL GIS LEGEND �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */
+/* �?�? THEMATIC MAP CARDS �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */
 .tc-group-label {
   padding: 7px 12px 4px;
   font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
@@ -475,7 +475,7 @@ ul { list-style: none; padding: 0; }
 .thematic-card:hover .tc-zoom { opacity: 1; }
 .tc-zoom:hover { color: var(--blue-main); }
 
-/* ══ LEGEND ══════════════════════════════════════════ */
+/* �?�? LEGEND �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */
 .legend-section { padding: 10px 0; border-top: 2px solid var(--border); }
 #legend-content { padding: 4px 10px 8px; }
 .legend-empty { color: var(--text-dim); font-size: 12px; font-style: italic; padding: 6px 0; }
@@ -543,7 +543,7 @@ ul { list-style: none; padding: 0; }
 .legend-line  { width: 24px; flex-shrink: 0; }
 .legend-dot   { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 
-/* ══ MAP ════════════════════════════════════════════ */
+/* �?�? MAP �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */
 #map {
   flex: 1 !important;
   height: calc(100vh - var(--toolbar-h)) !important;
@@ -619,7 +619,7 @@ ul { list-style: none; padding: 0; }
 .north-arrow-svg { width: 22px; height: 22px; }
 .leaflet-control-minimap { border: 2px solid var(--border) !important; border-radius: var(--radius-sm) !important; }
 
-/* ══ RIGHT PANEL ════════════════════════════════════ */
+/* �?�? RIGHT PANEL �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */
 #right-panel {
   position: relative;
   width: var(--right-w); min-width: var(--right-w);
@@ -743,7 +743,7 @@ ul { list-style: none; padding: 0; }
 .tech-badge.nominatim{ background: rgba(255,152,0,0.1);  color: #e65100; border: 1px solid rgba(255,152,0,0.3); }
 .about-footer { text-align: center; font-size: 11px; color: var(--text-dim); padding: 4px 0; }
 
-/* ══ INFO MODAL ═════════════════════════════════════ */
+/* �?�? INFO MODAL �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 9000;
   background: rgba(13,71,161,0.35);
@@ -793,7 +793,7 @@ ul { list-style: none; padding: 0; }
 /* Admin tooltip label — kept for safety but not used (no permanent tooltip) */
 .admin-label { display: none !important; }
 
-/* ══ MAP EXPAND BUTTON — below zoom controls (top-right) ══ */
+/* �?�? MAP EXPAND BUTTON — below zoom controls (top-right) �?�? */
 #btn-map-expand {
   position: absolute;
   top: 82px;        /* below Leaflet +/- zoom buttons (~70px) */
@@ -819,7 +819,7 @@ ul { list-style: none; padding: 0; }
 body.map-expanded #sidebar,
 body.map-expanded #right-panel { display: none !important; }
 
-/* ══ FLOATING LEGEND ON MAP — bottom left (QGIS/ArcGIS compact style) ══ */
+/* �?�? FLOATING LEGEND ON MAP — bottom left (QGIS/ArcGIS compact style) �?�? */
 #map-legend-float {
   position: absolute;
   bottom: 36px;
@@ -904,7 +904,7 @@ body.map-expanded #right-panel { display: none !important; }
 .lg-sym-point { flex-shrink: 0; }
 .lg-label { flex: 1; line-height: 1.2; }
 
-/* ══ MAP REGION TITLE — floating on map ═════════════ */
+/* �?�? MAP REGION TITLE — floating on map �?�?�?�?�?�?�?�?�?�?�?�?�? */
 #map-region-title {
   position: absolute;
   top: 14px;
@@ -929,7 +929,7 @@ body.map-expanded #right-panel { display: none !important; }
   white-space: nowrap;
 }
 
-/* ══ MOBILE ════════════════════════════════════════= */
+/* �?�? MOBILE �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?= */
 .mobile-only { display: none; }
 
 /* Mobile backdrop */
@@ -941,7 +941,7 @@ body.map-expanded #right-panel { display: none !important; }
 }
 #mobile-overlay.visible { display: block; }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   /* Show mobile buttons */
   .mobile-only { display: flex !important; }
 
@@ -1063,3 +1063,4 @@ body.map-expanded #right-panel { display: none !important; }
   #btn-map-expand   { top: 66px !important; }
   #map-region-title { display: none !important; }
 }
+

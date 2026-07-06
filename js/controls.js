@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function () {
      ═════════════════════════════════════════════════ */
   var mobileOverlay = document.getElementById('mobile-overlay');
 
-  function isMobile() { return window.innerWidth <= 768; }
+  function isMobile() { return window.innerWidth <= 1024; }
 
   function openMobilePanel(panel) {
     closeMobilePanels(false);
