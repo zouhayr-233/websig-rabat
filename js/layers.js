@@ -275,10 +275,10 @@ function ouedStyle(feat) {
     if (o <= 16) return { color: '#1e88e5', weight: 1.1, opacity: 0.82, lineCap: 'round', lineJoin: 'round' };
     return              { color: '#90caf9', weight: 0.5, opacity: 0.60, lineCap: 'round', lineJoin: 'round' };
   }
-  /* Fallback pour données OSM (pas de champ ORDRE) */
-  const tier = classifyOued(feat);
-  if (tier === 'principal') return { color: '#1565c0', weight: 2.8, opacity: 0.92, lineCap: 'round', lineJoin: 'round' };
-  if (tier === 'major')     return { color: '#1e88e5', weight: 1.5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' };
+  /* Fallback OSM — utiliser le champ category pré-calculé (plus fiable que les overrides de nom) */
+  const cat = (p.category || '').toLowerCase();
+  if (cat === 'principal') return { color: '#1565c0', weight: 2.8, opacity: 0.92, lineCap: 'round', lineJoin: 'round' };
+  if (cat === 'major')     return { color: '#1e88e5', weight: 1.5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' };
   return                           { color: '#90caf9', weight: 0.7, opacity: 0.70, lineCap: 'round', lineJoin: 'round' };
 }
 function ouedHighlight(feat) {
