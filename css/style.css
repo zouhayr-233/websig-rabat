@@ -555,47 +555,137 @@ ul { list-style: none; padding: 0; }
   overflow: hidden !important;
 }
 
-/* Leaflet popups — clean white */
+/* ══════════════════════════════════════════════
+   LEAFLET POPUPS — style cartographique expert
+   ══════════════════════════════════════════════ */
 .leaflet-popup-content-wrapper {
-  background: #ffffff !important; color: var(--text-body) !important;
-  border: 1.5px solid var(--border) !important; border-radius: var(--radius) !important;
-  box-shadow: var(--shadow-lg) !important; max-width: 320px;
+  background: #ffffff !important;
+  color: var(--text-body) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10) !important;
+  min-width: 220px;
+  overflow: hidden !important;
 }
-.leaflet-popup-tip { background: #ffffff !important; }
-.leaflet-popup-content { margin: 0 !important; font-size: 13px; font-family: 'Source Sans Pro',sans-serif; }
-.leaflet-popup-close-button { color: var(--text-muted) !important; font-size: 16px !important; top: 6px !important; right: 8px !important; }
-.leaflet-popup-close-button:hover { color: var(--risk-high) !important; }
-
-.popup-content { padding: 12px 14px; }
-.popup-content h3 {
-  font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700;
-  color: var(--blue-main); margin-bottom: 8px;
-  border-bottom: 2px solid var(--blue-pale); padding-bottom: 6px;
+.leaflet-popup-tip-container { margin-top: -1px; }
+.leaflet-popup-tip { background: #ffffff !important; box-shadow: none !important; }
+.leaflet-popup-content {
+  margin: 0 !important;
+  font-size: 12.5px;
+  font-family: 'Source Sans Pro', system-ui, sans-serif;
+  line-height: 1.45;
 }
-.popup-content table { width: 100%; border-collapse: collapse; }
-.popup-content table tr td { padding: 3px 0; font-size: 12px; }
-.popup-content table tr td:first-child { color: var(--text-muted); width: 45%; padding-right: 8px; }
-.popup-content table tr td:last-child { color: var(--text-dark); font-weight: 600; }
-.popup-content table tr:hover td { background: var(--bg-card); }
+.leaflet-popup-close-button {
+  color: rgba(255,255,255,0.85) !important;
+  font-size: 18px !important;
+  top: 7px !important; right: 10px !important;
+  font-weight: 300 !important;
+  z-index: 10;
+}
+.leaflet-popup-close-button:hover { color: #ffffff !important; opacity: 0.7; }
 
+/* ── En-tête coloré ── */
+.popup-hd {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 32px 9px 12px;
+  border-radius: 10px 10px 0 0;
+}
+.popup-hd-icon { font-size: 16px; flex-shrink: 0; line-height: 1; }
+.popup-hd-title {
+  font-size: 13.5px; font-weight: 700; color: #ffffff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  letter-spacing: 0.01em;
+}
+
+/* ── Corps du popup ── */
+.popup-content { padding: 10px 13px 12px; }
+
+.popup-content table {
+  width: 100%; border-collapse: collapse; margin-top: 2px;
+}
+.popup-content table tr td {
+  padding: 4px 2px; font-size: 12px; vertical-align: top;
+  border-bottom: 1px solid #f0f4f8;
+}
+.popup-content table tr:last-child td { border-bottom: none; }
+.popup-content table tr td:first-child {
+  color: #64748b; width: 47%; padding-right: 10px;
+  font-size: 11px; font-weight: 500; text-transform: uppercase;
+  letter-spacing: 0.03em; white-space: nowrap;
+}
+.popup-content table tr td:last-child { color: #1e293b; font-weight: 600; }
+.popup-content table tr:hover td { background: #f8fafc; }
+
+/* ── Code hydrologique (champ Code ABHS) ── */
+.popup-code {
+  display: inline-block;
+  font-family: 'Courier New', monospace;
+  font-size: 10.5px; font-weight: 600;
+  color: #1e40af; background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 1px 5px; border-radius: 3px;
+  letter-spacing: 0.02em;
+}
+
+/* ── Badge de statut ── */
+.status-badge {
+  display: inline-block; padding: 2px 7px; border-radius: 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+}
+.status-badge.operational { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.status-badge.construction { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+
+/* ── Badge de risque ── */
 .popup-content .risk-badge {
-  display: inline-block; padding: 2px 8px; border-radius: 10px;
-  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  display: inline-block; padding: 2px 9px; border-radius: 10px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
 }
-.popup-content .risk-badge.high   { background: rgba(198,40,40,0.12); color: var(--risk-high); border: 1.5px solid var(--risk-high); }
-.popup-content .risk-badge.medium { background: rgba(230,81,0,0.12); color: var(--risk-medium); border: 1.5px solid var(--risk-medium); }
-.popup-content .risk-badge.low    { background: rgba(46,125,50,0.12); color: var(--risk-low); border: 1.5px solid var(--risk-low); }
+.popup-content .risk-badge.high   { background: rgba(192,57,43,0.1); color: #7b241c; border: 1.5px solid #c0392b; }
+.popup-content .risk-badge.medium { background: rgba(230,126,34,0.1); color: #935116; border: 1.5px solid #e67e22; }
+.popup-content .risk-badge.low    { background: rgba(39,174,96,0.1);  color: #1e8449; border: 1.5px solid #27ae60; }
 
-.popup-level-bar { margin-top: 8px; }
-.popup-level-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
-.popup-level-bar-track { height: 6px; background: var(--blue-pale); border-radius: 3px; overflow: hidden; }
-.popup-level-bar-fill  { height: 100%; border-radius: 3px; transition: width 1s ease; }
+/* ── Barre de remplissage barrage ── */
+.popup-level-bar { margin-top: 10px; }
+.popup-level-bar-label {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 500;
+}
+.popup-level-bar-track {
+  height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;
+}
+.popup-level-bar-fill { height: 100%; border-radius: 4px; transition: width 1.2s ease; }
 
-.popup-chart-wrap { margin-top: 10px; height: 80px; position: relative; }
-.popup-measures { margin-top: 8px; }
-.popup-measures-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
-.popup-measures ul { list-style: disc; padding-left: 14px; }
-.popup-measures li { font-size: 11px; color: var(--text-body); padding: 1px 0; }
+/* ── Graphique station pluvio ── */
+.popup-chart-wrap { margin-top: 10px; height: 82px; position: relative; }
+.chart-subtitle {
+  font-size: 10.5px; color: #64748b; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.04em; margin-top: 8px;
+}
+
+/* ── Mesures de prévention ── */
+.popup-measures { margin-top: 9px; border-top: 1px solid #f0f4f8; padding-top: 7px; }
+.popup-measures-title {
+  font-size: 10.5px; font-weight: 700; color: #64748b;
+  text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px;
+}
+.popup-measures ul { list-style: none; padding-left: 0; margin: 0; }
+.popup-measures li {
+  font-size: 11.5px; color: #374151; padding: 2px 0 2px 14px;
+  position: relative;
+}
+.popup-measures li::before {
+  content: '›'; position: absolute; left: 2px;
+  color: #3b82f6; font-weight: 700;
+}
+
+/* ── Tooltip barrages ── */
+.dam-tooltip {
+  background: rgba(8,42,94,0.92); color: #ffffff;
+  border: none; border-radius: 5px; font-size: 12px;
+  font-weight: 600; padding: 4px 9px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
 
 /* Leaflet controls */
 .leaflet-control-zoom a, .leaflet-bar a {

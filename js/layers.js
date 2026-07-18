@@ -145,12 +145,12 @@ function classifyOued(feat) {
   return 'secondary';
 }
 
-/* ── Risk colour helpers — 4 classes like GIS output ─
-   very_high: rouge   high: orange  moderate: jaune  low: vert */
-/* Professional cartographic palette — moderate saturation */
-var RISK_FILL   = { very_high:'#ef4444', high:'#f97316', moderate:'#fde047', low:'#4ade80' };
-var RISK_BORDER = { very_high:'#b91c1c', high:'#c2410c', moderate:'#a16207', low:'#16a34a' };
+/* ── Palette risque inondation — standard cartographie des risques naturels
+   Conforme aux conventions UNDRR / Copernicus Emergency Management */
+var RISK_FILL   = { very_high:'#c0392b', high:'#e67e22', moderate:'#f1c40f', low:'#27ae60' };
+var RISK_BORDER = { very_high:'#7b241c', high:'#935116', moderate:'#9a7d0a', low:'#1e8449' };
 var RISK_LABEL  = { very_high:'Très élevé', high:'Élevé', moderate:'Modéré', low:'Faible' };
+var RISK_OPACITY = { very_high: 0.75, high: 0.68, moderate: 0.60, low: 0.55 };
 
 function riskKey(code) {
   if (!code) return 'low';
@@ -204,12 +204,13 @@ function renderStationChart(id, months) {
    ══════════════════════════════════════════════════ */
 function loadWatersheds(data) {
   window.appData.watersheds = data;
+  /* Palette bassins versants — teintes naturelles harmonisées (convention IGN) */
   const palette = [
-    { fill: '#c8e6fa', border: '#1565c0' },
-    { fill: '#c8efd8', border: '#2e7d32' },
-    { fill: '#fff9c4', border: '#f9a825' },
-    { fill: '#fce4d0', border: '#bf360c' },
-    { fill: '#ead5f5', border: '#6a1b9a' },
+    { fill: '#d4e8f5', border: '#1a4a7a', dash: null   },  /* bleu saphir  */
+    { fill: '#d5edda', border: '#1b5e3b', dash: null   },  /* vert forêt   */
+    { fill: '#f2ecd5', border: '#7a5200', dash: null   },  /* sable / ocre */
+    { fill: '#e8d5f0', border: '#5a2080', dash: null   },  /* violet doux  */
+    { fill: '#f0d5d5', border: '#7a2020', dash: null   },  /* rouge atténué*/
   ];
   const colorMap = {};
   data.features.forEach(function(f, idx) {
@@ -220,7 +221,7 @@ function loadWatersheds(data) {
     style: function(feature) {
       const id = String((feature.properties && (feature.properties.OBJECTID || feature.properties.CodeSousBas)) || 0);
       const p  = colorMap[id] || palette[0];
-      return { fillColor: p.fill, fillOpacity: 0.50, color: p.border, weight: 2, opacity: 0.85 };
+      return { fillColor: p.fill, fillOpacity: 0.42, color: p.border, weight: 2.2, opacity: 0.9, dashArray: p.dash };
     },
     onEachFeature: function(feat, l) {
       const p   = feat.properties || {};
@@ -235,11 +236,11 @@ function loadWatersheds(data) {
         + '<tr><td>Code bassin</td><td>' + (p.CodeBassin || '—') + '</td></tr>'
         + '<tr><td>Superficie</td><td>' + sup + '</td></tr>'
         + '</table></div>', { maxWidth: 290 });
-      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.75, weight: 2.8 }); });
+      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.68, weight: 3.0, opacity: 1 }); });
       l.on('mouseout', function() {
         const rid = String((this.feature.properties && (this.feature.properties.OBJECTID || this.feature.properties.CodeSousBas)) || 0);
         const rp  = colorMap[rid] || palette[0];
-        this.setStyle({ fillColor: rp.fill, fillOpacity: 0.50, color: rp.border, weight: 2 });
+        this.setStyle({ fillColor: rp.fill, fillOpacity: 0.42, color: rp.border, weight: 2.2, opacity: 0.9 });
       });
     }
   });
@@ -253,42 +254,51 @@ function loadWatersheds(data) {
    Fields: name, fclass, Shape_Leng, grid_code
    ══════════════════════════════════════════════════ */
 
-/* River palette — clear visual hierarchy */
-var ouedStyles = {
-  principal: { color: '#0d47a1', weight: 3.5, opacity: 1,   lineCap: 'round', lineJoin: 'round' },
-  major:     { color: '#1565c0', weight: 2.4, opacity: 1,   lineCap: 'round', lineJoin: 'round' },
-  secondary: { color: '#2196f3', weight: 1.5, opacity: 1,   lineCap: 'round', lineJoin: 'round' }
-};
+/* ── Symbologie hydrographique graduée par ordre de Strahler ──
+   5 paliers colorés — convention cartographique professionnelle
+   Strahler order 1 = plus grand axe (Sebou), 16+ = tout petit affluent */
+function ouedStyle(feat) {
+  const p = feat.properties || {};
+  const o = (p.ORDRE != null) ? +p.ORDRE : null;
+  if (o !== null) {
+    if (o <= 2)  return { color: '#082a5e', weight: 4.2, opacity: 0.95, lineCap: 'round', lineJoin: 'round' };
+    if (o <= 4)  return { color: '#0d47a1', weight: 3.0, opacity: 0.92, lineCap: 'round', lineJoin: 'round' };
+    if (o <= 7)  return { color: '#1565c0', weight: 1.8, opacity: 0.88, lineCap: 'round', lineJoin: 'round' };
+    if (o <= 11) return { color: '#1e88e5', weight: 1.0, opacity: 0.80, lineCap: 'round', lineJoin: 'round' };
+    if (o <= 14) return { color: '#42a5f5', weight: 0.6, opacity: 0.70, lineCap: 'round', lineJoin: 'round' };
+    return              { color: '#90caf9', weight: 0.4, opacity: 0.55, lineCap: 'round', lineJoin: 'round' };
+  }
+  /* Fallback si pas de champ ORDRE (données OSM) */
+  const tier = classifyOued(feat);
+  if (tier === 'principal') return { color: '#0d47a1', weight: 3.0, opacity: 0.92, lineCap: 'round', lineJoin: 'round' };
+  if (tier === 'major')     return { color: '#1565c0', weight: 1.8, opacity: 0.88, lineCap: 'round', lineJoin: 'round' };
+  return                           { color: '#42a5f5', weight: 0.6, opacity: 0.70, lineCap: 'round', lineJoin: 'round' };
+}
+function ouedHighlight(feat) {
+  const s = ouedStyle(feat);
+  return Object.assign({}, s, { weight: s.weight + 1.8, opacity: 1, color: '#082a5e' });
+}
 
 function loadRivers(data) {
   window.appData.rivers = data;
   /* ── river line layer ── */
   var riverLines = L.geoJSON(data, {
-    style: function(feat) { return ouedStyles[classifyOued(feat)]; },
+    style: ouedStyle,
     onEachFeature: function(feat, l) {
       const p    = feat.properties || {};
       const name = p.name || p.NAME || 'Cours d\'eau';
       const tier = classifyOued(feat);
-      const tierLabels = {
-        principal: 'Oued principal (grand axe)',
-        major:     'Oued majeur',
-        secondary: 'Oued secondaire / affluent'
-      };
-      const tierColors = { principal: '#0044AA', major: '#0066CC', secondary: '#3377BB' };
-      var rows = '<tr><td>Classification</td><td><b>' + tierLabels[tier] + '</b></td></tr>';
-      if (p.Drain_Prin) rows += '<tr><td>Drain principal</td><td>' + p.Drain_Prin + '</td></tr>';
-      if (p.Code)       rows += '<tr><td>Code hydrologique</td><td><code>' + p.Code + '</code></td></tr>';
-      if (p.ORDRE)      rows += '<tr><td>Ordre de Strahler</td><td>' + p.ORDRE + '</td></tr>';
-      if (p.Agence)     rows += '<tr><td>Source</td><td>' + p.Agence + '</td></tr>';
+      const tierLabels = { principal:'Axe principal', major:'Oued majeur', secondary:'Affluent secondaire' };
+      const headCol = ouedStyle(feat).color;
+      var rows = '<tr><td>Rang hydrologique</td><td><b>' + (p.ORDRE != null ? 'Ordre ' + p.ORDRE + ' (Strahler)' : tierLabels[tier]) + '</b></td></tr>';
+      if (p.Drain_Prin && p.Drain_Prin !== p.name) rows += '<tr><td>Drain principal</td><td>' + p.Drain_Prin + '</td></tr>';
+      if (p.Code)    rows += '<tr><td>Code ABHS</td><td><span class="popup-code">' + p.Code + '</span></td></tr>';
+      if (p.Agence)  rows += '<tr><td>Source</td><td>' + p.Agence + '</td></tr>';
       l.bindPopup('<div class="popup-content">'
-        + popupHeader(tierColors[tier], '🌊', name)
-        + '<table>' + rows + '</table></div>', { maxWidth: 300 });
-      l.on('mouseover', function() {
-        const t = classifyOued(this.feature);
-        this.setStyle({ weight: t === 'principal' ? 6 : t === 'major' ? 3.5 : 1.5, opacity: 1,
-                        color: t === 'principal' ? '#0a3d8f' : t === 'major' ? '#1048a0' : '#42a5f5' });
-      });
-      l.on('mouseout', function() { riverLines.resetStyle(this); });
+        + popupHeader(headCol, '〰️', name || 'Cours d\'eau')
+        + '<table>' + rows + '</table></div>', { maxWidth: 310 });
+      l.on('mouseover', function() { this.setStyle(ouedHighlight(this.feature)); });
+      l.on('mouseout',  function() { riverLines.resetStyle(this); });
     }
   });
 
@@ -430,11 +440,11 @@ function loadFloodZones(data) {
       const key = riskKey((feat.properties || {}).risk_code);
       return {
         fillColor:   RISK_FILL[key],
-        fillOpacity: 0.82,
-        color:       RISK_FILL[key],   /* border = same as fill → invisible seams */
-        weight:      0.3,
+        fillOpacity: RISK_OPACITY[key],
+        color:       RISK_BORDER[key],
+        weight:      1.2,
         dashArray:   null,
-        opacity:     0.4
+        opacity:     0.85
       };
     },
     onEachFeature: function(feat, l) {
@@ -469,11 +479,17 @@ function loadFloodZones(data) {
    ══════════════════════════════════════════════════ */
 function loadAdmin(data) {
   const lyr = L.geoJSON(data, {
-    style: function() {
+    style: function(feat) {
+      const p    = (feat && feat.properties) || {};
+      const type = (p.TYPE || p.type || '').toLowerCase();
+      /* Région = ligne pleine épaisse ; Province/Préfecture = tirets fins */
+      const isProv = type.includes('prov') || type.includes('préf') || type.includes('provi');
       return {
         fillColor: 'transparent', fillOpacity: 0,
-        color: '#000000', weight: 2.5,
-        opacity: 1
+        color:     isProv ? '#374151' : '#111827',
+        weight:    isProv ? 1.4 : 2.8,
+        dashArray: isProv ? '7,5' : null,
+        opacity:   isProv ? 0.75 : 0.95
       };
     },
     onEachFeature: function(feat, l) {
@@ -498,15 +514,16 @@ function loadAdmin(data) {
    Fields: NOM_NAPPE, TYPE_NAPPE, AREA_KM2 (données réelles)
    ══════════════════════════════════════════════════ */
 function loadAquifers(data) {
-  /* Blue → cyan gradient — professional hydrogeology convention */
+  /* Palette nappes souterraines — convention hydrogéologie professionnelle
+     Tons bleu-vert avec hachures pointillées (standard BRGM / FAO) */
   const aqPalette = [
-    { fill: '#bfdbfe', border: '#1d4ed8' },  /* bleu          */
-    { fill: '#a5f3fc', border: '#0891b2' },  /* cyan          */
-    { fill: '#bae6fd', border: '#0369a1' },  /* bleu ciel     */
-    { fill: '#cffafe', border: '#0e7490' },  /* cyan pâle     */
-    { fill: '#e0f2fe', border: '#0284c7' },  /* bleu très pâle*/
-    { fill: '#ccf0ff', border: '#0369a1' },
-    { fill: '#d1e9ff', border: '#1d4ed8' },
+    { fill: '#cce5ff', border: '#084c8d' },  /* bleu marine clair  — Gharb        */
+    { fill: '#b3d9f7', border: '#0d5b9e' },  /* bleu saphir        — Maamora      */
+    { fill: '#c2eef7', border: '#0c6e84' },  /* bleu-cyan          — Mnasra       */
+    { fill: '#c9f0e5', border: '#0b6b50' },  /* bleu-vert          — Dradère      */
+    { fill: '#d4e8c2', border: '#3d6b10' },  /* vert pâle          — Bouagba      */
+    { fill: '#dce0fa', border: '#3a3daa' },  /* bleu-lavande       — Khmissat     */
+    { fill: '#e8d8f5', border: '#6a2090' },  /* mauve              — Fès-Meknès   */
   ];
   const aqMap = {};
   data.features.forEach(function(f, idx) {
@@ -517,7 +534,7 @@ function loadAquifers(data) {
     style: function(feat) {
       const id = (feat.properties && (feat.properties.NOM_NAPPE || feat.properties.Nom_Nappe)) || '0';
       const cp = aqMap[id] || aqPalette[0];
-      return { fillColor: cp.fill, fillOpacity: 0.55, color: cp.border, weight: 2, dashArray: '7,4' };
+      return { fillColor: cp.fill, fillOpacity: 0.48, color: cp.border, weight: 2.0, dashArray: '8,5', opacity: 0.9 };
     },
     onEachFeature: function(feat, l) {
       const p    = feat.properties || {};
@@ -536,7 +553,7 @@ function loadAquifers(data) {
         + '<tr><td>Type</td><td><b>' + type + '</b></td></tr>'
         + '<tr><td>Superficie</td><td>' + aire + '</td></tr>'
         + '</table></div>', { maxWidth: 270 });
-      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.78, weight: 2.5 }); });
+      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.72, weight: 2.8, opacity: 1 }); });
       l.on('mouseout',  function() { lyr.resetStyle(this); });
     }
   });
