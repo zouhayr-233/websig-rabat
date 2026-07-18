@@ -261,25 +261,25 @@ function loadWatersheds(data) {
    Fields: name, fclass, Shape_Leng, grid_code
    ══════════════════════════════════════════════════ */
 
-/* ── Symbologie hydrographique — 4 paliers calés sur les clusters ABHS ──
-   Palier 1 : ORDRE ≤ 5  (clusters 1, 4, 5)    grands axes régionaux
-   Palier 2 : ORDRE ≤ 9  (clusters 8, 9)        oueds principaux
-   Palier 3 : ORDRE ≤ 16 (clusters 12–16)       oueds secondaires
-   Palier 4 : ORDRE > 16 (clusters 18–31)       affluents mineurs */
+/* ── Symbologie hydrographique — 4 paliers exacts (clusters ABHS) ──
+   Palier 1 : ORDRE = 1          axe Sebou (1 entité)
+   Palier 2 : ORDRE ≤ 5  (4,5)   grands axes régionaux (~89 entités)
+   Palier 3 : ORDRE ≤ 16 (8–16)  oueds principaux + secondaires (~1708 entités)
+   Palier 4 : ORDRE > 16 (18–31) affluents mineurs (~673 entités) */
 function ouedStyle(feat) {
   const p = feat.properties || {};
   const o = (p.ORDRE != null) ? +p.ORDRE : null;
   if (o !== null) {
-    if (o <= 5)  return { color: '#08306b', weight: 4.5, opacity: 0.97, lineCap: 'round', lineJoin: 'round' };
-    if (o <= 9)  return { color: '#1565c0', weight: 2.5, opacity: 0.90, lineCap: 'round', lineJoin: 'round' };
-    if (o <= 16) return { color: '#1e88e5', weight: 1.2, opacity: 0.82, lineCap: 'round', lineJoin: 'round' };
-    return              { color: '#64b5f6', weight: 0.6, opacity: 0.65, lineCap: 'round', lineJoin: 'round' };
+    if (o <= 1)  return { color: '#04266e', weight: 6.0, opacity: 0.98, lineCap: 'round', lineJoin: 'round' };
+    if (o <= 5)  return { color: '#1565c0', weight: 2.8, opacity: 0.92, lineCap: 'round', lineJoin: 'round' };
+    if (o <= 16) return { color: '#1e88e5', weight: 1.1, opacity: 0.82, lineCap: 'round', lineJoin: 'round' };
+    return              { color: '#90caf9', weight: 0.5, opacity: 0.60, lineCap: 'round', lineJoin: 'round' };
   }
   /* Fallback pour données OSM (pas de champ ORDRE) */
   const tier = classifyOued(feat);
-  if (tier === 'principal') return { color: '#08306b', weight: 4.5, opacity: 0.97, lineCap: 'round', lineJoin: 'round' };
-  if (tier === 'major')     return { color: '#1565c0', weight: 2.5, opacity: 0.90, lineCap: 'round', lineJoin: 'round' };
-  return                           { color: '#64b5f6', weight: 1.0, opacity: 0.72, lineCap: 'round', lineJoin: 'round' };
+  if (tier === 'principal') return { color: '#1565c0', weight: 2.8, opacity: 0.92, lineCap: 'round', lineJoin: 'round' };
+  if (tier === 'major')     return { color: '#1e88e5', weight: 1.5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' };
+  return                           { color: '#90caf9', weight: 0.7, opacity: 0.70, lineCap: 'round', lineJoin: 'round' };
 }
 function ouedHighlight(feat) {
   const s = ouedStyle(feat);
@@ -309,7 +309,7 @@ function loadRivers(data) {
     }
   });
 
-  /* ── river name labels — deduplicated by name (longest segment) ── */
+  /* ── étiquettes : Sebou + Bouregreg toujours visibles, autres noms à zoom ≥ 10 ── */
   var namedFeats = {};
   data.features.forEach(function(feat) {
     var p    = feat.properties || {};
@@ -322,10 +322,12 @@ function loadRivers(data) {
       namedFeats[name] = { feat: feat, len: len, tier: tier };
   });
 
-  var labelGroup = L.layerGroup();
+  var mainLabels   = L.layerGroup();  /* Sebou + Bouregreg — toujours */
+  var detailLabels = L.layerGroup();  /* autres noms      — zoom ≥ 10 */
+
   Object.keys(namedFeats).forEach(function(name) {
-    var entry = namedFeats[name];
-    var geom  = entry.feat.geometry;
+    var entry  = namedFeats[name];
+    var geom   = entry.feat.geometry;
     var coords = null;
     if (geom.type === 'LineString') {
       coords = geom.coordinates;
@@ -342,12 +344,28 @@ function loadRivers(data) {
       permanent: true, direction: 'center',
       className: entry.tier === 'principal' ? 'river-label-main' : 'river-label-major'
     });
-    labelGroup.addLayer(marker);
+    var nl     = name.toLowerCase();
+    var always = nl.includes('sebou') || nl.includes('bouregreg') || nl.includes('bou regreg');
+    (always ? mainLabels : detailLabels).addLayer(marker);
   });
 
-  var lyr = L.featureGroup([riverLines, labelGroup]);
+  var lyr = L.featureGroup([riverLines, mainLabels]);
   window.overlayLayers['Oueds / Rivières'] = lyr;
   if (window.map && isCardActive('Oueds / Rivières')) lyr.addTo(window.map);
+
+  /* Synchroniser les noms détaillés selon le zoom et l'état de la couche */
+  function syncDetailLabels() {
+    if (!window.map) return;
+    if (lyr._map && window.map.getZoom() >= 10) {
+      if (!window.map.hasLayer(detailLabels)) detailLabels.addTo(window.map);
+    } else {
+      if (window.map.hasLayer(detailLabels)) window.map.removeLayer(detailLabels);
+    }
+  }
+  if (window.map) {
+    window.map.on('zoomend layeradd layerremove', syncDetailLabels);
+    syncDetailLabels();
+  }
   notifyLayerReady('Oueds / Rivières');
 }
 
