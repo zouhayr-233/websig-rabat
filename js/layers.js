@@ -1,6 +1,6 @@
 'use strict';
 /* ===================================================
-   WebSIG RSK — layers.js v3
+   WebSIG RSK — layers.js v55
    Professional cartographic symbology.
    Real shapefile-derived GeoJSON (WGS84 / EPSG:4326).
    =================================================== */
@@ -113,25 +113,16 @@ function makeCityIcon(type) {
 }
 
 /* ══════════════════════════════════════════════════
-   OUED CLASSIFICATION — category field (real data) + name overrides
-   principal : grand axe régional (Sebou, Bou Regreg, Loukous…)
-   major     : oued secondaire nommé
-   secondary : affluent non nommé / court tronçon
+   OUED CLASSIFICATION
+   Priorité : ORDRE ABHS → category GeoJSON → fallback longueur
+   OSM rivers (ORDRE=null) : utiliser category pré-calculé directement
    ══════════════════════════════════════════════════ */
 function classifyOued(feat) {
   const p   = feat.properties || {};
   const n   = (p.name || p.NAME || '').toLowerCase();
   const len = +(p.Shape_Leng || 0);
 
-  /* Force-principal by name for key regional rivers regardless of segment length */
-  if (n.includes('sebou') ||
-      n.includes('bou regreg') || n.includes('bouregreg') || n.includes('bou-regreg') ||
-      n.includes('ouargha') || n.includes('rdate') || n.includes('loukous') ||
-      n.includes('mechra') || n.includes('grou'))
-    return 'principal';
-
-  /* Hiérarchie ABHS — paliers observés : 1 | 4–5 | 8–9 | 12–16 | 18+
-     ORDRE=1 = axe Sebou (plus grand), valeurs croissantes = affluents plus petits */
+  /* Hiérarchie ABHS (ORDRE issu des données réelles ABHS) */
   if (p.ORDRE != null) {
     const o = +p.ORDRE;
     if (o <= 5) return 'principal';
@@ -139,14 +130,20 @@ function classifyOued(feat) {
     return 'secondary';
   }
 
-  /* Use pre-computed category field */
+  /* OSM / features sans ORDRE : utiliser le champ category (prioritaire sur le nom)
+     Les noms de rivers importants sont bien catégorisés dans le GeoJSON */
   if (p.category) {
-    if (p.category === 'principal') return 'principal';
-    if (p.category === 'secondaire' || p.category === 'tertiaire') return 'major';
+    if (p.category === 'principal')  return 'principal';
+    if (p.category === 'major')      return 'major';
+    if (p.category === 'secondaire' || p.category === 'tertiaire' || p.category === 'secondary') return 'major';
     return 'secondary';
   }
 
-  /* Fallback: length-based tiers for legacy data */
+  /* Fallback nom uniquement si aucune donnée ORDRE/category */
+  if (n.includes('sebou') || n.includes('bou regreg') || n.includes('bouregreg') ||
+      n.includes('ouargha') || n.includes('rdate') || n.includes('loukous'))
+    return 'principal';
+
   if (len >= 0.45) return n ? 'principal' : 'secondary';
   if (len >= 0.25) return 'major';
   return 'secondary';
@@ -297,10 +294,14 @@ function loadRivers(data) {
       const tier = classifyOued(feat);
       const tierLabels = { principal:'Axe principal', major:'Oued majeur', secondary:'Affluent secondaire' };
       const headCol = ouedStyle(feat).color;
-      var rows = '<tr><td>Rang hydrologique</td><td><b>' + (p.ORDRE != null ? 'Ordre ' + p.ORDRE + ' (Strahler)' : tierLabels[tier]) + '</b></td></tr>';
+      var rangLabel = p.ORDRE != null
+        ? 'Rang ' + p.ORDRE + ' (ABHS)'
+        : tierLabels[tier] + (p.category ? ' (' + p.category + ')' : '');
+      var rows = '<tr><td>Rang hydrologique</td><td><b>' + rangLabel + '</b></td></tr>';
       if (p.Drain_Prin && p.Drain_Prin !== p.name) rows += '<tr><td>Drain principal</td><td>' + p.Drain_Prin + '</td></tr>';
-      if (p.Code)    rows += '<tr><td>Code ABHS</td><td><span class="popup-code">' + p.Code + '</span></td></tr>';
-      if (p.Agence)  rows += '<tr><td>Source</td><td>' + p.Agence + '</td></tr>';
+      if (p.Code)   rows += '<tr><td>Code ABHS</td><td><span class="popup-code">' + p.Code + '</span></td></tr>';
+      var src = p.Agence || p.source || '';
+      if (src) rows += '<tr><td>Source données</td><td>' + src.toUpperCase() + '</td></tr>';
       l.bindPopup('<div class="popup-content">'
         + popupHeader(headCol, '〰️', name || 'Cours d\'eau')
         + '<table>' + rows + '</table></div>', { maxWidth: 310 });
@@ -499,6 +500,93 @@ function loadFloodZones(data) {
 }
 
 /* ══════════════════════════════════════════════════
+   5b. RISQUE INONDATION AHP — méthode multi-critères
+   Facteurs: pente, flux accumulé, LULC, NDVI, proximité réseau, pluviométrie
+   Poids AHP: 0.2547 / 0.2215 / 0.1839 / 0.1691 / 0.0894 / 0.0814  CR=0.076
+   Source: Google Earth Engine (AHP_FloodRisk_RSK_GEE.js)
+   ══════════════════════════════════════════════════ */
+
+/* Palette AHP style GEE — conforme UNDRR / Copernicus Emergency */
+var AHP_FILL   = { very_high: '#e74c3c', high: '#e67e22', moderate: '#f1c40f', low: '#2ecc71' };
+var AHP_BORDER = { very_high: '#922b21', high: '#935116', moderate: '#9a7d0a', low: '#1e8449' };
+var AHP_LABEL  = { very_high: 'Très élevé', high: 'Élevé', moderate: 'Modéré', low: 'Faible' };
+var AHP_OPACITY = { very_high: 0.78, high: 0.70, moderate: 0.62, low: 0.55 };
+var AHP_WEIGHTS = { slope: 0.2547, flow_accumulation: 0.2215, LULC: 0.1839, proximity: 0.1691, precipitation: 0.0894, NDVI: 0.0814 };
+
+function ahpKey(code) {
+  if (!code) return 'low';
+  const c = String(code).toLowerCase();
+  if (c === 'very_high' || c === '4' || c.includes('très') || c.includes('very')) return 'very_high';
+  if (c === 'high'      || c === '3' || c.includes('elev'))  return 'high';
+  if (c === 'moderate'  || c === '2' || c.includes('moder') || c.includes('moyen')) return 'moderate';
+  return 'low';
+}
+
+function loadFloodRiskAHP(data) {
+  /* Build GEE-style AHP factor bar for popup */
+  function ahpWeightBar(weights) {
+    var rows = Object.keys(weights).map(function(k) {
+      var pct = Math.round(weights[k] * 100);
+      var label = { slope:'Pente', flow_accumulation:'Flux accumulé', LULC:'Occupation sols',
+                    proximity:'Proximité réseau', precipitation:'Pluviométrie', NDVI:'NDVI' }[k] || k;
+      return '<div style="margin:2px 0">'
+           + '<div style="display:flex;justify-content:space-between;font-size:10px;color:#475569">'
+           + '<span>' + label + '</span><span style="font-weight:600">' + pct + '%</span></div>'
+           + '<div style="background:#e2e8f0;border-radius:3px;height:5px;overflow:hidden">'
+           + '<div style="width:' + pct + '%;height:100%;background:#3b82f6;border-radius:3px"></div>'
+           + '</div></div>';
+    }).join('');
+    return '<div style="margin-top:8px;padding:6px 0">'
+         + '<div style="font-size:10px;font-weight:700;color:#1e3a8a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Poids AHP (CR=0.076)</div>'
+         + rows + '</div>';
+  }
+
+  const lyr = L.geoJSON(data, {
+    style: function(feat) {
+      const key = ahpKey((feat.properties || {}).risk_code);
+      return {
+        fillColor:   AHP_FILL[key],
+        fillOpacity: AHP_OPACITY[key],
+        color:       AHP_BORDER[key],
+        weight:      0.8,
+        opacity:     0.90
+      };
+    },
+    onEachFeature: function(feat, l) {
+      const p   = feat.properties || {};
+      const key = ahpKey(p.risk_code);
+      var headerContent =
+        '<div style="display:flex;align-items:center;gap:6px;margin:-12px -14px 10px;padding:9px 12px;border-radius:8px 8px 0 0;background:' + AHP_BORDER[key] + ';color:white">'
+        + '<span style="font-size:17px">🌊</span>'
+        + '<div><div style="font-family:Rajdhani,sans-serif;font-size:15px;font-weight:700">' + (p.name || 'Zone de risque AHP') + '</div>'
+        + '<div style="font-size:10px;opacity:0.85">Méthode AHP — 6 facteurs</div></div></div>';
+      var badge =
+        '<span style="display:inline-block;background:' + AHP_FILL[key] + ';color:' + AHP_BORDER[key]
+        + ';border:1.5px solid ' + AHP_BORDER[key] + ';padding:2px 9px;border-radius:12px;font-weight:800;font-size:12px">'
+        + AHP_LABEL[key] + '</span>';
+      var rows = '<tr><td>Niveau de risque</td><td>' + badge + '</td></tr>'
+        + '<tr><td>Superficie</td><td><b>' + (p.area_km2 || '—') + '</b> km²</td></tr>'
+        + (p.last_flood_year ? '<tr><td>Dernière inondation</td><td>' + p.last_flood_year + '</td></tr>' : '')
+        + '<tr><td>Source</td><td>' + (p.source || 'AHP/GEE') + '</td></tr>'
+        + (p.note ? '<tr><td colspan="2" style="font-size:10px;color:#94a3b8;font-style:italic">' + p.note + '</td></tr>' : '');
+      l.bindPopup(
+        '<div class="popup-content">' + headerContent
+        + '<table>' + rows + '</table>'
+        + ahpWeightBar(AHP_WEIGHTS)
+        + '</div>', { maxWidth: 310 }
+      );
+      l.on('mouseover', function() {
+        this.setStyle({ fillOpacity: Math.min(AHP_OPACITY[key] + 0.15, 0.95), weight: 1.8 });
+      });
+      l.on('mouseout', function() { lyr.resetStyle(this); });
+    }
+  });
+  window.overlayLayers['Risque inondation AHP'] = lyr;
+  if (window.map && isCardActive('Risque inondation AHP')) lyr.addTo(window.map);
+  notifyLayerReady('Risque inondation AHP');
+}
+
+/* ══════════════════════════════════════════════════
    6. LIMITES ADMINISTRATIVES
    Fields: Nom_Region, Population, CODE_REGIO, Menages
    ══════════════════════════════════════════════════ */
@@ -675,8 +763,9 @@ async function loadAllLayers() {
     loadLayer('dams_real.geojson',             loadDams),
     loadLayer('admin_boundaries_real.geojson', loadAdmin),
     loadLayer('aquifers.geojson',              loadAquifers),
-    loadLayer('rain_stations_real.geojson',     loadStations),
-    loadLayer('flood_zones.geojson',            loadFloodZones)
+    loadLayer('rain_stations_real.geojson',    loadStations),
+    loadLayer('flood_zones.geojson',           loadFloodZones),
+    loadLayer('flood_risk_ahp.geojson',        loadFloodRiskAHP)
   ]);
   loadCities();
   console.log('[layers] done. Keys:', Object.keys(window.overlayLayers));

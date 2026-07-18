@@ -429,8 +429,16 @@ document.addEventListener('DOMContentLoaded', function () {
           lgPoly('#cffafe','#0e7490', true, 'Nappe côtière'),
         ]));
 
+      if (L === 'Risque inondation AHP')
+        sections.push(lgSection('🌊 Risque inondation — AHP (6 facteurs)', [
+          lgPoly('#e74c3c','#922b21', false, 'Très élevé (plaine du Gharb, basse vallée Sebou)'),
+          lgPoly('#e67e22','#935116', false, 'Élevé (vallée Bouregreg, zones côtières)'),
+          lgPoly('#f1c40f','#9a7d0a', false, 'Modéré (plateaux intermédiaires)'),
+          lgPoly('#2ecc71','#1e8449', false, 'Faible (relief prérifain)'),
+        ]));
+
       if (L === 'Zones de risque')
-        sections.push(lgSection('⚠️ Risque d\'inondation', [
+        sections.push(lgSection('⚠️ Risque d\'inondation (DEM)', [
           lgPoly('#ef4444','#b91c1c', false, 'Très élevé — corridors des oueds'),
           lgPoly('#f97316','#c2410c', false, 'Élevé — plaines inondables'),
           lgPoly('#fde047','#a16207', false, 'Modéré — zones de transition'),

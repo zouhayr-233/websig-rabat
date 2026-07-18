@@ -259,15 +259,40 @@
               <button class="tc-zoom" data-layer="Stations pluviométriques" title="Centrer">⊙</button>
             </div>
 
-            <!-- ── Carte 6 : Risque d'Inondation ── -->
+            <!-- ── Carte 6 : Risque d'Inondation (AHP + classique) ── -->
             <div class="tc-group-label">⚠️ Risque d'inondation</div>
 
-            <div class="thematic-card active" data-layer="Zones de risque">
+            <!-- 6a — AHP (nouvelle couche principale) -->
+            <div class="thematic-card active" data-layer="Risque inondation AHP">
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#e74c3c 0%,#e67e22 33%,#f1c40f 66%,#2ecc71 100%)"></div>
+              <div class="tc-body" style="padding:7px 32px 7px 10px">
+                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+                  <span style="font-size:14px;flex-shrink:0">🌊</span>
+                  <span class="tc-name">Risque Inondation — AHP</span>
+                  <span class="tc-status"></span>
+                </div>
+                <div style="font-size:9px;color:#64748b;margin-bottom:4px">Pente · Flux · LULC · NDVI · Proximité · Précip.</div>
+                <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#e74c3c;border:1.5px solid #922b21"></span>
+                  <span style="font-size:9px;font-weight:700;color:#922b21;margin-right:2px">Très élevé</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#e67e22;border:1.5px solid #935116"></span>
+                  <span style="font-size:9px;font-weight:700;color:#935116;margin-right:2px">Élevé</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#f1c40f;border:1.5px solid #9a7d0a"></span>
+                  <span style="font-size:9px;font-weight:700;color:#9a7d0a;margin-right:2px">Modéré</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#2ecc71;border:1.5px solid #1e8449"></span>
+                  <span style="font-size:9px;font-weight:700;color:#1e8449">Faible</span>
+                </div>
+              </div>
+              <button class="tc-zoom" data-layer="Risque inondation AHP" title="Centrer">⊙</button>
+            </div>
+
+            <!-- 6b — Zones classiques (modèle DEM) -->
+            <div class="thematic-card" data-layer="Zones de risque">
               <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#dc2626 0%,#ea580c 33%,#ca8a04 66%,#16a34a 100%)"></div>
               <div class="tc-body" style="padding:7px 32px 7px 10px">
                 <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
                   <span style="font-size:14px;flex-shrink:0">⚠️</span>
-                  <span class="tc-name">Zones à Risque d'Inondation</span>
+                  <span class="tc-name">Zones à Risque (DEM)</span>
                   <span class="tc-status"></span>
                 </div>
                 <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
@@ -582,7 +607,7 @@
 
   <!-- APP MODULES -->
   <script src="js/map.js?v=50"></script>
-  <script src="js/layers.js?v=54"></script>
+  <script src="js/layers.js?v=55"></script>
   <script src="js/controls.js?v=50"></script>
   <script src="js/charts.js?v=50"></script>
 
