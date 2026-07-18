@@ -50,26 +50,32 @@ function hideSpinnerNow() {
    PROFESSIONAL ICONS
    ══════════════════════════════════════════════════ */
 
-/* Dam icon — blue background, white trapezoid wall */
+/* Dam icon — symbole cartographique barrage (convention IGN/BRGM) */
 var damIcon = L.divIcon({
   className: '',
   html: '<svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">'
-      + '<circle cx="19" cy="19" r="17" fill="#0d47a1" stroke="white" stroke-width="2.5"/>'
-      + '<polygon points="11,14 27,14 24.5,24 13.5,24" fill="white" opacity="0.95"/>'
-      + '<rect x="17.5" y="14" width="3" height="10" fill="#64b5f6" opacity="0.7"/>'
-      + '<path d="M8 28 Q12 25 16 28 Q20 31 24 28 Q28 25 30 26" stroke="#64b5f6" stroke-width="1.8" fill="none" stroke-linecap="round"/>'
+      + '<circle cx="19" cy="19" r="17" fill="#083d6e" stroke="white" stroke-width="2.5"/>'
+      + '<rect x="7" y="10" width="24" height="4.5" fill="#bbdefb" rx="1" opacity="0.75"/>'
+      + '<polygon points="8,14.5 30,14.5 27,25 11,25" fill="white" opacity="0.97"/>'
+      + '<rect x="17" y="14.5" width="4" height="10.5" fill="#1e88e5" opacity="0.55"/>'
+      + '<line x1="8" y1="18.5" x2="30" y2="18.5" stroke="#1976d2" stroke-width="0.7" opacity="0.4"/>'
+      + '<line x1="9" y1="22" x2="29" y2="22" stroke="#1976d2" stroke-width="0.7" opacity="0.4"/>'
+      + '<path d="M7 29 Q10.5 26.5 14 29 Q17.5 31.5 21 29 Q24.5 26.5 31 27.5" stroke="#90caf9" stroke-width="1.8" fill="none" stroke-linecap="round"/>'
       + '</svg>',
   iconSize: [38, 38], iconAnchor: [19, 19], popupAnchor: [0, -22]
 });
 
-/* Rain station icon — blue filled circle with drop */
+/* Station pluviométrique — pluviomètre + échelle (symbole hydrologique ABHS) */
 var stationIcon = L.divIcon({
   className: '',
   html: '<svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">'
-      + '<circle cx="15" cy="15" r="13" fill="#1976d2" stroke="white" stroke-width="2"/>'
-      + '<path d="M12 8C12 8,7 14,7 17C7 19.8,9.2 22,12 22C14.8 22,17 19.8,17 17C17 14,12 8,12 8Z" fill="white" opacity="0.9"/>'
-      + '<line x1="20" y1="9"  x2="19" y2="13" stroke="white" stroke-width="1.5" stroke-linecap="round"/>'
-      + '<line x1="22" y1="13" x2="21" y2="17" stroke="white" stroke-width="1.5" stroke-linecap="round"/>'
+      + '<circle cx="15" cy="15" r="13" fill="#1565c0" stroke="white" stroke-width="2"/>'
+      + '<rect x="10" y="8" width="7" height="14" fill="white" rx="2" opacity="0.95"/>'
+      + '<rect x="11" y="16" width="5" height="6" fill="#64b5f6" rx="1" opacity="0.85"/>'
+      + '<line x1="14" y1="10.5" x2="16.5" y2="10.5" stroke="#1565c0" stroke-width="0.9" opacity="0.7"/>'
+      + '<line x1="14" y1="12.5" x2="16.5" y2="12.5" stroke="#1565c0" stroke-width="0.9" opacity="0.7"/>'
+      + '<line x1="14" y1="14.5" x2="16.5" y2="14.5" stroke="#1565c0" stroke-width="0.9" opacity="0.7"/>'
+      + '<path d="M20 10 Q21 8 22 10 Q23 12 22 13.5 Q21 15 20 13.5 Q19 12 20 10Z" fill="white" opacity="0.85"/>'
       + '</svg>',
   iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -17]
 });
@@ -124,11 +130,12 @@ function classifyOued(feat) {
       n.includes('mechra') || n.includes('grou'))
     return 'principal';
 
-  /* Use ORDRE de Strahler if present (ABHS real data — lower = more important) */
+  /* Hiérarchie ABHS — paliers observés : 1 | 4–5 | 8–9 | 12–16 | 18+
+     ORDRE=1 = axe Sebou (plus grand), valeurs croissantes = affluents plus petits */
   if (p.ORDRE != null) {
     const o = +p.ORDRE;
-    if (o <= 4)  return 'principal';
-    if (o <= 10) return 'major';
+    if (o <= 5) return 'principal';
+    if (o <= 9) return 'major';
     return 'secondary';
   }
 
@@ -254,25 +261,25 @@ function loadWatersheds(data) {
    Fields: name, fclass, Shape_Leng, grid_code
    ══════════════════════════════════════════════════ */
 
-/* ── Symbologie hydrographique graduée par ordre de Strahler ──
-   5 paliers colorés — convention cartographique professionnelle
-   Strahler order 1 = plus grand axe (Sebou), 16+ = tout petit affluent */
+/* ── Symbologie hydrographique — calée sur les paliers réels ABHS ──
+   Paliers observés dans la donnée : 1 | 4–5 | 8–9 | 12–16 | 18–22 | 24+
+   Chaque palier = un niveau de la hiérarchie du réseau hydrographique RSK */
 function ouedStyle(feat) {
   const p = feat.properties || {};
   const o = (p.ORDRE != null) ? +p.ORDRE : null;
   if (o !== null) {
-    if (o <= 2)  return { color: '#082a5e', weight: 4.2, opacity: 0.95, lineCap: 'round', lineJoin: 'round' };
-    if (o <= 4)  return { color: '#0d47a1', weight: 3.0, opacity: 0.92, lineCap: 'round', lineJoin: 'round' };
-    if (o <= 7)  return { color: '#1565c0', weight: 1.8, opacity: 0.88, lineCap: 'round', lineJoin: 'round' };
-    if (o <= 11) return { color: '#1e88e5', weight: 1.0, opacity: 0.80, lineCap: 'round', lineJoin: 'round' };
-    if (o <= 14) return { color: '#42a5f5', weight: 0.6, opacity: 0.70, lineCap: 'round', lineJoin: 'round' };
-    return              { color: '#90caf9', weight: 0.4, opacity: 0.55, lineCap: 'round', lineJoin: 'round' };
+    if (o <= 1)  return { color: '#08306b', weight: 5.5, opacity: 0.97, lineCap: 'round', lineJoin: 'round' };  /* axe Sebou */
+    if (o <= 5)  return { color: '#0d47a1', weight: 3.2, opacity: 0.93, lineCap: 'round', lineJoin: 'round' };  /* grands axes */
+    if (o <= 9)  return { color: '#1565c0', weight: 2.0, opacity: 0.88, lineCap: 'round', lineJoin: 'round' };  /* oueds importants */
+    if (o <= 16) return { color: '#1976d2', weight: 1.1, opacity: 0.82, lineCap: 'round', lineJoin: 'round' };  /* oueds secondaires */
+    if (o <= 22) return { color: '#42a5f5', weight: 0.7, opacity: 0.72, lineCap: 'round', lineJoin: 'round' };  /* petits affluents */
+    return              { color: '#90caf9', weight: 0.5, opacity: 0.60, lineCap: 'round', lineJoin: 'round' };  /* très petits affluents */
   }
-  /* Fallback si pas de champ ORDRE (données OSM) */
+  /* Fallback pour données OSM (pas de champ ORDRE) */
   const tier = classifyOued(feat);
-  if (tier === 'principal') return { color: '#0d47a1', weight: 3.0, opacity: 0.92, lineCap: 'round', lineJoin: 'round' };
-  if (tier === 'major')     return { color: '#1565c0', weight: 1.8, opacity: 0.88, lineCap: 'round', lineJoin: 'round' };
-  return                           { color: '#42a5f5', weight: 0.6, opacity: 0.70, lineCap: 'round', lineJoin: 'round' };
+  if (tier === 'principal') return { color: '#0d47a1', weight: 3.2, opacity: 0.93, lineCap: 'round', lineJoin: 'round' };
+  if (tier === 'major')     return { color: '#1565c0', weight: 2.0, opacity: 0.88, lineCap: 'round', lineJoin: 'round' };
+  return                           { color: '#42a5f5', weight: 1.0, opacity: 0.75, lineCap: 'round', lineJoin: 'round' };
 }
 function ouedHighlight(feat) {
   const s = ouedStyle(feat);
