@@ -124,11 +124,19 @@ function classifyOued(feat) {
       n.includes('mechra') || n.includes('grou'))
     return 'principal';
 
-  /* Use the pre-computed category field if present (new real data) */
+  /* Use ORDRE de Strahler if present (ABHS real data — lower = more important) */
+  if (p.ORDRE != null) {
+    const o = +p.ORDRE;
+    if (o <= 4)  return 'principal';
+    if (o <= 10) return 'major';
+    return 'secondary';
+  }
+
+  /* Use pre-computed category field */
   if (p.category) {
     if (p.category === 'principal') return 'principal';
     if (p.category === 'secondaire' || p.category === 'tertiaire') return 'major';
-    return 'secondary'; /* temporaire or unrecognised */
+    return 'secondary';
   }
 
   /* Fallback: length-based tiers for legacy data */
@@ -259,7 +267,7 @@ function loadRivers(data) {
     style: function(feat) { return ouedStyles[classifyOued(feat)]; },
     onEachFeature: function(feat, l) {
       const p    = feat.properties || {};
-      const name = p.name || p.NAME || 'Oued';
+      const name = p.name || p.NAME || 'Cours d\'eau';
       const tier = classifyOued(feat);
       const tierLabels = {
         principal: 'Oued principal (grand axe)',
@@ -267,14 +275,14 @@ function loadRivers(data) {
         secondary: 'Oued secondaire / affluent'
       };
       const tierColors = { principal: '#0044AA', major: '#0066CC', secondary: '#3377BB' };
-      const len = p.Shape_Leng ? (+p.Shape_Leng * 111).toFixed(1) + ' km (approx.)' : '—';
+      var rows = '<tr><td>Classification</td><td><b>' + tierLabels[tier] + '</b></td></tr>';
+      if (p.Drain_Prin) rows += '<tr><td>Drain principal</td><td>' + p.Drain_Prin + '</td></tr>';
+      if (p.Code)       rows += '<tr><td>Code hydrologique</td><td><code>' + p.Code + '</code></td></tr>';
+      if (p.ORDRE)      rows += '<tr><td>Ordre de Strahler</td><td>' + p.ORDRE + '</td></tr>';
+      if (p.Agence)     rows += '<tr><td>Source</td><td>' + p.Agence + '</td></tr>';
       l.bindPopup('<div class="popup-content">'
         + popupHeader(tierColors[tier], '🌊', name)
-        + '<table>'
-        + '<tr><td>Classification</td><td><b>' + tierLabels[tier] + '</b></td></tr>'
-        + '<tr><td>Type hydrologique</td><td>' + (p.fclass || '—') + '</td></tr>'
-        + '<tr><td>Longueur estimée</td><td>' + len + '</td></tr>'
-        + '</table></div>', { maxWidth: 290 });
+        + '<table>' + rows + '</table></div>', { maxWidth: 300 });
       l.on('mouseover', function() {
         const t = classifyOued(this.feature);
         this.setStyle({ weight: t === 'principal' ? 6 : t === 'major' ? 3.5 : 1.5, opacity: 1,
