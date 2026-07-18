@@ -107,28 +107,33 @@ function makeCityIcon(type) {
 }
 
 /* ══════════════════════════════════════════════════
-   OUED CLASSIFICATION — length-based + name overrides
-   principal : Sebou, Bou Regreg, Ouargha, Rdate + len ≥ 0.45°
-   major     : len 0.09–0.45° (≈ 10–50 km individual segment)
-   secondary : len < 0.09° + dissolved DEM networks (grid_code)
+   OUED CLASSIFICATION — category field (real data) + name overrides
+   principal : grand axe régional (Sebou, Bou Regreg, Loukous…)
+   major     : oued secondaire nommé
+   secondary : affluent non nommé / court tronçon
    ══════════════════════════════════════════════════ */
 function classifyOued(feat) {
-  const p  = feat.properties || {};
-  const n  = (p.name || p.NAME || '').toLowerCase();
+  const p   = feat.properties || {};
+  const n   = (p.name || p.NAME || '').toLowerCase();
   const len = +(p.Shape_Leng || 0);
 
-  /* Diss dissolved-network features — always secondary (background drainage) */
-  if (p.grid_code != null) return 'secondary';
-
-  /* Force-principal by name for key regional rivers */
+  /* Force-principal by name for key regional rivers regardless of segment length */
   if (n.includes('sebou') ||
       n.includes('bou regreg') || n.includes('bouregreg') || n.includes('bou-regreg') ||
-      n.includes('ouargha') || n.includes('rdate') || n.includes('tanoubert') || n.includes('beht') || n.includes('grou'))
+      n.includes('ouargha') || n.includes('rdate') || n.includes('loukous') ||
+      n.includes('mechra') || n.includes('grou'))
     return 'principal';
 
-  /* Length-based tiers — unnamed rivers cannot be principal */
-  if (len >= 0.45) return n ? 'principal' : 'secondary';  /* ≥ ~50 km, named only */
-  if (len >= 0.25) return 'major';                        /* ≥ ~28 km */
+  /* Use the pre-computed category field if present (new real data) */
+  if (p.category) {
+    if (p.category === 'principal') return 'principal';
+    if (p.category === 'secondaire' || p.category === 'tertiaire') return 'major';
+    return 'secondary'; /* temporaire or unrecognised */
+  }
+
+  /* Fallback: length-based tiers for legacy data */
+  if (len >= 0.45) return n ? 'principal' : 'secondary';
+  if (len >= 0.25) return 'major';
   return 'secondary';
 }
 
@@ -482,7 +487,7 @@ function loadAdmin(data) {
 
 /* ══════════════════════════════════════════════════
    7. NAPPES SOUTERRAINES — per-nappe color coding
-   Fields: Nom_Nappe
+   Fields: NOM_NAPPE, TYPE_NAPPE, AREA_KM2 (données réelles)
    ══════════════════════════════════════════════════ */
 function loadAquifers(data) {
   /* Blue → cyan gradient — professional hydrogeology convention */
@@ -492,27 +497,36 @@ function loadAquifers(data) {
     { fill: '#bae6fd', border: '#0369a1' },  /* bleu ciel     */
     { fill: '#cffafe', border: '#0e7490' },  /* cyan pâle     */
     { fill: '#e0f2fe', border: '#0284c7' },  /* bleu très pâle*/
+    { fill: '#ccf0ff', border: '#0369a1' },
+    { fill: '#d1e9ff', border: '#1d4ed8' },
   ];
   const aqMap = {};
   data.features.forEach(function(f, idx) {
-    const id = (f.properties && f.properties.Nom_Nappe) || String(idx);
+    const id = (f.properties && (f.properties.NOM_NAPPE || f.properties.Nom_Nappe)) || String(idx);
     aqMap[id] = aqPalette[idx % aqPalette.length];
   });
   const lyr = L.geoJSON(data, {
     style: function(feat) {
-      const id = (feat.properties && feat.properties.Nom_Nappe) || '0';
+      const id = (feat.properties && (feat.properties.NOM_NAPPE || feat.properties.Nom_Nappe)) || '0';
       const cp = aqMap[id] || aqPalette[0];
       return { fillColor: cp.fill, fillOpacity: 0.55, color: cp.border, weight: 2, dashArray: '7,4' };
     },
     onEachFeature: function(feat, l) {
-      const p  = feat.properties || {};
-      const id = p.Nom_Nappe || '0';
-      const cp = aqMap[id] || aqPalette[0];
+      const p    = feat.properties || {};
+      const nom  = p.NOM_NAPPE || p.Nom_Nappe || 'Nappe souterraine';
+      const id   = nom;
+      const cp   = aqMap[id] || aqPalette[0];
+      const type = p.TYPE_NAPPE
+        ? (p.TYPE_NAPPE === 'captive' ? 'Nappe captive' : 'Nappe libre')
+        : 'Nappe souterraine';
+      const aire = p.AREA_KM2
+        ? (+p.AREA_KM2).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' km²'
+        : '—';
       l.bindPopup('<div class="popup-content">'
-        + popupHeader(cp.border, '💧', p.Nom_Nappe || 'Nappe souterraine')
+        + popupHeader(cp.border, '💧', nom)
         + '<table>'
-        + '<tr><td>Type</td><td>Nappe souterraine libre</td></tr>'
-        + '<tr><td>Nom</td><td><b>' + (p.Nom_Nappe || '—') + '</b></td></tr>'
+        + '<tr><td>Type</td><td><b>' + type + '</b></td></tr>'
+        + '<tr><td>Superficie</td><td>' + aire + '</td></tr>'
         + '</table></div>', { maxWidth: 270 });
       l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.78, weight: 2.5 }); });
       l.on('mouseout',  function() { lyr.resetStyle(this); });
