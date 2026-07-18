@@ -261,25 +261,25 @@ function loadWatersheds(data) {
    Fields: name, fclass, Shape_Leng, grid_code
    ══════════════════════════════════════════════════ */
 
-/* ── Symbologie hydrographique — calée sur les paliers réels ABHS ──
-   Paliers observés dans la donnée : 1 | 4–5 | 8–9 | 12–16 | 18–22 | 24+
-   Chaque palier = un niveau de la hiérarchie du réseau hydrographique RSK */
+/* ── Symbologie hydrographique — 4 paliers calés sur les clusters ABHS ──
+   Palier 1 : ORDRE ≤ 5  (clusters 1, 4, 5)    grands axes régionaux
+   Palier 2 : ORDRE ≤ 9  (clusters 8, 9)        oueds principaux
+   Palier 3 : ORDRE ≤ 16 (clusters 12–16)       oueds secondaires
+   Palier 4 : ORDRE > 16 (clusters 18–31)       affluents mineurs */
 function ouedStyle(feat) {
   const p = feat.properties || {};
   const o = (p.ORDRE != null) ? +p.ORDRE : null;
   if (o !== null) {
-    if (o <= 1)  return { color: '#08306b', weight: 5.5, opacity: 0.97, lineCap: 'round', lineJoin: 'round' };  /* axe Sebou */
-    if (o <= 5)  return { color: '#0d47a1', weight: 3.2, opacity: 0.93, lineCap: 'round', lineJoin: 'round' };  /* grands axes */
-    if (o <= 9)  return { color: '#1565c0', weight: 2.0, opacity: 0.88, lineCap: 'round', lineJoin: 'round' };  /* oueds importants */
-    if (o <= 16) return { color: '#1976d2', weight: 1.1, opacity: 0.82, lineCap: 'round', lineJoin: 'round' };  /* oueds secondaires */
-    if (o <= 22) return { color: '#42a5f5', weight: 0.7, opacity: 0.72, lineCap: 'round', lineJoin: 'round' };  /* petits affluents */
-    return              { color: '#90caf9', weight: 0.5, opacity: 0.60, lineCap: 'round', lineJoin: 'round' };  /* très petits affluents */
+    if (o <= 5)  return { color: '#08306b', weight: 4.5, opacity: 0.97, lineCap: 'round', lineJoin: 'round' };
+    if (o <= 9)  return { color: '#1565c0', weight: 2.5, opacity: 0.90, lineCap: 'round', lineJoin: 'round' };
+    if (o <= 16) return { color: '#1e88e5', weight: 1.2, opacity: 0.82, lineCap: 'round', lineJoin: 'round' };
+    return              { color: '#64b5f6', weight: 0.6, opacity: 0.65, lineCap: 'round', lineJoin: 'round' };
   }
   /* Fallback pour données OSM (pas de champ ORDRE) */
   const tier = classifyOued(feat);
-  if (tier === 'principal') return { color: '#0d47a1', weight: 3.2, opacity: 0.93, lineCap: 'round', lineJoin: 'round' };
-  if (tier === 'major')     return { color: '#1565c0', weight: 2.0, opacity: 0.88, lineCap: 'round', lineJoin: 'round' };
-  return                           { color: '#42a5f5', weight: 1.0, opacity: 0.75, lineCap: 'round', lineJoin: 'round' };
+  if (tier === 'principal') return { color: '#08306b', weight: 4.5, opacity: 0.97, lineCap: 'round', lineJoin: 'round' };
+  if (tier === 'major')     return { color: '#1565c0', weight: 2.5, opacity: 0.90, lineCap: 'round', lineJoin: 'round' };
+  return                           { color: '#64b5f6', weight: 1.0, opacity: 0.72, lineCap: 'round', lineJoin: 'round' };
 }
 function ouedHighlight(feat) {
   const s = ouedStyle(feat);
