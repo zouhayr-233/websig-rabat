@@ -63,26 +63,23 @@ function renderRiskPie(data) {
   var ctx = document.getElementById('riskPieChart');
   if (!ctx) return;
 
-  var labels  = ['Très élevé', 'Élevé', 'Modéré', 'Faible'];
-  var colors  = ['#ef4444', '#f97316', '#fde047', '#4ade80'];
-  var areas   = [206, 2060, 2679, 4398]; /* real DEM areas — updated dynamically */
+  var labels  = ['Très élevé', 'Élevé', 'Modéré'];
+  var colors  = ['#e74c3c', '#e67e22', '#f1c40f'];
+  var areas   = [1400, 35, 0]; /* Sen1Floods11 deep learning result — updated dynamically */
 
-  if (data && data.floodZones) {
-    var totals = { very_high: 0, high: 0, moderate: 0, medium: 0, low: 0 };
-    data.floodZones.features.forEach(function (f) {
-      if (f.properties.background) return; /* skip RSK background feature */
-      var code = (f.properties.risk_code || 'low').toLowerCase();
+  if (data && data.floodRiskDL) {
+    var totals = { very_high: 0, high: 0, moderate: 0 };
+    data.floodRiskDL.features.forEach(function (f) {
+      var code = (f.properties.risk_code || '').toLowerCase();
       var area = +f.properties.area_km2 || 0;
-      if (code === 'very_high')                        totals.very_high += area;
-      else if (code === 'high')                        totals.high     += area;
-      else if (code === 'moderate' || code === 'medium') totals.moderate += area;
-      else                                             totals.low      += area;
+      if (code === 'very_high')      totals.very_high += area;
+      else if (code === 'high')      totals.high      += area;
+      else if (code === 'moderate')  totals.moderate  += area;
     });
     areas = [
       Math.round(totals.very_high),
       Math.round(totals.high),
-      Math.round(totals.moderate),
-      Math.round(totals.low)
+      Math.round(totals.moderate)
     ];
   }
 

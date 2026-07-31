@@ -259,54 +259,28 @@
               <button class="tc-zoom" data-layer="Stations pluviométriques" title="Centrer">⊙</button>
             </div>
 
-            <!-- ── Carte 6 : Risque d'Inondation (AHP + classique) ── -->
+            <!-- ── Carte 6 : Risque d'Inondation (Deep Learning) ── -->
             <div class="tc-group-label">⚠️ Risque d'inondation</div>
 
-            <!-- 6a — AHP (nouvelle couche principale) -->
-            <div class="thematic-card active" data-layer="Risque inondation AHP">
-              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#e74c3c 0%,#e67e22 33%,#f1c40f 66%,#2ecc71 100%)"></div>
+            <div class="thematic-card active" data-layer="Risque inondation">
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#e74c3c 0%,#e67e22 33%,#f1c40f 66%)"></div>
               <div class="tc-body" style="padding:7px 32px 7px 10px">
                 <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
                   <span style="font-size:14px;flex-shrink:0">🌊</span>
-                  <span class="tc-name">Risque Inondation — AHP</span>
+                  <span class="tc-name">Risque d'inondation</span>
                   <span class="tc-status"></span>
                 </div>
-                <div style="font-size:9px;color:#64748b;margin-bottom:4px">Pente · Flux · LULC · NDVI · Proximité · Précip.</div>
+                <div style="font-size:9px;color:#64748b;margin-bottom:4px">Sen1Floods11 (FCN-ResNet50, Sentinel-1) · saisons humides 2015–2024</div>
                 <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
                   <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#e74c3c;border:1.5px solid #922b21"></span>
                   <span style="font-size:9px;font-weight:700;color:#922b21;margin-right:2px">Très élevé</span>
                   <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#e67e22;border:1.5px solid #935116"></span>
                   <span style="font-size:9px;font-weight:700;color:#935116;margin-right:2px">Élevé</span>
                   <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#f1c40f;border:1.5px solid #9a7d0a"></span>
-                  <span style="font-size:9px;font-weight:700;color:#9a7d0a;margin-right:2px">Modéré</span>
-                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#2ecc71;border:1.5px solid #1e8449"></span>
-                  <span style="font-size:9px;font-weight:700;color:#1e8449">Faible</span>
+                  <span style="font-size:9px;font-weight:700;color:#9a7d0a">Modéré</span>
                 </div>
               </div>
-              <button class="tc-zoom" data-layer="Risque inondation AHP" title="Centrer">⊙</button>
-            </div>
-
-            <!-- 6b — Zones classiques (modèle DEM) -->
-            <div class="thematic-card" data-layer="Zones de risque">
-              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#dc2626 0%,#ea580c 33%,#ca8a04 66%,#16a34a 100%)"></div>
-              <div class="tc-body" style="padding:7px 32px 7px 10px">
-                <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
-                  <span style="font-size:14px;flex-shrink:0">⚠️</span>
-                  <span class="tc-name">Zones à Risque (DEM)</span>
-                  <span class="tc-status"></span>
-                </div>
-                <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
-                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#fca5a5;border:1.5px solid #dc2626"></span>
-                  <span style="font-size:9px;font-weight:700;color:#dc2626;margin-right:2px">Très élevé</span>
-                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#fdba74;border:1.5px solid #ea580c"></span>
-                  <span style="font-size:9px;font-weight:700;color:#ea580c;margin-right:2px">Élevé</span>
-                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#fef08a;border:1.5px solid #ca8a04"></span>
-                  <span style="font-size:9px;font-weight:700;color:#a16207;margin-right:2px">Modéré</span>
-                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#bbf7d0;border:1.5px dashed #16a34a"></span>
-                  <span style="font-size:9px;font-weight:700;color:#16a34a">Faible</span>
-                </div>
-              </div>
-              <button class="tc-zoom" data-layer="Zones de risque" title="Centrer">⊙</button>
+              <button class="tc-zoom" data-layer="Risque inondation" title="Centrer">⊙</button>
             </div>
 
             <!-- ── Carte 7 : Découpage Administratif ── -->
@@ -512,7 +486,7 @@
               <h4>🎯 Objectifs</h4>
               <ul class="about-list">
                 <li>Cartographie interactive des ressources en eau de la région RSK</li>
-                <li>Modélisation et visualisation du risque d'inondation (Random Forest + DEM)</li>
+                <li>Détection du risque d'inondation par Deep Learning (Sen1Floods11 — Sentinel-1 SAR)</li>
                 <li>Intégration de données pluviométriques et hydrologiques (2000–2025)</li>
                 <li>Outil WebSIG d'aide à la décision pour la gestion du risque hydrique</li>
               </ul>

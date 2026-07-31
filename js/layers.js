@@ -6,7 +6,7 @@
    =================================================== */
 
 window.overlayLayers = {};
-window.appData = { dams: null, stations: null, watersheds: null, floodZones: null, rivers: null };
+window.appData = { dams: null, stations: null, watersheds: null, rivers: null, floodRiskDL: null };
 
 /* Check if a thematic card is active — uses getAttribute to avoid encoding issues */
 function isCardActive(layerName) {
@@ -147,22 +147,6 @@ function classifyOued(feat) {
   if (len >= 0.45) return n ? 'principal' : 'secondary';
   if (len >= 0.25) return 'major';
   return 'secondary';
-}
-
-/* ── Palette risque inondation — standard cartographie des risques naturels
-   Conforme aux conventions UNDRR / Copernicus Emergency Management */
-var RISK_FILL   = { very_high:'#c0392b', high:'#e67e22', moderate:'#f1c40f', low:'#27ae60' };
-var RISK_BORDER = { very_high:'#7b241c', high:'#935116', moderate:'#9a7d0a', low:'#1e8449' };
-var RISK_LABEL  = { very_high:'Très élevé', high:'Élevé', moderate:'Modéré', low:'Faible' };
-var RISK_OPACITY = { very_high: 0.75, high: 0.68, moderate: 0.60, low: 0.55 };
-
-function riskKey(code) {
-  if (!code) return 'low';
-  const c = code.toLowerCase();
-  if (c === 'very_high' || c.includes('very') || c.includes('très')) return 'very_high';
-  if (c === 'high'  || c.includes('elev') || c === '1') return 'high';
-  if (c === 'moderate' || c.includes('moder') || c.includes('moyen') || c === '2') return 'moderate';
-  return 'low';
 }
 
 /* ── Level fill bar ──────────────────────────────── */
@@ -456,134 +440,69 @@ function loadStations(data) {
 }
 
 /* ══════════════════════════════════════════════════
-   5. ZONES INONDATION — GEE-style homogeneous render
-   No visible borders, solid fills — looks like raster
-   ══════════════════════════════════════════════════ */
-function loadFloodZones(data) {
-  window.appData.floodZones = data;
-  const lyr = L.geoJSON(data, {
-    style: function(feat) {
-      const key = riskKey((feat.properties || {}).risk_code);
-      return {
-        fillColor:   RISK_FILL[key],
-        fillOpacity: RISK_OPACITY[key],
-        color:       RISK_BORDER[key],
-        weight:      1.2,
-        dashArray:   null,
-        opacity:     0.85
-      };
-    },
-    onEachFeature: function(feat, l) {
-      const p     = feat.properties || {};
-      const key   = riskKey(p.risk_code);
-      const label = RISK_LABEL[key];
-      const measures = (p.mitigation_measures || []).map(function(m) { return '<li>' + m + '</li>'; }).join('');
-      l.bindPopup('<div class="popup-content">'
-        + popupHeader(RISK_BORDER[key], '⚠️', p.name || 'Zone inondation')
-        + '<table>'
-        + '<tr><td>Niveau de risque</td><td><span style="background:' + RISK_FILL[key] + ';color:' + RISK_BORDER[key] + ';border:1px solid ' + RISK_BORDER[key] + ';padding:2px 8px;border-radius:4px;font-weight:700">' + label + '</span></td></tr>'
-        + '<tr><td>Superficie</td><td>' + (p.area_km2 || '—') + ' km²</td></tr>'
-        + '<tr><td>Dernière inondation</td><td>' + (p.last_flood_year || '—') + '</td></tr>'
-        + (p.cv_f1 ? '<tr><td>Précision modèle (F1)</td><td><b>' + p.cv_f1 + '</b></td></tr>' : '')
-        + '</table>'
-        + (measures ? '<div class="popup-measures"><div class="popup-measures-title">Mesures de prévention</div><ul>' + measures + '</ul></div>' : '')
-        + '</div>', { maxWidth: 300 });
-      l.on('mouseover', function() {
-        this.setStyle({ fillOpacity: 0.95, weight: 1.5, color: RISK_BORDER[riskKey(this.feature.properties.risk_code)] });
-      });
-      l.on('mouseout', function() { lyr.resetStyle(this); });
-    }
-  });
-  window.overlayLayers['Zones de risque'] = lyr;
-  if (window.map && isCardActive('Zones de risque')) lyr.addTo(window.map);
-  notifyLayerReady('Zones de risque');
-}
-
-/* ══════════════════════════════════════════════════
-   5b. RISQUE INONDATION AHP — méthode multi-critères
-   Facteurs: pente, flux accumulé, LULC, NDVI, proximité réseau, pluviométrie
-   Poids AHP: 0.2547 / 0.2215 / 0.1839 / 0.1691 / 0.0894 / 0.0814  CR=0.076
-   Source: Google Earth Engine (AHP_FloodRisk_RSK_GEE.js)
+   5. RISQUE INONDATION — Deep Learning (Sen1Floods11)
+   Modèle: FCN-ResNet50 sur Sentinel-1 VV/VH, pré-entraîné et validé
+   (Bonafilia, Tellman, Anderson, Issenberg — CVPR 2020 EarthVision
+   Workshop, IoU validation = 0.542). Fréquence d'inondation calculée
+   sur les saisons humides 2015-2024, permanent water JRC exclue.
    ══════════════════════════════════════════════════ */
 
-/* Palette AHP style GEE — conforme UNDRR / Copernicus Emergency */
-var AHP_FILL   = { very_high: '#e74c3c', high: '#e67e22', moderate: '#f1c40f', low: '#2ecc71' };
-var AHP_BORDER = { very_high: '#922b21', high: '#935116', moderate: '#9a7d0a', low: '#1e8449' };
-var AHP_LABEL  = { very_high: 'Très élevé', high: 'Élevé', moderate: 'Modéré', low: 'Faible' };
-var AHP_OPACITY = { very_high: 0.78, high: 0.70, moderate: 0.62, low: 0.55 };
-var AHP_WEIGHTS = { slope: 0.2547, flow_accumulation: 0.2215, LULC: 0.1839, proximity: 0.1691, precipitation: 0.0894, NDVI: 0.0814 };
+var DL_FILL    = { very_high: '#e74c3c', high: '#e67e22', moderate: '#f1c40f' };
+var DL_BORDER  = { very_high: '#922b21', high: '#935116', moderate: '#9a7d0a' };
+var DL_LABEL   = { very_high: 'Très élevé', high: 'Élevé', moderate: 'Modéré' };
+var DL_OPACITY = { very_high: 0.78, high: 0.70, moderate: 0.62 };
 
-function ahpKey(code) {
-  if (!code) return 'low';
+function dlRiskKey(code) {
+  if (!code) return 'moderate';
   const c = String(code).toLowerCase();
   if (c === 'very_high' || c === '4' || c.includes('très') || c.includes('very')) return 'very_high';
   if (c === 'high'      || c === '3' || c.includes('elev'))  return 'high';
-  if (c === 'moderate'  || c === '2' || c.includes('moder') || c.includes('moyen')) return 'moderate';
-  return 'low';
+  return 'moderate';
 }
 
-function loadFloodRiskAHP(data) {
-  /* Build GEE-style AHP factor bar for popup */
-  function ahpWeightBar(weights) {
-    var rows = Object.keys(weights).map(function(k) {
-      var pct = Math.round(weights[k] * 100);
-      var label = { slope:'Pente', flow_accumulation:'Flux accumulé', LULC:'Occupation sols',
-                    proximity:'Proximité réseau', precipitation:'Pluviométrie', NDVI:'NDVI' }[k] || k;
-      return '<div style="margin:2px 0">'
-           + '<div style="display:flex;justify-content:space-between;font-size:10px;color:#475569">'
-           + '<span>' + label + '</span><span style="font-weight:600">' + pct + '%</span></div>'
-           + '<div style="background:#e2e8f0;border-radius:3px;height:5px;overflow:hidden">'
-           + '<div style="width:' + pct + '%;height:100%;background:#3b82f6;border-radius:3px"></div>'
-           + '</div></div>';
-    }).join('');
-    return '<div style="margin-top:8px;padding:6px 0">'
-         + '<div style="font-size:10px;font-weight:700;color:#1e3a8a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Poids AHP (CR=0.076)</div>'
-         + rows + '</div>';
-  }
-
+function loadFloodRiskDL(data) {
+  window.appData.floodRiskDL = data;
   const lyr = L.geoJSON(data, {
     style: function(feat) {
-      const key = ahpKey((feat.properties || {}).risk_code);
+      const key = dlRiskKey((feat.properties || {}).risk_code);
       return {
-        fillColor:   AHP_FILL[key],
-        fillOpacity: AHP_OPACITY[key],
-        color:       AHP_BORDER[key],
+        fillColor:   DL_FILL[key],
+        fillOpacity: DL_OPACITY[key],
+        color:       DL_BORDER[key],
         weight:      0.8,
         opacity:     0.90
       };
     },
     onEachFeature: function(feat, l) {
       const p   = feat.properties || {};
-      const key = ahpKey(p.risk_code);
+      const key = dlRiskKey(p.risk_code);
       var headerContent =
-        '<div style="display:flex;align-items:center;gap:6px;margin:-12px -14px 10px;padding:9px 12px;border-radius:8px 8px 0 0;background:' + AHP_BORDER[key] + ';color:white">'
+        '<div style="display:flex;align-items:center;gap:6px;margin:-12px -14px 10px;padding:9px 12px;border-radius:8px 8px 0 0;background:' + DL_BORDER[key] + ';color:white">'
         + '<span style="font-size:17px">🌊</span>'
-        + '<div><div style="font-family:Rajdhani,sans-serif;font-size:15px;font-weight:700">' + (p.name || 'Zone de risque AHP') + '</div>'
-        + '<div style="font-size:10px;opacity:0.85">Méthode AHP — 6 facteurs</div></div></div>';
+        + '<div><div style="font-family:Rajdhani,sans-serif;font-size:15px;font-weight:700">' + (p.name || 'Zone de risque') + '</div>'
+        + '<div style="font-size:10px;opacity:0.85">Sen1Floods11 — Deep Learning (Sentinel-1)</div></div></div>';
       var badge =
-        '<span style="display:inline-block;background:' + AHP_FILL[key] + ';color:' + AHP_BORDER[key]
-        + ';border:1.5px solid ' + AHP_BORDER[key] + ';padding:2px 9px;border-radius:12px;font-weight:800;font-size:12px">'
-        + AHP_LABEL[key] + '</span>';
+        '<span style="display:inline-block;background:' + DL_FILL[key] + ';color:' + DL_BORDER[key]
+        + ';border:1.5px solid ' + DL_BORDER[key] + ';padding:2px 9px;border-radius:12px;font-weight:800;font-size:12px">'
+        + DL_LABEL[key] + '</span>';
       var rows = '<tr><td>Niveau de risque</td><td>' + badge + '</td></tr>'
         + '<tr><td>Superficie</td><td><b>' + (p.area_km2 || '—') + '</b> km²</td></tr>'
-        + (p.last_flood_year ? '<tr><td>Dernière inondation</td><td>' + p.last_flood_year + '</td></tr>' : '')
-        + '<tr><td>Source</td><td>' + (p.source || 'AHP/GEE') + '</td></tr>'
+        + '<tr><td>Modèle</td><td style="font-size:10px">' + (p.model || 'FCN-ResNet50 (Sen1Floods11)') + '</td></tr>'
+        + '<tr><td>Source</td><td>' + (p.source || 'Sentinel-1 SAR / GEE') + '</td></tr>'
         + (p.note ? '<tr><td colspan="2" style="font-size:10px;color:#94a3b8;font-style:italic">' + p.note + '</td></tr>' : '');
       l.bindPopup(
-        '<div class="popup-content">' + headerContent
-        + '<table>' + rows + '</table>'
-        + ahpWeightBar(AHP_WEIGHTS)
-        + '</div>', { maxWidth: 310 }
+        '<div class="popup-content">' + headerContent + '<table>' + rows + '</table></div>',
+        { maxWidth: 310 }
       );
       l.on('mouseover', function() {
-        this.setStyle({ fillOpacity: Math.min(AHP_OPACITY[key] + 0.15, 0.95), weight: 1.8 });
+        this.setStyle({ fillOpacity: Math.min(DL_OPACITY[key] + 0.15, 0.95), weight: 1.8 });
       });
       l.on('mouseout', function() { lyr.resetStyle(this); });
     }
   });
-  window.overlayLayers['Risque inondation AHP'] = lyr;
-  if (window.map && isCardActive('Risque inondation AHP')) lyr.addTo(window.map);
-  notifyLayerReady('Risque inondation AHP');
+  window.overlayLayers['Risque inondation'] = lyr;
+  if (window.map && isCardActive('Risque inondation')) lyr.addTo(window.map);
+  notifyLayerReady('Risque inondation');
 }
 
 /* ══════════════════════════════════════════════════
@@ -764,8 +683,7 @@ async function loadAllLayers() {
     loadLayer('admin_boundaries_real.geojson', loadAdmin),
     loadLayer('aquifers.geojson',              loadAquifers),
     loadLayer('rain_stations_real.geojson',    loadStations),
-    loadLayer('flood_zones.geojson',           loadFloodZones),
-    loadLayer('flood_risk_ahp.geojson',        loadFloodRiskAHP)
+    loadLayer('flood_risk_dl.geojson',         loadFloodRiskDL)
   ]);
   loadCities();
   console.log('[layers] done. Keys:', Object.keys(window.overlayLayers));
