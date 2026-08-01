@@ -57,65 +57,86 @@ function _damCap(props) {
 var _KM2_PER_DEG2 = 111.1 * 111.1 * Math.cos(34 * Math.PI / 180); /* ≈ 10 229 km²/deg² at lat 34° */
 
 /* ══════════════════════════════════════════════════
-   1. DOUGHNUT — Flood risk distribution
+   1. HORIZONTAL BAR — Flood susceptibility distribution (AHP)
+   A donut hides small/unbalanced classes; a bar chart with an
+   always-visible end label keeps every class readable regardless of
+   how skewed the areas are.
    ══════════════════════════════════════════════════ */
 function renderRiskPie(data) {
-  var ctx = document.getElementById('riskPieChart');
+  var ctx = document.getElementById('riskBarChart');
   if (!ctx) return;
 
-  var labels  = ['Très élevé', 'Élevé', 'Modéré'];
-  var colors  = ['#e74c3c', '#e67e22', '#f1c40f'];
-  var areas   = [1400, 35, 0]; /* Sen1Floods11 deep learning result — updated dynamically */
+  var labels = ['Élevé', 'Modéré', 'Faible'];
+  var colors = ['#d73027', '#fee08b', '#1a9850'];
+  var areas  = [7223, 4569, 5748]; /* AHP result — updated dynamically */
+  var pcts   = [41.2, 26.1, 32.8];
 
-  if (data && data.floodRiskDL) {
-    var totals = { very_high: 0, high: 0, moderate: 0 };
-    data.floodRiskDL.features.forEach(function (f) {
+  if (data && data.floodSusceptibility) {
+    var totals = { high: 0, moderate: 0, low: 0 };
+    var pctByCode = { high: 0, moderate: 0, low: 0 };
+    data.floodSusceptibility.features.forEach(function (f) {
       var code = (f.properties.risk_code || '').toLowerCase();
       var area = +f.properties.area_km2 || 0;
-      if (code === 'very_high')      totals.very_high += area;
-      else if (code === 'high')      totals.high      += area;
-      else if (code === 'moderate')  totals.moderate  += area;
+      var pct = +f.properties.pct || 0;
+      if (code === 'high')          { totals.high     += area; pctByCode.high     = pct; }
+      else if (code === 'moderate') { totals.moderate += area; pctByCode.moderate = pct; }
+      else if (code === 'low')      { totals.low      += area; pctByCode.low      = pct; }
     });
-    areas = [
-      Math.round(totals.very_high),
-      Math.round(totals.high),
-      Math.round(totals.moderate)
-    ];
+    areas = [Math.round(totals.high), Math.round(totals.moderate), Math.round(totals.low)];
+    pcts  = [pctByCode.high, pctByCode.moderate, pctByCode.low];
   }
 
   /* Update inline legend */
   var rl = document.getElementById('risk-legend-inline');
   if (rl) {
     rl.innerHTML = labels.map(function(lbl, i) {
-      return areas[i] > 0
-        ? '<span class="risk-dot" style="background:' + colors[i] + '"></span> '
-          + lbl + ' : ' + areas[i].toLocaleString('fr-FR') + ' km²'
-        : '';
-    }).filter(Boolean).join('&ensp;');
+      return '<span class="risk-dot" style="background:' + colors[i] + '"></span> '
+        + lbl + ' : ' + areas[i].toLocaleString('fr-FR') + ' km² (' + pcts[i] + '%)';
+    }).join('&ensp;');
   }
 
-  /* Filter zero slices */
-  var fl = { labels: [], colors: [], data: [] };
-  areas.forEach(function (v, i) {
-    if (v > 0) { fl.labels.push(labels[i]); fl.colors.push(colors[i]); fl.data.push(v); }
-  });
+  var endLabelPlugin = {
+    id: 'riskBarLabels',
+    afterDatasetsDraw: function (chart) {
+      var c = chart.ctx;
+      var meta = chart.getDatasetMeta(0);
+      meta.data.forEach(function (bar, i) {
+        var lbl = areas[i].toLocaleString('fr-FR') + ' km² (' + pcts[i] + '%)';
+        c.save();
+        c.font = 'bold 11px "Source Sans Pro",sans-serif';
+        c.textBaseline = 'middle';
+        c.textAlign = 'left';
+        c.fillStyle = '#334155';
+        c.fillText(lbl, Math.max(bar.x, chart.chartArea.left) + 6, bar.y);
+        c.restore();
+      });
+    }
+  };
 
   new Chart(ctx, {
-    type: 'doughnut',
+    type: 'bar',
     data: {
-      labels: fl.labels,
-      datasets: [{ data: fl.data, backgroundColor: fl.colors,
-                   borderColor: '#ffffff', borderWidth: 3, hoverOffset: 8 }]
+      labels: labels,
+      datasets: [{ data: areas, backgroundColor: colors, borderWidth: 0, borderRadius: 4, borderSkipped: false }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      layout: { padding: { right: 80 } },
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: { label: function (c) {
-          return ' ' + c.label + ' : ' + c.parsed.toLocaleString('fr-FR') + ' km²';
+          return ' ' + c.label + ' : ' + c.parsed.x.toLocaleString('fr-FR') + ' km² (' + pcts[c.dataIndex] + '%)';
         }}}
+      },
+      scales: {
+        x: { ticks: { color: '#64748b', font: { size: 10 },
+                      callback: function (v) { return v.toLocaleString('fr-FR') + ' km²'; } },
+             grid: { color: 'rgba(100,116,139,0.1)' }, border: { display: false } },
+        y: { ticks: { color: '#334155', font: { size: 11, weight: '600' } },
+             grid: { display: false }, border: { display: false } }
       }
-    }
+    },
+    plugins: [endLabelPlugin]
   });
 }
 function renderDamChart(data) {

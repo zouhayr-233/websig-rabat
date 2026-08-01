@@ -6,7 +6,7 @@
    =================================================== */
 
 window.overlayLayers = {};
-window.appData = { dams: null, stations: null, watersheds: null, rivers: null, floodRiskDL: null };
+window.appData = { dams: null, stations: null, watersheds: null, rivers: null, floodSusceptibility: null };
 
 /* Check if a thematic card is active — uses getAttribute to avoid encoding issues */
 function isCardActive(layerName) {
@@ -440,69 +440,69 @@ function loadStations(data) {
 }
 
 /* ══════════════════════════════════════════════════
-   5. RISQUE INONDATION — Deep Learning (Sen1Floods11)
-   Modèle: FCN-ResNet50 sur Sentinel-1 VV/VH, pré-entraîné et validé
-   (Bonafilia, Tellman, Anderson, Issenberg — CVPR 2020 EarthVision
-   Workshop, IoU validation = 0.542). Fréquence d'inondation calculée
-   sur les saisons humides 2015-2024, permanent water JRC exclue.
+   5. CARTE D'INONDATION — Susceptibilité (AHP)
+   Méthode AHP (Analytic Hierarchy Process) — analyse multicritère,
+   7 facteurs : pluviométrie, distance aux rivières, élévation, TWI,
+   pente, occupation des sols, densité de drainage. CR = 0.0247 (< 0.10).
+   3 classes : Faible / Modéré / Élevé.
    ══════════════════════════════════════════════════ */
 
-var DL_FILL    = { very_high: '#e74c3c', high: '#e67e22', moderate: '#f1c40f' };
-var DL_BORDER  = { very_high: '#922b21', high: '#935116', moderate: '#9a7d0a' };
-var DL_LABEL   = { very_high: 'Très élevé', high: 'Élevé', moderate: 'Modéré' };
-var DL_OPACITY = { very_high: 0.78, high: 0.70, moderate: 0.62 };
+var AHP_FILL   = { low: '#1a9850', moderate: '#fee08b', high: '#d73027' };
+var AHP_BORDER = { low: '#0e6b34', moderate: '#b8860b', high: '#8b1a12' };
+var AHP_LABEL  = { low: 'Faible', moderate: 'Modéré', high: 'Élevé' };
+var AHP_OPACITY = { low: 0.55, moderate: 0.62, high: 0.7 };
 
-function dlRiskKey(code) {
+function ahpRiskKey(code) {
   if (!code) return 'moderate';
   const c = String(code).toLowerCase();
-  if (c === 'very_high' || c === '4' || c.includes('très') || c.includes('very')) return 'very_high';
-  if (c === 'high'      || c === '3' || c.includes('elev'))  return 'high';
+  if (c === 'low'  || c.includes('faib'))  return 'low';
+  if (c === 'high' || c.includes('elev') || c.includes('élev')) return 'high';
   return 'moderate';
 }
 
-function loadFloodRiskDL(data) {
-  window.appData.floodRiskDL = data;
+function loadFloodSusceptibility(data) {
+  window.appData.floodSusceptibility = data;
   const lyr = L.geoJSON(data, {
     style: function(feat) {
-      const key = dlRiskKey((feat.properties || {}).risk_code);
+      const key = ahpRiskKey((feat.properties || {}).risk_code);
       return {
-        fillColor:   DL_FILL[key],
-        fillOpacity: DL_OPACITY[key],
-        color:       DL_BORDER[key],
+        fillColor:   AHP_FILL[key],
+        fillOpacity: AHP_OPACITY[key],
+        color:       AHP_BORDER[key],
         weight:      0.8,
         opacity:     0.90
       };
     },
     onEachFeature: function(feat, l) {
       const p   = feat.properties || {};
-      const key = dlRiskKey(p.risk_code);
+      const key = ahpRiskKey(p.risk_code);
       var headerContent =
-        '<div style="display:flex;align-items:center;gap:6px;margin:-12px -14px 10px;padding:9px 12px;border-radius:8px 8px 0 0;background:' + DL_BORDER[key] + ';color:white">'
+        '<div style="display:flex;align-items:center;gap:6px;margin:-12px -14px 10px;padding:9px 12px;border-radius:8px 8px 0 0;background:' + AHP_BORDER[key] + ';color:white">'
         + '<span style="font-size:17px">🌊</span>'
         + '<div><div style="font-family:Rajdhani,sans-serif;font-size:15px;font-weight:700">' + (p.name || 'Zone de risque') + '</div>'
-        + '<div style="font-size:10px;opacity:0.85">Sen1Floods11 — Deep Learning (Sentinel-1)</div></div></div>';
+        + '<div style="font-size:10px;opacity:0.85">AHP — Analyse Multicritère</div></div></div>';
       var badge =
-        '<span style="display:inline-block;background:' + DL_FILL[key] + ';color:' + DL_BORDER[key]
-        + ';border:1.5px solid ' + DL_BORDER[key] + ';padding:2px 9px;border-radius:12px;font-weight:800;font-size:12px">'
-        + DL_LABEL[key] + '</span>';
-      var rows = '<tr><td>Niveau de risque</td><td>' + badge + '</td></tr>'
-        + '<tr><td>Superficie</td><td><b>' + (p.area_km2 || '—') + '</b> km²</td></tr>'
-        + '<tr><td>Modèle</td><td style="font-size:10px">' + (p.model || 'FCN-ResNet50 (Sen1Floods11)') + '</td></tr>'
-        + '<tr><td>Source</td><td>' + (p.source || 'Sentinel-1 SAR / GEE') + '</td></tr>'
+        '<span style="display:inline-block;background:' + AHP_FILL[key] + ';color:' + AHP_BORDER[key]
+        + ';border:1.5px solid ' + AHP_BORDER[key] + ';padding:2px 9px;border-radius:12px;font-weight:800;font-size:12px">'
+        + AHP_LABEL[key] + '</span>';
+      var rows = '<tr><td>Susceptibilité</td><td>' + badge + '</td></tr>'
+        + '<tr><td>Superficie</td><td><b>' + (p.area_km2 || '—') + '</b> km² (' + (p.pct || '—') + '%)</td></tr>'
+        + '<tr><td>Modèle</td><td style="font-size:10px">' + (p.model || 'AHP') + '</td></tr>'
+        + '<tr><td>Source</td><td>' + (p.source || 'AHP') + '</td></tr>'
         + (p.note ? '<tr><td colspan="2" style="font-size:10px;color:#94a3b8;font-style:italic">' + p.note + '</td></tr>' : '');
       l.bindPopup(
         '<div class="popup-content">' + headerContent + '<table>' + rows + '</table></div>',
         { maxWidth: 310 }
       );
       l.on('mouseover', function() {
-        this.setStyle({ fillOpacity: Math.min(DL_OPACITY[key] + 0.15, 0.95), weight: 1.8 });
+        this.setStyle({ fillOpacity: Math.min(AHP_OPACITY[key] + 0.15, 0.95), weight: 1.8 });
       });
       l.on('mouseout', function() { lyr.resetStyle(this); });
     }
   });
-  window.overlayLayers['Risque inondation'] = lyr;
-  if (window.map && isCardActive('Risque inondation')) lyr.addTo(window.map);
-  notifyLayerReady('Risque inondation');
+  window.overlayLayers["Carte d'inondation"] = lyr;
+  if (window.map && isCardActive("Carte d'inondation")) lyr.addTo(window.map);
+  notifyLayerReady("Carte d'inondation");
 }
 
 /* ══════════════════════════════════════════════════
@@ -683,7 +683,7 @@ async function loadAllLayers() {
     loadLayer('admin_boundaries_real.geojson', loadAdmin),
     loadLayer('aquifers.geojson',              loadAquifers),
     loadLayer('rain_stations_real.geojson',    loadStations),
-    loadLayer('flood_risk_dl.geojson',         loadFloodRiskDL)
+    loadLayer('flood_susceptibility.geojson',  loadFloodSusceptibility)
   ]);
   loadCities();
   console.log('[layers] done. Keys:', Object.keys(window.overlayLayers));
@@ -709,6 +709,32 @@ function getDamCapacity(props) {
   return 0;
 }
 
+/* Haversine great-circle length (km) of a Line/MultiLineString geometry */
+function haversineKm(lat1, lon1, lat2, lon2) {
+  var R = 6371;
+  var dLat = (lat2 - lat1) * Math.PI / 180;
+  var dLon = (lon2 - lon1) * Math.PI / 180;
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+function lineStringLengthKm(coords) {
+  var km = 0;
+  for (var i = 1; i < coords.length; i++) {
+    km += haversineKm(coords[i-1][1], coords[i-1][0], coords[i][1], coords[i][0]);
+  }
+  return km;
+}
+function geometryLengthKm(geom) {
+  if (!geom) return 0;
+  if (geom.type === 'LineString') return lineStringLengthKm(geom.coordinates);
+  if (geom.type === 'MultiLineString') {
+    return geom.coordinates.reduce(function(s, line) { return s + lineStringLengthKm(line); }, 0);
+  }
+  return 0;
+}
+
 function updateStatCards() {
   var d = window.appData;
 
@@ -722,8 +748,11 @@ function updateStatCards() {
   }
 
   if (d.rivers) {
+    /* Haversine length (km) — rivers_real.geojson has no Shape_Leng field
+       (that was an OUEDS.shp-only attribute), so the previous
+       Shape_Leng*111 computation silently summed to 0 for every feature. */
     var totalKm = d.rivers.features.reduce(function(s, f) {
-      return s + (+(f.properties.Shape_Leng || 0) * 111);
+      return s + geometryLengthKm(f.geometry);
     }, 0);
     var elR = document.getElementById('stat-rivers');
     if (elR) elR.textContent = Math.round(totalKm).toLocaleString('fr-FR');

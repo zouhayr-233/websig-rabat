@@ -429,11 +429,11 @@ document.addEventListener('DOMContentLoaded', function () {
           lgPoly('#cffafe','#0e7490', true, 'Nappe côtière'),
         ]));
 
-      if (L === 'Risque inondation')
-        sections.push(lgSection('🌊 Risque d\'inondation', [
-          lgPoly('#e74c3c','#922b21', false, 'Très élevé — fréquence d\'inondation la plus forte'),
-          lgPoly('#e67e22','#935116', false, 'Élevé'),
-          lgPoly('#f1c40f','#9a7d0a', false, 'Modéré'),
+      if (L === "Carte d'inondation")
+        sections.push(lgSection('🌊 Susceptibilité aux inondations (AHP)', [
+          lgPoly('#d73027','#8b1a12', false, 'Élevé'),
+          lgPoly('#fee08b','#b8860b', false, 'Modéré'),
+          lgPoly('#1a9850','#0e6b34', false, 'Faible'),
         ]));
     });
 

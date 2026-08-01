@@ -259,28 +259,28 @@
               <button class="tc-zoom" data-layer="Stations pluviométriques" title="Centrer">⊙</button>
             </div>
 
-            <!-- ── Carte 6 : Risque d'Inondation (Deep Learning) ── -->
+            <!-- ── Carte 6 : Carte d'Inondation (AHP) ── -->
             <div class="tc-group-label">⚠️ Risque d'inondation</div>
 
-            <div class="thematic-card active" data-layer="Risque inondation">
-              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#e74c3c 0%,#e67e22 33%,#f1c40f 66%)"></div>
+            <div class="thematic-card active" data-layer="Carte d'inondation">
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#d73027 0%,#fee08b 50%,#1a9850 100%)"></div>
               <div class="tc-body" style="padding:7px 32px 7px 10px">
                 <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
                   <span style="font-size:14px;flex-shrink:0">🌊</span>
-                  <span class="tc-name">Risque d'inondation</span>
+                  <span class="tc-name">Carte d'inondation</span>
                   <span class="tc-status"></span>
                 </div>
-                <div style="font-size:9px;color:#64748b;margin-bottom:4px">Sen1Floods11 (FCN-ResNet50, Sentinel-1) · saisons humides 2015–2024</div>
+                <div style="font-size:9px;color:#64748b;margin-bottom:4px">AHP — Analyse Multicritère (7 facteurs)</div>
                 <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
-                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#e74c3c;border:1.5px solid #922b21"></span>
-                  <span style="font-size:9px;font-weight:700;color:#922b21;margin-right:2px">Très élevé</span>
-                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#e67e22;border:1.5px solid #935116"></span>
-                  <span style="font-size:9px;font-weight:700;color:#935116;margin-right:2px">Élevé</span>
-                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#f1c40f;border:1.5px solid #9a7d0a"></span>
-                  <span style="font-size:9px;font-weight:700;color:#9a7d0a">Modéré</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#d73027;border:1.5px solid #8b1a12"></span>
+                  <span style="font-size:9px;font-weight:700;color:#8b1a12;margin-right:2px">Élevé</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#fee08b;border:1.5px solid #b8860b"></span>
+                  <span style="font-size:9px;font-weight:700;color:#b8860b;margin-right:2px">Modéré</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#1a9850;border:1.5px solid #0e6b34"></span>
+                  <span style="font-size:9px;font-weight:700;color:#0e6b34">Faible</span>
                 </div>
               </div>
-              <button class="tc-zoom" data-layer="Risque inondation" title="Centrer">⊙</button>
+              <button class="tc-zoom" data-layer="Carte d'inondation" title="Centrer">⊙</button>
             </div>
 
             <!-- ── Carte 7 : Découpage Administratif ── -->
@@ -399,12 +399,13 @@
 
             <div class="chart-block">
               <h3 class="chart-title">Distribution des zones de risque</h3>
-              <div class="chart-wrap">
-                <canvas id="riskPieChart"></canvas>
+              <div class="chart-wrap" style="height:150px">
+                <canvas id="riskBarChart"></canvas>
               </div>
               <div class="risk-legend-inline" id="risk-legend-inline">
-                <span class="risk-dot" style="background:#e74c3c"></span> Très élevé : 1 400 km²
-                <span class="risk-dot" style="background:#e67e22"></span> Élevé : 36 km²
+                <span class="risk-dot" style="background:#d73027"></span> Élevé : 7 223 km² (41.2%)
+                <span class="risk-dot" style="background:#fee08b"></span> Modéré : 4 569 km² (26.1%)
+                <span class="risk-dot" style="background:#1a9850"></span> Faible : 5 748 km² (32.8%)
               </div>
             </div>
 
@@ -484,7 +485,7 @@
               <h4>🎯 Objectifs</h4>
               <ul class="about-list">
                 <li>Cartographie interactive des ressources en eau de la région RSK</li>
-                <li>Détection du risque d'inondation par Deep Learning (Sen1Floods11 — Sentinel-1 SAR)</li>
+                <li>Carte de susceptibilité aux inondations par méthode AHP (analyse multicritère)</li>
                 <li>Intégration de données pluviométriques et hydrologiques (2000–2025)</li>
                 <li>Outil WebSIG d'aide à la décision pour la gestion du risque hydrique</li>
               </ul>
