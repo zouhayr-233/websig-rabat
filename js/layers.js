@@ -113,40 +113,52 @@ function makeCityIcon(type) {
 }
 
 /* ══════════════════════════════════════════════════
-   OUED CLASSIFICATION
-   Priorité : ORDRE ABHS → category GeoJSON → fallback longueur
-   OSM rivers (ORDRE=null) : utiliser category pré-calculé directement
+   OUED CLASSIFICATION — source unique de vérité
+   Priorité : (1) rang hydrologique ABHS (ORDRE, donnée officielle)
+              (2) rivières régionales majeures reconnues par nom
+              (3) category OSM pré-calculée (repli pour le hors-couverture ABHS)
+   4 paliers réels, alignés avec la symbologie (TIER_STYLE) et la légende :
+     principal  ORDRE = 1        axe du Sebou (tronc principal, 1 entité)
+     major      ORDRE 4–5        grands axes régionaux (~89 entités)
+     secondary  ORDRE 8–16       affluents secondaires (~1700 entités)
+     minor      ORDRE > 16       drains / talwegs mineurs (~670 entités)
    ══════════════════════════════════════════════════ */
-function classifyOued(feat) {
-  const p   = feat.properties || {};
-  const n   = (p.name || p.NAME || '').toLowerCase();
-  const len = +(p.Shape_Leng || 0);
+var TIER_LABEL = { principal: 'Axe principal', major: 'Affluent majeur', secondary: 'Affluent secondaire', minor: 'Drain mineur' };
+var TIER_STYLE = {
+  principal: { color: '#04266e', weight: 6.0, opacity: 0.98 },
+  major:     { color: '#1565c0', weight: 2.8, opacity: 0.92 },
+  secondary: { color: '#1e88e5', weight: 1.1, opacity: 0.82 },
+  minor:     { color: '#90caf9', weight: 0.5, opacity: 0.60 }
+};
 
-  /* Hiérarchie ABHS (ORDRE issu des données réelles ABHS) */
+function classifyOued(feat) {
+  const p = feat.properties || {};
+  const n = (p.name || p.NAME || '').toLowerCase();
+
+  /* (1) Rang hydrologique ABHS — donnée officielle, priorité absolue */
   if (p.ORDRE != null) {
     const o = +p.ORDRE;
-    if (o <= 5) return 'principal';
-    if (o <= 9) return 'major';
-    return 'secondary';
+    if (o <= 1)  return 'principal';
+    if (o <= 5)  return 'major';
+    if (o <= 16) return 'secondary';
+    return 'minor';
   }
 
-  /* OSM / features sans ORDRE : utiliser le champ category (prioritaire sur le nom)
-     Les noms de rivers importants sont bien catégorisés dans le GeoJSON */
-  if (p.category) {
-    if (p.category === 'principal')  return 'principal';
-    if (p.category === 'major')      return 'major';
-    if (p.category === 'secondaire' || p.category === 'tertiaire' || p.category === 'secondary') return 'major';
-    return 'secondary';
-  }
+  /* (2) Rivières majeures reconnues par nom (hors couverture ABHS, source OSM) —
+     évite qu'un simple tag OSM approximatif déclasse un cours d'eau régional connu */
+  if (n.includes('sebou')) return 'principal';
+  if (n.includes('bou regreg') || n.includes('bouregreg')) return 'principal';
+  if (n.includes('ouargha') || n.includes('ouergha')) return 'principal';
+  if (n.includes('loukous') || n.includes('loukkos')) return 'principal';
+  if (n.includes('grou') || n.includes('beht') || n.includes('cherrat') || n.includes('rdom') || n.includes('r\'dom'))
+    return 'major';
 
-  /* Fallback nom uniquement si aucune donnée ORDRE/category */
-  if (n.includes('sebou') || n.includes('bou regreg') || n.includes('bouregreg') ||
-      n.includes('ouargha') || n.includes('rdate') || n.includes('loukous'))
-    return 'principal';
-
-  if (len >= 0.45) return n ? 'principal' : 'secondary';
-  if (len >= 0.25) return 'major';
-  return 'secondary';
+  /* (3) Repli sur le champ category pré-calculé du GeoJSON */
+  const cat = p.category;
+  if (cat === 'principal') return 'principal';
+  if (cat === 'major')     return 'major';
+  if (cat === 'secondary' || cat === 'secondaire') return 'secondary';
+  return 'minor';
 }
 
 /* ── Level fill bar ──────────────────────────────── */
@@ -238,29 +250,15 @@ function loadWatersheds(data) {
 }
 
 /* ══════════════════════════════════════════════════
-   2. OUEDS — length-based 3-tier classification
-   Fields: name, fclass, Shape_Leng, grid_code
+   2. OUEDS — classification hydrologique réelle 4 paliers (ABHS + noms)
+   Fields: name, ORDRE, category, Shape_Leng
    ══════════════════════════════════════════════════ */
 
-/* ── Symbologie hydrographique — 4 paliers exacts (clusters ABHS) ──
-   Palier 1 : ORDRE = 1          axe Sebou (1 entité)
-   Palier 2 : ORDRE ≤ 5  (4,5)   grands axes régionaux (~89 entités)
-   Palier 3 : ORDRE ≤ 16 (8–16)  oueds principaux + secondaires (~1708 entités)
-   Palier 4 : ORDRE > 16 (18–31) affluents mineurs (~673 entités) */
+/* Style dérivé de classifyOued() — une seule source de vérité, partagée
+   avec la légende dynamique (controls.js) et la légende statique (index.html) */
 function ouedStyle(feat) {
-  const p = feat.properties || {};
-  const o = (p.ORDRE != null) ? +p.ORDRE : null;
-  if (o !== null) {
-    if (o <= 1)  return { color: '#04266e', weight: 6.0, opacity: 0.98, lineCap: 'round', lineJoin: 'round' };
-    if (o <= 5)  return { color: '#1565c0', weight: 2.8, opacity: 0.92, lineCap: 'round', lineJoin: 'round' };
-    if (o <= 16) return { color: '#1e88e5', weight: 1.1, opacity: 0.82, lineCap: 'round', lineJoin: 'round' };
-    return              { color: '#90caf9', weight: 0.5, opacity: 0.60, lineCap: 'round', lineJoin: 'round' };
-  }
-  /* Fallback OSM — utiliser le champ category pré-calculé (plus fiable que les overrides de nom) */
-  const cat = (p.category || '').toLowerCase();
-  if (cat === 'principal') return { color: '#1565c0', weight: 2.8, opacity: 0.92, lineCap: 'round', lineJoin: 'round' };
-  if (cat === 'major')     return { color: '#1e88e5', weight: 1.5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' };
-  return                           { color: '#90caf9', weight: 0.7, opacity: 0.70, lineCap: 'round', lineJoin: 'round' };
+  const s = TIER_STYLE[classifyOued(feat)];
+  return Object.assign({ lineCap: 'round', lineJoin: 'round' }, s);
 }
 function ouedHighlight(feat) {
   const s = ouedStyle(feat);
@@ -276,11 +274,10 @@ function loadRivers(data) {
       const p    = feat.properties || {};
       const name = p.name || p.NAME || 'Cours d\'eau';
       const tier = classifyOued(feat);
-      const tierLabels = { principal:'Axe principal', major:'Oued majeur', secondary:'Affluent secondaire' };
       const headCol = ouedStyle(feat).color;
       var rangLabel = p.ORDRE != null
-        ? 'Rang ' + p.ORDRE + ' (ABHS)'
-        : tierLabels[tier] + (p.category ? ' (' + p.category + ')' : '');
+        ? 'Rang ' + p.ORDRE + ' (ABHS) — ' + TIER_LABEL[tier]
+        : TIER_LABEL[tier] + (p.category ? ' (' + p.category + ')' : '');
       var rows = '<tr><td>Rang hydrologique</td><td><b>' + rangLabel + '</b></td></tr>';
       if (p.Drain_Prin && p.Drain_Prin !== p.name) rows += '<tr><td>Drain principal</td><td>' + p.Drain_Prin + '</td></tr>';
       if (p.Code)   rows += '<tr><td>Code ABHS</td><td><span class="popup-code">' + p.Code + '</span></td></tr>';
@@ -301,7 +298,7 @@ function loadRivers(data) {
     var name = (p.name || p.NAME || '').trim();
     if (!name) return;
     var tier = classifyOued(feat);
-    if (tier === 'secondary') return;
+    if (tier === 'secondary' || tier === 'minor') return;
     var len  = +(p.Shape_Leng || 0);
     if (!namedFeats[name] || len > namedFeats[name].len)
       namedFeats[name] = { feat: feat, len: len, tier: tier };

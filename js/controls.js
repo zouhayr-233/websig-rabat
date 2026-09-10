@@ -406,9 +406,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (L === 'Oueds / Rivières')
         sections.push(lgSection('🌊 Oueds / Rivières', [
-          lgLine('#0d47a1', 3.5, false, 'Principal — Sebou, Bou Regreg, Tanoubert, Beht, Grou…'),
-          lgLine('#1565c0', 2.4, false, 'Majeur — ≥ 28 km'),
-          lgLine('#2196f3', 1.5, false, 'Secondaire / réseau DEM'),
+          lgLine('#04266e', 6.0, false, 'Axe principal — Sebou (rang ABHS 1)'),
+          lgLine('#1565c0', 2.8, false, 'Affluent majeur — Ouergha, Beht, Grou, Bou Regreg, Cherrat…'),
+          lgLine('#1e88e5', 1.1, false, 'Affluent secondaire (rang ABHS 8–16)'),
+          lgLine('#90caf9', 0.5, false, 'Drain / talweg mineur (rang ABHS > 16)'),
         ]));
 
       if (L === 'Barrages')
