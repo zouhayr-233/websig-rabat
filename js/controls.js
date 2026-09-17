@@ -431,10 +431,12 @@ document.addEventListener('DOMContentLoaded', function () {
         ]));
 
       if (L === "Carte d'inondation")
-        sections.push(lgSection('🌊 Susceptibilité aux inondations (AHP)', [
-          lgPoly('#d73027','#8b1a12', false, 'Élevé'),
+        sections.push(lgSection('🌊 Susceptibilité aux inondations (GTB)', [
+          lgPoly('#d73027','#8b1a12', false, 'Très élevé'),
+          lgPoly('#fc8d59','#c2530f', false, 'Élevé'),
           lgPoly('#fee08b','#b8860b', false, 'Modéré'),
-          lgPoly('#1a9850','#0e6b34', false, 'Faible'),
+          lgPoly('#91cf60','#4d7c2b', false, 'Faible'),
+          lgPoly('#1a9850','#0e6b34', false, 'Très faible'),
         ]));
     });
 

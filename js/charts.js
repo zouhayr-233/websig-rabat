@@ -57,7 +57,7 @@ function _damCap(props) {
 var _KM2_PER_DEG2 = 111.1 * 111.1 * Math.cos(34 * Math.PI / 180); /* ≈ 10 229 km²/deg² at lat 34° */
 
 /* ══════════════════════════════════════════════════
-   1. HORIZONTAL BAR — Flood susceptibility distribution (AHP)
+   1. HORIZONTAL BAR — Flood susceptibility distribution (GTB)
    A donut hides small/unbalanced classes; a bar chart with an
    always-visible end label keeps every class readable regardless of
    how skewed the areas are.
@@ -66,24 +66,22 @@ function renderRiskPie(data) {
   var ctx = document.getElementById('riskBarChart');
   if (!ctx) return;
 
-  var labels = ['Élevé', 'Modéré', 'Faible'];
-  var colors = ['#d73027', '#fee08b', '#1a9850'];
-  var areas  = [7223, 4569, 5748]; /* AHP result — updated dynamically */
-  var pcts   = [41.2, 26.1, 32.8];
+  var labels = ['Très élevé', 'Élevé', 'Modéré', 'Faible', 'Très faible'];
+  var colors = ['#d73027', '#fc8d59', '#fee08b', '#91cf60', '#1a9850'];
+  var areas  = [825, 191, 167, 188, 16295]; /* GTB result — updated dynamically */
+  var pcts   = [4.67, 1.08, 0.95, 1.06, 92.24];
 
   if (data && data.floodSusceptibility) {
-    var totals = { high: 0, moderate: 0, low: 0 };
-    var pctByCode = { high: 0, moderate: 0, low: 0 };
+    var totals = { very_high: 0, high: 0, moderate: 0, low: 0, very_low: 0 };
+    var pctByCode = { very_high: 0, high: 0, moderate: 0, low: 0, very_low: 0 };
     data.floodSusceptibility.features.forEach(function (f) {
       var code = (f.properties.risk_code || '').toLowerCase();
       var area = +f.properties.area_km2 || 0;
       var pct = +f.properties.pct || 0;
-      if (code === 'high')          { totals.high     += area; pctByCode.high     = pct; }
-      else if (code === 'moderate') { totals.moderate += area; pctByCode.moderate = pct; }
-      else if (code === 'low')      { totals.low      += area; pctByCode.low      = pct; }
+      if (code in totals) { totals[code] += area; pctByCode[code] = pct; }
     });
-    areas = [Math.round(totals.high), Math.round(totals.moderate), Math.round(totals.low)];
-    pcts  = [pctByCode.high, pctByCode.moderate, pctByCode.low];
+    areas = [Math.round(totals.very_high), Math.round(totals.high), Math.round(totals.moderate), Math.round(totals.low), Math.round(totals.very_low)];
+    pcts  = [pctByCode.very_high, pctByCode.high, pctByCode.moderate, pctByCode.low, pctByCode.very_low];
   }
 
   /* Update inline legend */

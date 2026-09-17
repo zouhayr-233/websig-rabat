@@ -437,21 +437,24 @@ function loadStations(data) {
 }
 
 /* ══════════════════════════════════════════════════
-   5. CARTE D'INONDATION — Susceptibilité (AHP)
-   Méthode AHP (Analytic Hierarchy Process) — analyse multicritère,
-   7 facteurs : pluviométrie, distance aux rivières, élévation, TWI,
-   pente, occupation des sols, densité de drainage. CR = 0.0247 (< 0.10).
-   3 classes : Faible / Modéré / Élevé.
+   5. CARTE D'INONDATION — Susceptibilité (GTB)
+   Modèle GTB (Gradient Tree Boosting) — apprentissage automatique
+   supervisé entraîné sur un inventaire d'inondations historiques et des
+   facteurs conditionnants (pluviométrie, pente, TWI, distance aux
+   rivières, occupation du sol, élévation, densité de drainage).
+   5 classes : Très faible / Faible / Modéré / Élevé / Très élevé.
    ══════════════════════════════════════════════════ */
 
-var AHP_FILL   = { low: '#1a9850', moderate: '#fee08b', high: '#d73027' };
-var AHP_BORDER = { low: '#0e6b34', moderate: '#b8860b', high: '#8b1a12' };
-var AHP_LABEL  = { low: 'Faible', moderate: 'Modéré', high: 'Élevé' };
-var AHP_OPACITY = { low: 0.55, moderate: 0.62, high: 0.7 };
+var GTB_FILL    = { very_low: '#1a9850', low: '#91cf60', moderate: '#fee08b', high: '#fc8d59', very_high: '#d73027' };
+var GTB_BORDER  = { very_low: '#0e6b34', low: '#4d7c2b', moderate: '#b8860b', high: '#c2530f', very_high: '#8b1a12' };
+var GTB_LABEL   = { very_low: 'Très faible', low: 'Faible', moderate: 'Modéré', high: 'Élevé', very_high: 'Très élevé' };
+var GTB_OPACITY = { very_low: 0.45, low: 0.5, moderate: 0.58, high: 0.66, very_high: 0.72 };
 
 function ahpRiskKey(code) {
   if (!code) return 'moderate';
   const c = String(code).toLowerCase();
+  if (c === 'very_low'  || c.includes('tres_faib') || c.includes('très faib')) return 'very_low';
+  if (c === 'very_high' || c.includes('tres_elev') || c.includes('très élev') || c.includes('tres_élev')) return 'very_high';
   if (c === 'low'  || c.includes('faib'))  return 'low';
   if (c === 'high' || c.includes('elev') || c.includes('élev')) return 'high';
   return 'moderate';
@@ -463,9 +466,9 @@ function loadFloodSusceptibility(data) {
     style: function(feat) {
       const key = ahpRiskKey((feat.properties || {}).risk_code);
       return {
-        fillColor:   AHP_FILL[key],
-        fillOpacity: AHP_OPACITY[key],
-        color:       AHP_BORDER[key],
+        fillColor:   GTB_FILL[key],
+        fillOpacity: GTB_OPACITY[key],
+        color:       GTB_BORDER[key],
         weight:      0.8,
         opacity:     0.90
       };
@@ -474,25 +477,25 @@ function loadFloodSusceptibility(data) {
       const p   = feat.properties || {};
       const key = ahpRiskKey(p.risk_code);
       var headerContent =
-        '<div style="display:flex;align-items:center;gap:6px;margin:-12px -14px 10px;padding:9px 12px;border-radius:8px 8px 0 0;background:' + AHP_BORDER[key] + ';color:white">'
+        '<div style="display:flex;align-items:center;gap:6px;margin:-12px -14px 10px;padding:9px 12px;border-radius:8px 8px 0 0;background:' + GTB_BORDER[key] + ';color:white">'
         + '<span style="font-size:17px">🌊</span>'
         + '<div><div style="font-family:Rajdhani,sans-serif;font-size:15px;font-weight:700">' + (p.name || 'Zone de risque') + '</div>'
-        + '<div style="font-size:10px;opacity:0.85">AHP — Analyse Multicritère</div></div></div>';
+        + '<div style="font-size:10px;opacity:0.85">GTB — Gradient Tree Boosting</div></div></div>';
       var badge =
-        '<span style="display:inline-block;background:' + AHP_FILL[key] + ';color:' + AHP_BORDER[key]
-        + ';border:1.5px solid ' + AHP_BORDER[key] + ';padding:2px 9px;border-radius:12px;font-weight:800;font-size:12px">'
-        + AHP_LABEL[key] + '</span>';
+        '<span style="display:inline-block;background:' + GTB_FILL[key] + ';color:' + GTB_BORDER[key]
+        + ';border:1.5px solid ' + GTB_BORDER[key] + ';padding:2px 9px;border-radius:12px;font-weight:800;font-size:12px">'
+        + GTB_LABEL[key] + '</span>';
       var rows = '<tr><td>Susceptibilité</td><td>' + badge + '</td></tr>'
         + '<tr><td>Superficie</td><td><b>' + (p.area_km2 || '—') + '</b> km² (' + (p.pct || '—') + '%)</td></tr>'
-        + '<tr><td>Modèle</td><td style="font-size:10px">' + (p.model || 'AHP') + '</td></tr>'
-        + '<tr><td>Source</td><td>' + (p.source || 'AHP') + '</td></tr>'
+        + '<tr><td>Modèle</td><td style="font-size:10px">' + (p.model || 'GTB') + '</td></tr>'
+        + '<tr><td>Source</td><td>' + (p.source || 'GTB') + '</td></tr>'
         + (p.note ? '<tr><td colspan="2" style="font-size:10px;color:#94a3b8;font-style:italic">' + p.note + '</td></tr>' : '');
       l.bindPopup(
         '<div class="popup-content">' + headerContent + '<table>' + rows + '</table></div>',
         { maxWidth: 310 }
       );
       l.on('mouseover', function() {
-        this.setStyle({ fillOpacity: Math.min(AHP_OPACITY[key] + 0.15, 0.95), weight: 1.8 });
+        this.setStyle({ fillOpacity: Math.min(GTB_OPACITY[key] + 0.15, 0.95), weight: 1.8 });
       });
       l.on('mouseout', function() { lyr.resetStyle(this); });
     }
