@@ -56,18 +56,61 @@ window.activeBaseLayer = osmLayer;
 
 /* ── 3. Controls ───────────────────────────────────── */
 L.control.zoom({ position: 'topright' }).addTo(map);
-L.control.scale({ position: 'bottomleft', maxWidth: 120, metric: true, imperial: false }).addTo(map);
 L.control.attribution({ position: 'bottomright', prefix: 'WebSIG RSK | PFE 2025' }).addTo(map);
 
-/* North arrow */
+/* Graphic bar scale — classic cartographic style (alternating segments) */
+const GraphicScale = L.Control.extend({
+  options: { position: 'bottomleft', maxWidth: 130 },
+  onAdd: function (map) {
+    const div = L.DomUtil.create('div', 'leaflet-control-graphic-scale');
+    this._div = div; this._map = map;
+    map.on('moveend zoomend resize', this._update, this);
+    this._update();
+    return div;
+  },
+  onRemove: function (map) { map.off('moveend zoomend resize', this._update, this); },
+  _niceNumber: function (num) {
+    const pow10 = Math.pow(10, Math.floor(Math.log(num) / Math.LN10));
+    const d = num / pow10;
+    const nice = d >= 10 ? 10 : d >= 5 ? 5 : d >= 3 ? 3 : d >= 2 ? 2 : 1;
+    return nice * pow10;
+  },
+  _update: function () {
+    const map = this._map, maxWidth = this.options.maxWidth;
+    const y = map.getSize().y / 2;
+    const maxMeters = map.distance(
+      map.containerPointToLatLng([0, y]),
+      map.containerPointToLatLng([maxWidth, y])
+    );
+    const meters = this._niceNumber(maxMeters);
+    const px = Math.round(maxWidth * (meters / maxMeters));
+    const half = px % 2 === 0 ? px / 2 : Math.round(px / 2);
+    const label = meters >= 1000 ? (meters / 1000) + ' km' : meters + ' m';
+    const halfLabel = meters >= 1000 ? (meters / 2000) : (meters / 2);
+
+    this._div.innerHTML =
+      '<div class="gscale-bar" style="width:' + px + 'px">'
+      + '<span class="gscale-seg dark"  style="width:' + half + 'px"></span>'
+      + '<span class="gscale-seg light" style="width:' + (px - half) + 'px"></span>'
+      + '</div>'
+      + '<div class="gscale-labels" style="width:' + px + 'px">'
+      + '<span>0</span><span>' + halfLabel + '</span><span>' + label + '</span>'
+      + '</div>';
+  }
+});
+new GraphicScale().addTo(map);
+
+/* North arrow — compass rose badge, top-left (classic map-layout position) */
 const NorthArrow = L.Control.extend({
-  options: { position: 'bottomright' },
+  options: { position: 'topleft' },
   onAdd() {
-    const d = L.DomUtil.create('div', 'leaflet-control-north-arrow leaflet-bar');
-    d.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg">'
-      + '<polygon points="12,2 15,10 12,8 9,10" fill="#00b4d8"/>'
-      + '<polygon points="12,22 15,14 12,16 9,14" fill="#8899aa"/>'
-      + '<text x="12" y="13.5" text-anchor="middle" font-size="5" font-family="sans-serif" font-weight="700" fill="#e0e0e0">N</text>'
+    const d = L.DomUtil.create('div', 'leaflet-control-north-arrow');
+    d.innerHTML = '<svg viewBox="0 0 32 32" width="32" height="32" xmlns="http://www.w3.org/2000/svg">'
+      + '<circle cx="16" cy="16" r="14.5" fill="#ffffff" stroke="#16213e" stroke-width="1.3"/>'
+      + '<circle cx="16" cy="16" r="11.5" fill="none" stroke="#16213e" stroke-width="0.6" opacity="0.5"/>'
+      + '<polygon points="16,4 19.5,16 16,13.4 12.5,16" fill="#16213e"/>'
+      + '<polygon points="16,28 19.5,16 16,18.6 12.5,16" fill="#aab0bd"/>'
+      + '<text x="16" y="9.6" text-anchor="middle" font-size="6.2" font-weight="700" font-family="Arial,sans-serif" fill="#16213e">N</text>'
       + '</svg>';
     L.DomEvent.disableClickPropagation(d);
     return d;

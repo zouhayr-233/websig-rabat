@@ -151,6 +151,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  const btnGrid = document.getElementById('btn-grid');
+  if (btnGrid) {
+    btnGrid.addEventListener('click', function () {
+      var isOn = window.WebSIGGraticule && window.WebSIGGraticule.toggle();
+      btnGrid.classList.toggle('active', !!isOn);
+    });
+  }
+
   const btnInfo = document.getElementById('btn-info');
   if (btnInfo) btnInfo.addEventListener('click', openInfoModal);
 

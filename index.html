@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.css" />
 
   <!-- App styles -->
-  <link rel="stylesheet" href="css/style.css?v=51" />
+  <link rel="stylesheet" href="css/style.css?v=52" />
 </head>
 <body>
 
@@ -78,6 +78,11 @@
         <button id="btn-fullscreen" class="toolbar-btn" title="Plein écran">
           <span class="btn-icon">⛶</span>
           <span class="btn-label">Plein écran</span>
+        </button>
+        <div class="toolbar-separator"></div>
+        <button id="btn-grid" class="toolbar-btn" title="Afficher/masquer la grille de coordonnées">
+          <span class="btn-icon">▦</span>
+          <span class="btn-label">Grille</span>
         </button>
         <div class="toolbar-separator"></div>
         <button id="btn-info" class="toolbar-btn" title="À propos du projet">
@@ -586,9 +591,10 @@
   </script>
 
   <!-- APP MODULES -->
-  <script src="js/map.js?v=50"></script>
+  <script src="js/map.js?v=51"></script>
+  <script src="js/graticule.js?v=1"></script>
   <script src="js/layers.js?v=55"></script>
-  <script src="js/controls.js?v=50"></script>
+  <script src="js/controls.js?v=51"></script>
   <script src="js/charts.js?v=50"></script>
 
 </body>

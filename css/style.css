@@ -747,13 +747,71 @@ ul { list-style: none; padding: 0; }
   color: var(--text-body) !important; font-size: 10px !important;
 }
 .leaflet-control-north-arrow {
-  background: #fff; border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm); width: 32px; height: 32px;
+  background: transparent; border: none; box-shadow: none;
+  width: 34px; height: 34px;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--shadow-sm);
+  filter: drop-shadow(0 1px 3px rgba(15,23,42,0.35));
 }
-.north-arrow-svg { width: 22px; height: 22px; }
 .leaflet-control-minimap { border: 2px solid var(--border) !important; border-radius: var(--radius-sm) !important; }
+
+/* ── Graphic bar scale (classic cartographic style) ── */
+.leaflet-control-graphic-scale {
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(22,33,62,0.35);
+  border-radius: 3px;
+  padding: 4px 6px 3px;
+  box-shadow: var(--shadow-sm);
+  font-family: 'Source Sans Pro', sans-serif;
+}
+.gscale-bar { display: flex; height: 7px; border: 1px solid #16213e; border-radius: 1px; overflow: hidden; }
+.gscale-seg { height: 100%; }
+.gscale-seg.dark  { background: #16213e; }
+.gscale-seg.light { background: #ffffff; }
+.gscale-labels {
+  display: flex; justify-content: space-between;
+  margin-top: 2px; font-size: 9px; font-weight: 600; color: #16213e;
+}
+
+/* ── Cartographic grid / neatline frame (toggle via toolbar) ── */
+#graticule-frame {
+  position: absolute; inset: 6px;
+  pointer-events: none; z-index: 850; display: none;
+  border: 2px solid #16213e;
+}
+#graticule-frame::before {
+  content: ''; position: absolute; inset: 4px;
+  border: 1px solid #16213e;
+}
+#graticule-overlay {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 851; display: none;
+  font-family: 'Source Sans Pro', sans-serif;
+}
+#map.graticule-active #graticule-frame,
+#map.graticule-active #graticule-overlay { display: block; }
+
+.grat-line { position: absolute; }
+.grat-v { top: 6px; bottom: 6px; width: 0; border-left: 1px dashed rgba(22,33,62,0.30); }
+.grat-h { left: 6px; right: 6px; height: 0; border-top: 1px dashed rgba(22,33,62,0.30); }
+
+.grat-tick { position: absolute; background: #16213e; }
+.grat-tick-top    { top: 6px;    width: 1px; height: 7px; }
+.grat-tick-bottom { bottom: 6px; width: 1px; height: 7px; }
+.grat-tick-left   { left: 6px;   height: 1px; width: 7px; }
+.grat-tick-right  { right: 6px;  height: 1px; width: 7px; }
+
+.grat-label {
+  position: absolute;
+  font-size: 10px; font-weight: 700; color: #16213e;
+  background: rgba(255,255,255,0.9);
+  padding: 1px 4px; border-radius: 2px;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+.grat-label-top    { top: 15px;    transform: translate(-50%, 0); }
+.grat-label-bottom { bottom: 15px; transform: translate(-50%, 0); }
+.grat-label-left   { left: 15px;   transform: translate(0, -50%); }
+.grat-label-right  { right: 15px;  transform: translate(0, -50%); }
 
 /* �?�? RIGHT PANEL �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */
 #right-panel {
@@ -962,9 +1020,9 @@ body.map-expanded #right-panel { display: none !important; }
   left: 14px;
   z-index: 900;
   background: rgba(255,255,255,0.97);
-  border-radius: 4px;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.22);
-  border: 1px solid #c8c8c8;
+  border-radius: 6px;
+  box-shadow: 0 4px 18px rgba(15,23,42,0.28);
+  border: 1px solid rgba(15,23,42,0.15);
   width: 170px;
   min-width: 120px;
   max-width: 400px;
@@ -974,14 +1032,14 @@ body.map-expanded #right-panel { display: none !important; }
   overflow: hidden;
 }
 .mlf-title {
-  padding: 4px 8px 3px;
+  padding: 6px 10px;
   font-family: 'Rajdhani', sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  color: #1a1a2e;
-  border-bottom: 1px solid #ddd;
+  color: #ffffff;
+  background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 100%);
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.7px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -989,7 +1047,7 @@ body.map-expanded #right-panel { display: none !important; }
 }
 .mlf-drag-hint {
   font-size: 11px;
-  color: #999;
+  color: rgba(255,255,255,0.8);
   line-height: 1;
   cursor: se-resize;
   flex-shrink: 0;
@@ -1025,10 +1083,10 @@ body.map-expanded #right-panel { display: none !important; }
 .lg-section { margin-bottom: 6px; }
 .lg-section:last-child { margin-bottom: 0; }
 .lg-title {
-  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
-  color: #444; text-transform: uppercase; letter-spacing: 0.5px;
-  margin-bottom: 3px; padding-bottom: 1px;
-  border-bottom: 1px solid #e8e8e8;
+  font-family: 'Rajdhani', sans-serif; font-size: 9.5px; font-weight: 700;
+  color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 3px; padding-bottom: 2px;
+  border-bottom: 1.5px solid #dbeafe;
 }
 .lg-item { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; font-size: 9px; color: #1a1a2e; }
 .lg-item:last-child { margin-bottom: 0; }
