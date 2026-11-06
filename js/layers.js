@@ -675,16 +675,43 @@ function loadCities() {
 /* ══════════════════════════════════════════════════
    MAIN — load all layers
    ══════════════════════════════════════════════════ */
+/* Couche -> libellé lisible pour le message d'erreur */
+var LAYER_LABELS = {
+  'watersheds_real.geojson':       'Bassins & sous-bassins versants',
+  'rivers_real.geojson':           'Réseau hydrographique (oueds)',
+  'dams_real.geojson':             'Barrages',
+  'admin_boundaries_real.geojson': 'Limites administratives',
+  'aquifers.geojson':              'Nappes souterraines',
+  'rain_stations_real.geojson':    'Stations pluviométriques',
+  'flood_susceptibility.geojson':  'Susceptibilité aux inondations'
+};
+
+function showDataErrorBanner(failedFiles) {
+  var banner = document.getElementById('data-error-banner');
+  var text   = document.getElementById('data-error-text');
+  if (!banner || !text || !failedFiles.length) return;
+  var names = failedFiles.map(function (f) { return LAYER_LABELS[f] || f; });
+  text.textContent = 'Certaines couches n’ont pas pu être chargées : '
+    + names.join(', ') + '. Vérifiez votre connexion et rechargez la page.';
+  banner.style.display = 'flex';
+}
+
 async function loadAllLayers() {
-  await Promise.allSettled([
-    loadLayer('watersheds_real.geojson',       loadWatersheds),
-    loadLayer('rivers_real.geojson',           loadRivers),
-    loadLayer('dams_real.geojson',             loadDams),
-    loadLayer('admin_boundaries_real.geojson', loadAdmin),
-    loadLayer('aquifers.geojson',              loadAquifers),
-    loadLayer('rain_stations_real.geojson',    loadStations),
-    loadLayer('flood_susceptibility.geojson',  loadFloodSusceptibility)
-  ]);
+  var files = [
+    ['watersheds_real.geojson',       loadWatersheds],
+    ['rivers_real.geojson',           loadRivers],
+    ['dams_real.geojson',             loadDams],
+    ['admin_boundaries_real.geojson', loadAdmin],
+    ['aquifers.geojson',              loadAquifers],
+    ['rain_stations_real.geojson',    loadStations],
+    ['flood_susceptibility.geojson',  loadFloodSusceptibility]
+  ];
+  var results = await Promise.allSettled(files.map(function (f) { return loadLayer(f[0], f[1]); }));
+  var failed = files
+    .map(function (f, i) { return (results[i].status === 'fulfilled' && results[i].value) ? null : f[0]; })
+    .filter(Boolean);
+  if (failed.length) showDataErrorBanner(failed);
+
   loadCities();
   console.log('[layers] done. Keys:', Object.keys(window.overlayLayers));
   updateStatCards();
@@ -693,7 +720,7 @@ async function loadAllLayers() {
   /* ── Z-order fix: flood zones drawn last so they cover rivers.
      Bring rivers, dams, cities to front after everything loads. ── */
   setTimeout(function () {
-    ['Oueds / Rivières', 'Barrages', 'Stations pluviémétriques', 'Villes principales'].forEach(function (name) {
+    ['Oueds / Rivières', 'Barrages', 'Stations pluviométriques', 'Villes principales'].forEach(function (name) {
       var lyr = window.overlayLayers[name];
       if (lyr && window.map && window.map.hasLayer(lyr)) {
         try { lyr.bringToFront(); } catch (e) {}

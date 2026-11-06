@@ -146,18 +146,31 @@ setTimeout(function () {
 }, 500);
 
 /* ── 5. Coordinates display ────────────────────────── */
-map.on('mousemove', function (e) {
+function updateCoordsDisplay(latlng) {
   const la = document.getElementById('coord-lat');
   const lo = document.getElementById('coord-lon');
-  if (la) la.textContent = e.latlng.lat.toFixed(5);
-  if (lo) lo.textContent = e.latlng.lng.toFixed(5);
-});
-map.on('mouseout', function () {
+  if (la) la.textContent = latlng.lat.toFixed(5);
+  if (lo) lo.textContent = latlng.lng.toFixed(5);
+}
+function clearCoordsDisplay() {
   const la = document.getElementById('coord-lat');
   const lo = document.getElementById('coord-lon');
   if (la) la.textContent = '—';
   if (lo) lo.textContent = '—';
-});
+}
+map.on('mousemove', function (e) { updateCoordsDisplay(e.latlng); });
+map.on('mouseout',  clearCoordsDisplay);
+
+/* Touch devices don't fire 'mousemove': read the finger position directly
+   from the touch event and convert it to a lat/lon via the map container. */
+map.getContainer().addEventListener('touchstart', handleMapTouch, { passive: true });
+map.getContainer().addEventListener('touchmove',  handleMapTouch, { passive: true });
+function handleMapTouch(ev) {
+  if (!ev.touches || !ev.touches.length) return;
+  const touch = ev.touches[0]; /* Touch has clientX/clientY, same shape Leaflet expects */
+  const point = map.mouseEventToContainerPoint(touch);
+  updateCoordsDisplay(map.containerPointToLatLng(point));
+}
 
 /* ── 6. Spinner hide ───────────────────────────────── */
 function hideSpinner() {

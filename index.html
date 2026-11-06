@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WebSIG RSK — Risque d'inondation | Géomatique Appliquée — Ibn Tofail 2024–2026</title>
 
   <!-- Google Fonts -->
@@ -40,6 +40,13 @@
       <p class="spinner-text">Chargement...</p>
       <div class="spinner-bar"><div class="spinner-progress"></div></div>
     </div>
+  </div>
+
+  <!-- DATA ERROR BANNER — shown only if one or more data files fail to load -->
+  <div id="data-error-banner" role="alert" style="display:none;">
+    <span class="error-icon">⚠️</span>
+    <span id="data-error-text"></span>
+    <button id="data-error-close" title="Fermer" aria-label="Fermer le message d'erreur">✕</button>
   </div>
 
   <!-- MAIN APP CONTAINER -->
@@ -410,7 +417,7 @@
             <div class="chart-block">
               <h3 class="chart-title">Distribution des zones de risque (GTB — 5 classes)</h3>
               <div class="chart-wrap tall">
-                <canvas id="riskBarChart"></canvas>
+                <canvas id="riskBarChart" role="img" aria-label="Diagramme en barres de la distribution des surfaces par classe de susceptibilité aux inondations, en kilomètres carrés et en pourcentage."></canvas>
               </div>
               <div class="risk-legend-inline" id="risk-legend-inline">
                 <span class="risk-dot" style="background:#d73027"></span> Très élevé : 825 km² (4.67%)
@@ -424,14 +431,14 @@
             <div class="chart-block">
               <h3 class="chart-title">Capacité des barrages (Mm³)</h3>
               <div class="chart-wrap">
-                <canvas id="damLevelChart"></canvas>
+                <canvas id="damLevelChart" role="img" aria-label="Diagramme en barres de la capacité des 5 principaux barrages de la région, en millions de mètres cubes."></canvas>
               </div>
             </div>
 
             <div class="chart-block">
               <h3 class="chart-title">Superficie des bassins versants</h3>
               <div class="chart-wrap">
-                <canvas id="watershedChart"></canvas>
+                <canvas id="watershedChart" role="img" aria-label="Diagramme en barres de la superficie des bassins et sous-bassins versants, en kilomètres carrés."></canvas>
               </div>
             </div>
           </div>
@@ -441,14 +448,14 @@
             <div class="chart-block">
               <h3 class="chart-title">Précipitations moyennes mensuelles (RSK)</h3>
               <div class="chart-wrap">
-                <canvas id="monthlyRainChart"></canvas>
+                <canvas id="monthlyRainChart" role="img" aria-label="Diagramme en barres des précipitations moyennes mensuelles dans la région, en millimètres, de janvier à décembre."></canvas>
               </div>
             </div>
 
             <div class="chart-block">
               <h3 class="chart-title">Série interannuelle 2000–2025</h3>
               <div class="chart-wrap tall">
-                <canvas id="annualRainChart"></canvas>
+                <canvas id="annualRainChart" role="img" aria-label="Graphique en ligne des précipitations annuelles de la région de 2000 à 2025, avec moyenne mobile sur 5 ans."></canvas>
               </div>
             </div>
 

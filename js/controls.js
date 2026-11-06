@@ -115,8 +115,28 @@ document.addEventListener('DOMContentLoaded', function () {
       this.classList.add('active');
       const tab = document.getElementById('tab-' + this.dataset.tab);
       if (tab) tab.classList.add('active');
+      /* Charts inside a tab hidden via display:none have a 0x0 canvas while
+         inactive. Most browsers resize them automatically (ResizeObserver)
+         once the tab becomes visible, but we force it explicitly so the
+         charts are never left blank on slower/older browsers. */
+      if (tab && window.Chart && Chart.instances) {
+        setTimeout(function () {
+          Object.values(Chart.instances).forEach(function (c) {
+            if (tab.contains(c.canvas)) c.resize();
+          });
+        }, 0);
+      }
     });
   });
+
+  /* ── DATA ERROR BANNER — dismiss button ──────────── */
+  const dataErrorClose = document.getElementById('data-error-close');
+  if (dataErrorClose) {
+    dataErrorClose.addEventListener('click', function () {
+      const banner = document.getElementById('data-error-banner');
+      if (banner) banner.style.display = 'none';
+    });
+  }
 
   /* ── SEARCH BAR ──────────────────────────────────── */
   const searchInput = document.getElementById('search-input');
