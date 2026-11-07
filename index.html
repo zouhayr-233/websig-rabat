@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WebSIG RSK — Risque d'inondation | Géomatique Appliquée — Ibn Tofail 2024–2026</title>
+  <title>WebSIG RSK — Ressources en eau et susceptibilité aux inondations</title>
+  <meta name="description" content="WebSIG RSK — Ressources en eau et susceptibilité aux inondations de la région Rabat-Salé-Kénitra. Carte informative, non réglementaire." />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -60,7 +61,7 @@
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#00b4d8"/>
             <circle cx="12" cy="9" r="2.5" fill="#0d1b2a"/>
           </svg>
-          <span class="brand-title">WebSIG<span class="brand-region">-Rabat-Salé-Kénitra</span></span>
+          <span class="brand-title">WebSIG<span class="brand-region"> RSK</span></span>
         </div>
       </div>
 
@@ -133,7 +134,7 @@
               </svg>
               <div class="sidebar-title">
                 <span class="sidebar-project">WebSIG RSK</span>
-                <span class="sidebar-subtitle">Ressources en eau &amp; Risques</span>
+                <span class="sidebar-subtitle">Ressources en eau &amp; susceptibilité aux inondations</span>
               </div>
             </div>
           </div>
@@ -154,23 +155,27 @@
 
             <!-- Fond de carte -->
             <div class="tc-group-label">🗺️ Fond de carte</div>
-            <div class="basemap-grid" style="padding:8px 10px 10px">
-              <div class="basemap-card active" data-basemap="OpenStreetMap" title="OpenStreetMap">
+            <div class="basemap-grid" role="radiogroup" aria-label="Fond de carte" style="padding:8px 10px 10px">
+              <label class="basemap-card active" data-basemap="OpenStreetMap" title="OpenStreetMap">
+                <input type="radio" name="basemap" value="OpenStreetMap" class="basemap-radio-input" checked>
                 <div class="basemap-thumb bm-osm"><span class="basemap-check">✓</span></div>
                 <span class="basemap-name">OpenStreetMap</span>
-              </div>
-              <div class="basemap-card" data-basemap="Satellite" title="Satellite Esri">
+              </label>
+              <label class="basemap-card" data-basemap="Satellite" title="Satellite Esri">
+                <input type="radio" name="basemap" value="Satellite" class="basemap-radio-input">
                 <div class="basemap-thumb bm-sat"><span class="basemap-check">✓</span></div>
                 <span class="basemap-name">Satellite</span>
-              </div>
-              <div class="basemap-card" data-basemap="Terrain" title="Terrain Esri">
+              </label>
+              <label class="basemap-card" data-basemap="Terrain" title="Terrain Esri">
+                <input type="radio" name="basemap" value="Terrain" class="basemap-radio-input">
                 <div class="basemap-thumb bm-terrain"><span class="basemap-check">✓</span></div>
                 <span class="basemap-name">Terrain</span>
-              </div>
-              <div class="basemap-card" data-basemap="CartoDB Dark" title="CartoDB Dark">
+              </label>
+              <label class="basemap-card" data-basemap="CartoDB Dark" title="CartoDB Dark">
+                <input type="radio" name="basemap" value="CartoDB Dark" class="basemap-radio-input">
                 <div class="basemap-thumb bm-dark"><span class="basemap-check">✓</span></div>
                 <span class="basemap-name">Nuit</span>
-              </div>
+              </label>
             </div>
 
             <!-- ── Carte 1 : Bassins & Sous-bassins ── -->
@@ -272,15 +277,15 @@
               <button class="tc-zoom" data-layer="Stations pluviométriques" title="Centrer">⊙</button>
             </div>
 
-            <!-- ── Carte 6 : Carte d'Inondation (GTB) ── -->
-            <div class="tc-group-label">⚠️ Risque d'inondation</div>
+            <!-- ── Carte 6 : Susceptibilité aux Inondations (GTB) ── -->
+            <div class="tc-group-label">🌊 Susceptibilité aux inondations</div>
 
-            <div class="thematic-card active" data-layer="Carte d'inondation">
+            <div class="thematic-card active" data-layer="Susceptibilité aux inondations">
               <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#d73027 0%,#fc8d59 25%,#fee08b 50%,#91cf60 75%,#1a9850 100%)"></div>
               <div class="tc-body" style="padding:7px 32px 7px 10px">
                 <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
                   <span style="font-size:14px;flex-shrink:0">🌊</span>
-                  <span class="tc-name">Carte d'inondation</span>
+                  <span class="tc-name">Susceptibilité aux inondations</span>
                   <span class="tc-status"></span>
                 </div>
                 <div style="font-size:9px;color:#64748b;margin-bottom:4px">GTB — Gradient Tree Boosting (Machine Learning)</div>
@@ -297,7 +302,7 @@
                   <span style="font-size:9px;font-weight:700;color:#0e6b34">Très faible</span>
                 </div>
               </div>
-              <button class="tc-zoom" data-layer="Carte d'inondation" title="Centrer">⊙</button>
+              <button class="tc-zoom" data-layer="Susceptibilité aux inondations" title="Centrer sur la couche Susceptibilité aux inondations" aria-label="Centrer sur la couche Susceptibilité aux inondations">⊙</button>
             </div>
 
             <!-- ── Carte 7 : Découpage Administratif ── -->
@@ -379,6 +384,9 @@
           <div id="legend-resize-handle" title="Redimensionner"></div>
         </div>
 
+        <!-- Bandeau permanent — rappel que la carte est informative -->
+        <div id="map-disclaimer-banner">Carte informative, non réglementaire</div>
+
       </div>
 
       <!-- RIGHT PANEL -->
@@ -405,7 +413,7 @@
                 <div class="stat-label">Mm³ capacité totale</div>
               </div>
               <div class="stat-card">
-                <div class="stat-number" id="stat-rivers">1 339</div>
+                <div class="stat-number" id="stat-rivers">…</div>
                 <div class="stat-label">km de réseau hydrographique</div>
               </div>
               <div class="stat-card">
@@ -415,7 +423,7 @@
             </div>
 
             <div class="chart-block">
-              <h3 class="chart-title">Distribution des zones de risque (GTB — 5 classes)</h3>
+              <h3 class="chart-title">Distribution des classes de susceptibilité aux inondations (GTB — 5 classes)</h3>
               <div class="chart-wrap tall">
                 <canvas id="riskBarChart" role="img" aria-label="Diagramme en barres de la distribution des surfaces par classe de susceptibilité aux inondations, en kilomètres carrés et en pourcentage."></canvas>
               </div>
@@ -439,6 +447,13 @@
               <h3 class="chart-title">Superficie des bassins versants</h3>
               <div class="chart-wrap">
                 <canvas id="watershedChart" role="img" aria-label="Diagramme en barres de la superficie des bassins et sous-bassins versants, en kilomètres carrés."></canvas>
+              </div>
+            </div>
+
+            <div class="chart-block">
+              <h3 class="chart-title">Superficie des nappes souterraines</h3>
+              <div class="chart-wrap">
+                <canvas id="aquiferChart" role="img" aria-label="Diagramme en barres de la superficie des nappes souterraines de la région, en kilomètres carrés."></canvas>
               </div>
             </div>
           </div>
@@ -470,12 +485,8 @@
                     <th>Réseau</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr><td>Rabat-Météo</td><td>75</td><td>562</td><td>DMN</td></tr>
-                  <tr><td>Kénitra</td><td>15</td><td>618</td><td>ABHS</td></tr>
-                  <tr><td>Salé</td><td>20</td><td>548</td><td>DMN</td></tr>
-                  <tr><td>Tiflet</td><td>290</td><td>498</td><td>ABHS</td></tr>
-                  <tr><td>Khémisset</td><td>405</td><td>478</td><td>ABHS</td></tr>
+                <tbody id="stations-table-body">
+                  <tr><td colspan="4">Chargement…</td></tr>
                 </tbody>
               </table>
             </div>
@@ -484,7 +495,7 @@
           <!-- TAB: À PROPOS -->
           <div class="tab-content" id="tab-about">
             <div class="about-header">
-              <h2>WebSIG — Ressources en eau &amp; Risque d'inondation</h2>
+              <h2>WebSIG RSK — Ressources en eau et susceptibilité aux inondations</h2>
               <h3>Région Rabat-Salé-Kénitra, Maroc</h3>
             </div>
 
@@ -506,7 +517,7 @@
                 <li>Cartographie interactive des ressources en eau de la région RSK</li>
                 <li>Carte de susceptibilité aux inondations par apprentissage automatique (GTB — Gradient Tree Boosting, 5 classes)</li>
                 <li>Intégration de données pluviométriques et hydrologiques (2000–2025)</li>
-                <li>Outil WebSIG d'aide à la décision pour la gestion du risque hydrique</li>
+                <li>Outil WebSIG d'aide à la décision pour la gestion des ressources en eau et de la susceptibilité aux inondations</li>
               </ul>
             </div>
 
@@ -550,8 +561,8 @@
   <div id="info-modal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <button class="modal-close" id="modal-close-btn">✕</button>
-      <h2>WebSIG — Ressources en eau &amp; Risque d'inondation</h2>
-      <p>Système d'Information Géographique Web dédié à la cartographie du risque d'inondation et à la gestion des ressources en eau de la région <strong>Rabat-Salé-Kénitra</strong>.</p>
+      <h2>WebSIG RSK — Ressources en eau et susceptibilité aux inondations</h2>
+      <p>Système d'Information Géographique Web dédié à la cartographie de la susceptibilité aux inondations et à la gestion des ressources en eau de la région <strong>Rabat-Salé-Kénitra</strong>.</p>
       <h3>Utilisation</h3>
       <ul>
         <li><strong>Couches :</strong> activez/désactivez les thèmes dans le panneau gauche (☰)</li>

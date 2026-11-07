@@ -6,7 +6,7 @@
    =================================================== */
 
 window.overlayLayers = {};
-window.appData = { dams: null, stations: null, watersheds: null, rivers: null, floodSusceptibility: null };
+window.appData = { dams: null, stations: null, watersheds: null, rivers: null, floodSusceptibility: null, aquifers: null };
 
 /* Check if a thematic card is active — uses getAttribute to avoid encoding issues */
 function isCardActive(layerName) {
@@ -449,6 +449,9 @@ var GTB_FILL    = { very_low: '#1a9850', low: '#91cf60', moderate: '#fee08b', hi
 var GTB_BORDER  = { very_low: '#0e6b34', low: '#4d7c2b', moderate: '#b8860b', high: '#c2530f', very_high: '#8b1a12' };
 var GTB_LABEL   = { very_low: 'Très faible', low: 'Faible', moderate: 'Modéré', high: 'Élevé', very_high: 'Très élevé' };
 var GTB_OPACITY = { very_low: 0.45, low: 0.5, moderate: 0.58, high: 0.66, very_high: 0.72 };
+/* Exposés explicitement pour réutilisation par controls.js (légende) — même
+   palette que la carte, pas de duplication. */
+window.GTB_FILL = GTB_FILL; window.GTB_BORDER = GTB_BORDER; window.GTB_LABEL = GTB_LABEL;
 
 function ahpRiskKey(code) {
   if (!code) return 'moderate';
@@ -479,7 +482,7 @@ function loadFloodSusceptibility(data) {
       var headerContent =
         '<div style="display:flex;align-items:center;gap:6px;margin:-12px -14px 10px;padding:9px 12px;border-radius:8px 8px 0 0;background:' + GTB_BORDER[key] + ';color:white">'
         + '<span style="font-size:17px">🌊</span>'
-        + '<div><div style="font-family:Rajdhani,sans-serif;font-size:15px;font-weight:700">' + (p.name || 'Zone de risque') + '</div>'
+        + '<div><div style="font-family:Rajdhani,sans-serif;font-size:15px;font-weight:700">' + (p.name || 'Susceptibilité aux inondations') + '</div>'
         + '<div style="font-size:10px;opacity:0.85">GTB — Gradient Tree Boosting</div></div></div>';
       var badge =
         '<span style="display:inline-block;background:' + GTB_FILL[key] + ';color:' + GTB_BORDER[key]
@@ -490,8 +493,10 @@ function loadFloodSusceptibility(data) {
         + '<tr><td>Modèle</td><td style="font-size:10px">' + (p.model || 'GTB') + '</td></tr>'
         + '<tr><td>Source</td><td>' + (p.source || 'GTB') + '</td></tr>'
         + (p.note ? '<tr><td colspan="2" style="font-size:10px;color:#94a3b8;font-style:italic">' + p.note + '</td></tr>' : '');
+      var disclaimer = '<div class="popup-disclaimer">Susceptibilité modélisée à titre informatif. '
+        + 'Ce n\'est pas un zonage réglementaire.</div>';
       l.bindPopup(
-        '<div class="popup-content">' + headerContent + '<table>' + rows + '</table></div>',
+        '<div class="popup-content">' + headerContent + '<table>' + rows + '</table>' + disclaimer + '</div>',
         { maxWidth: 310 }
       );
       l.on('mouseover', function() {
@@ -500,9 +505,9 @@ function loadFloodSusceptibility(data) {
       l.on('mouseout', function() { lyr.resetStyle(this); });
     }
   });
-  window.overlayLayers["Carte d'inondation"] = lyr;
-  if (window.map && isCardActive("Carte d'inondation")) lyr.addTo(window.map);
-  notifyLayerReady("Carte d'inondation");
+  window.overlayLayers['Susceptibilité aux inondations'] = lyr;
+  if (window.map && isCardActive('Susceptibilité aux inondations')) lyr.addTo(window.map);
+  notifyLayerReady('Susceptibilité aux inondations');
 }
 
 /* ══════════════════════════════════════════════════
@@ -546,6 +551,7 @@ function loadAdmin(data) {
    Fields: NOM_NAPPE, TYPE_NAPPE, AREA_KM2 (données réelles)
    ══════════════════════════════════════════════════ */
 function loadAquifers(data) {
+  window.appData.aquifers = data;
   /* Palette nappes souterraines — convention hydrogéologie professionnelle
      Tons bleu-vert avec hachures pointillées (standard BRGM / FAO) */
   const aqPalette = [
@@ -691,7 +697,7 @@ function showDataErrorBanner(failedFiles) {
   var text   = document.getElementById('data-error-text');
   if (!banner || !text || !failedFiles.length) return;
   var names = failedFiles.map(function (f) { return LAYER_LABELS[f] || f; });
-  text.textContent = 'Certaines couches n’ont pas pu être chargées : '
+  text.textContent = 'Certaines couches n\'ont pas pu être chargées : '
     + names.join(', ') + '. Vérifiez votre connexion et rechargez la page.';
   banner.style.display = 'flex';
 }

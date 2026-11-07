@@ -33,7 +33,9 @@ document.addEventListener('DOMContentLoaded', function () {
     renderRiskPie(window.appData);
     renderDamChart(window.appData);
     renderWatershedChart(window.appData);
+    renderAquiferChart(window.appData);
     renderMonthlyRain(window.appData);
+    renderStationsTable(window.appData);
   });
 
   /* Safety fallback: render with static values if data never arrives */
@@ -42,7 +44,9 @@ document.addEventListener('DOMContentLoaded', function () {
       renderRiskPie(null);
       renderDamChart(null);
       renderWatershedChart(null);
+      renderAquiferChart(null);
       renderMonthlyRain(null);
+      renderStationsTable(null);
     }
   }, 7000);
 });
@@ -277,6 +281,80 @@ function renderWatershedChart(data) {
     }
   });
 }
+
+/* ══════════════════════════════════════════════════
+   NAPPES SOUTERRAINES — surface par nappe (données réelles
+   aquifers.geojson, champ AREA_KM2). 6e graphique du tableau de
+   bord, demandé en complément des 5 graphiques existants.
+   ══════════════════════════════════════════════════ */
+function renderAquiferChart(data) {
+  var ctx = document.getElementById('aquiferChart');
+  if (!ctx) return;
+
+  var labels = [], areas = [];
+  if (data && data.aquifers) {
+    var pairs = data.aquifers.features.map(function (f) {
+      var p = f.properties || {};
+      return { name: p.NOM_NAPPE || p.Nom_Nappe || '?', km2: +p.AREA_KM2 || 0 };
+    }).sort(function (a, b) { return b.km2 - a.km2; });
+    labels = pairs.map(function (p) { return p.name; });
+    areas  = pairs.map(function (p) { return p.km2; });
+  }
+
+  if (!labels.length) {
+    /* Pas de donnée reelle disponible : on l'affiche honnetement, sans
+       inventer de chiffres de repli. */
+    ctx.replaceWith(Object.assign(document.createElement('p'), {
+      className: 'legend-empty', textContent: 'Données indisponibles (n.d.)'
+    }));
+    return;
+  }
+
+  var greens = ['#084c8d','#0d5b9e','#0c6e84','#0b6b50','#3d6b10','#3a3daa','#6a2090'];
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{ label: 'Superficie (km²)', data: areas, backgroundColor: greens, borderWidth: 0, borderRadius: 6, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: function (c) { return '  ' + c.parsed.x.toLocaleString('fr-FR') + ' km²'; } } }
+      },
+      scales: {
+        x: { ticks: { color: '#64748b', font: { size: 10 }, callback: function (v) { return v.toLocaleString('fr-FR') + ' km²'; } },
+             grid: { color: 'rgba(100,116,139,0.1)' }, border: { display: false } },
+        y: { ticks: { color: '#334155', font: { size: 10, weight: '600' } }, grid: { display: false }, border: { display: false } }
+      }
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   TABLE — Précipitations par station (donnees reelles
+   rain_stations_real.geojson), remplace l'ancien tableau code en dur
+   dont les valeurs ne correspondaient pas au fichier source.
+   ══════════════════════════════════════════════════ */
+function renderStationsTable(data) {
+  var tbody = document.getElementById('stations-table-body');
+  if (!tbody) return;
+
+  if (!data || !data.stations || !data.stations.features.length) {
+    tbody.innerHTML = '<tr><td colspan="4">Données indisponibles (n.d.)</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.stations.features.map(function (f) {
+    var p = f.properties || {};
+    var annual = (p.annual_rainfall != null) ? Math.round(p.annual_rainfall).toLocaleString('fr-FR') : 'n.d.';
+    var alt    = (p.altitude != null) ? p.altitude : 'n.d.';
+    return '<tr><td>' + (p.name || p.city || '—') + '</td><td>' + alt + '</td><td>' + annual + '</td><td>' + (p.network || 'n.d.') + '</td></tr>';
+  }).join('');
+}
+
 async function renderMonthlyRain(data) {
   var ctx = document.getElementById('monthlyRainChart');
   if (!ctx) return;

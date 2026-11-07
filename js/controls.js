@@ -25,14 +25,19 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (e) { console.warn('[controls] toggleLayer:', name, e.message); }
   }
 
-  /* ── BASE LAYER CARDS ────────────────────────────── */
-  document.querySelectorAll('.basemap-card').forEach(function (card) {
-    card.addEventListener('click', function () {
+  /* ── BASE LAYER CARDS — vrai groupe de boutons radio ─
+     Un seul fond actif à la fois (géré nativement par le navigateur :
+     clic, Entrée/Espace, flèches). On synchronise juste la classe
+     .active (style visuel) avec l'input réellement coché. ── */
+  document.querySelectorAll('.basemap-radio-input').forEach(function (input) {
+    input.addEventListener('change', function () {
+      if (!this.checked) return;
       document.querySelectorAll('.basemap-card').forEach(function (c) {
         c.classList.remove('active');
       });
-      this.classList.add('active');
-      if (window.switchBaseLayer) window.switchBaseLayer(this.dataset.basemap);
+      var card = this.closest('.basemap-card');
+      if (card) card.classList.add('active');
+      if (window.switchBaseLayer) window.switchBaseLayer(this.value);
     });
   });
 
@@ -458,14 +463,8 @@ document.addEventListener('DOMContentLoaded', function () {
           lgPoly('#cffafe','#0e7490', true, 'Nappe côtière'),
         ]));
 
-      if (L === "Carte d'inondation")
-        sections.push(lgSection('🌊 Susceptibilité aux inondations (GTB)', [
-          lgPoly('#d73027','#8b1a12', false, 'Très élevé'),
-          lgPoly('#fc8d59','#c2530f', false, 'Élevé'),
-          lgPoly('#fee08b','#b8860b', false, 'Modéré'),
-          lgPoly('#91cf60','#4d7c2b', false, 'Faible'),
-          lgPoly('#1a9850','#0e6b34', false, 'Très faible'),
-        ]));
+      if (L === 'Susceptibilité aux inondations')
+        sections.push(lgSusceptibilitySection());
     });
 
     /* Limites admin + Villes — toujours présentes si leurs layers sont actifs */
@@ -493,6 +492,30 @@ document.addEventListener('DOMContentLoaded', function () {
       + '<div class="lg-title">' + title + '</div>'
       + rows.join('')
       + '</div>';
+  }
+
+  /* ── Susceptibilité aux inondations — pastille + nom + superficie/% réels
+     (lus depuis flood_susceptibility.geojson, pas codés en dur) afin que le
+     sens ne repose pas uniquement sur la couleur. Réutilise la palette GTB
+     déjà définie dans layers.js (GTB_FILL / GTB_BORDER / GTB_LABEL). ── */
+  function lgSusceptibilitySection() {
+    var order = ['very_high', 'high', 'moderate', 'low', 'very_low'];
+    var data = window.appData && window.appData.floodSusceptibility;
+    var rows = order.map(function (key) {
+      var area = 'n.d.', pct = 'n.d.';
+      if (data) {
+        var feat = data.features.find(function (f) {
+          return ((f.properties || {}).risk_code || '').toLowerCase() === key;
+        });
+        if (feat) {
+          area = (+feat.properties.area_km2).toLocaleString('fr-FR') + ' km²';
+          pct  = feat.properties.pct + ' %';
+        }
+      }
+      var label = window.GTB_LABEL[key] + ' — ' + area + ' (' + pct + ')';
+      return lgPoly(window.GTB_FILL[key], window.GTB_BORDER[key], false, label);
+    });
+    return lgSection('🌊 Susceptibilité aux inondations (GTB)', rows);
   }
 
   /* ── Polygon symbol ── */
