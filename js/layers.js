@@ -437,78 +437,100 @@ function loadStations(data) {
 }
 
 /* ══════════════════════════════════════════════════
-   5. CARTE D'INONDATION — Susceptibilité (GTB)
-   Modèle GTB (Gradient Tree Boosting) — apprentissage automatique
-   supervisé entraîné sur un inventaire d'inondations historiques et des
-   facteurs conditionnants (pluviométrie, pente, TWI, distance aux
-   rivières, occupation du sol, élévation, densité de drainage).
-   5 classes : Très faible / Faible / Modéré / Élevé / Très élevé.
+   5. SUSCEPTIBILITÉ AUX INONDATIONS — modèle GTB
+   Indice p (probabilité estimée par le modèle Gradient Tree Boosting),
+   classé en 5 classes. Fichier data/flood_susceptibility.geojson :
+   5 entités MultiPolygon (attributs classe / libelle / superficie_km2),
+   version généralisée pour l'affichage. Les superficies affichées dans
+   le tableau de bord viennent de json/statistiques.json (raster), jamais
+   d'un calcul sur ces polygones.
    ══════════════════════════════════════════════════ */
 
-var GTB_FILL    = { very_low: '#1a9850', low: '#91cf60', moderate: '#fee08b', high: '#fc8d59', very_high: '#d73027' };
-var GTB_BORDER  = { very_low: '#0e6b34', low: '#4d7c2b', moderate: '#b8860b', high: '#c2530f', very_high: '#8b1a12' };
-var GTB_LABEL   = { very_low: 'Très faible', low: 'Faible', moderate: 'Modéré', high: 'Élevé', very_high: 'Très élevé' };
-var GTB_OPACITY = { very_low: 0.45, low: 0.5, moderate: 0.58, high: 0.66, very_high: 0.72 };
-/* Exposés explicitement pour réutilisation par controls.js (légende) — même
-   palette que la carte, pas de duplication. */
-window.GTB_FILL = GTB_FILL; window.GTB_BORDER = GTB_BORDER; window.GTB_LABEL = GTB_LABEL;
+var SUSC_KEY   = 'Susceptibilité aux inondations';
+var SUSC_FILE  = 'flood_susceptibility.geojson';
+var SUSC_FILE_VERSION = '20261115';
+/* Classes, seuils et couleurs : identiques à la carte du rapport */
+var SUSC_CLASSES = [
+  { classe: 1, libelle: 'Très faible', seuil: 'p < 0,2',    couleur: '#006100' },
+  { classe: 2, libelle: 'Faible',      seuil: '0,2 à 0,4',  couleur: '#7aab00' },
+  { classe: 3, libelle: 'Modérée',     seuil: '0,4 à 0,6',  couleur: '#ffff00' },
+  { classe: 4, libelle: 'Élevée',      seuil: '0,6 à 0,8',  couleur: '#ff9900' },
+  { classe: 5, libelle: 'Très élevée', seuil: 'p ≥ 0,8',    couleur: '#ff2200' }
+];
+var SUSC_FILL_OPACITY = 0.65;
+window.SUSC_KEY = SUSC_KEY;
+window.SUSC_CLASSES = SUSC_CLASSES;
 
-function ahpRiskKey(code) {
-  if (!code) return 'moderate';
-  const c = String(code).toLowerCase();
-  if (c === 'very_low'  || c.includes('tres_faib') || c.includes('très faib')) return 'very_low';
-  if (c === 'very_high' || c.includes('tres_elev') || c.includes('très élev') || c.includes('tres_élev')) return 'very_high';
-  if (c === 'low'  || c.includes('faib'))  return 'low';
-  if (c === 'high' || c.includes('elev') || c.includes('élev')) return 'high';
-  return 'moderate';
+function suscClass(n) {
+  for (var i = 0; i < SUSC_CLASSES.length; i++) if (SUSC_CLASSES[i].classe === +n) return SUSC_CLASSES[i];
+  return null;
+}
+
+/* Panneau dédié sous l'overlayPane (z-index 400) : les oueds, limites et
+   bassins (SVG) restent dessinés au-dessus du remplissage. Moteur canvas
+   pour cette couche seulement (~22 000 anneaux). */
+var _suscRenderer = null;
+function suscRenderer() {
+  if (_suscRenderer) return _suscRenderer;
+  if (!window.map.getPane('susceptibilitePane')) {
+    var pane = window.map.createPane('susceptibilitePane');
+    pane.style.zIndex = 350;
+  }
+  _suscRenderer = L.canvas({ pane: 'susceptibilitePane', padding: 0.5 });
+  return _suscRenderer;
 }
 
 function loadFloodSusceptibility(data) {
   window.appData.floodSusceptibility = data;
   const lyr = L.geoJSON(data, {
+    renderer: suscRenderer(),
+    pane: 'susceptibilitePane',
     style: function(feat) {
-      const key = ahpRiskKey((feat.properties || {}).risk_code);
-      return {
-        fillColor:   GTB_FILL[key],
-        fillOpacity: GTB_OPACITY[key],
-        color:       GTB_BORDER[key],
-        weight:      0.8,
-        opacity:     0.90
-      };
+      const c = suscClass((feat.properties || {}).classe);
+      const col = c ? c.couleur : '#999999';
+      /* Contour de la même couleur que le remplissage (0,5) : masque les
+         fines fentes entre polygones voisins. */
+      return { fillColor: col, fillOpacity: SUSC_FILL_OPACITY, color: col, weight: 0.5, opacity: SUSC_FILL_OPACITY };
     },
     onEachFeature: function(feat, l) {
-      const p   = feat.properties || {};
-      const key = ahpRiskKey(p.risk_code);
-      var headerContent =
-        '<div style="display:flex;align-items:center;gap:6px;margin:-12px -14px 10px;padding:9px 12px;border-radius:8px 8px 0 0;background:' + GTB_BORDER[key] + ';color:white">'
-        + '<span style="font-size:17px">🌊</span>'
-        + '<div><div style="font-family:Rajdhani,sans-serif;font-size:15px;font-weight:700">' + (p.name || 'Susceptibilité aux inondations') + '</div>'
-        + '<div style="font-size:10px;opacity:0.85">GTB — Gradient Tree Boosting</div></div></div>';
-      var badge =
-        '<span style="display:inline-block;background:' + GTB_FILL[key] + ';color:' + GTB_BORDER[key]
-        + ';border:1.5px solid ' + GTB_BORDER[key] + ';padding:2px 9px;border-radius:12px;font-weight:800;font-size:12px">'
-        + GTB_LABEL[key] + '</span>';
-      var rows = '<tr><td>Susceptibilité</td><td>' + badge + '</td></tr>'
-        + '<tr><td>Superficie</td><td><b>' + (p.area_km2 || '—') + '</b> km² (' + (p.pct || '—') + '%)</td></tr>'
-        + '<tr><td>Modèle</td><td style="font-size:10px">' + (p.model || 'GTB') + '</td></tr>'
-        + '<tr><td>Source</td><td>' + (p.source || 'GTB') + '</td></tr>'
-        + (p.note ? '<tr><td colspan="2" style="font-size:10px;color:#94a3b8;font-style:italic">' + p.note + '</td></tr>' : '');
-      var disclaimer = '<div class="popup-disclaimer">Susceptibilité modélisée à titre informatif. '
-        + 'Ce n\'est pas un zonage réglementaire.</div>';
-      l.bindPopup(
-        '<div class="popup-content">' + headerContent + '<table>' + rows + '</table>' + disclaimer + '</div>',
-        { maxWidth: 310 }
-      );
-      l.on('mouseover', function() {
-        this.setStyle({ fillOpacity: Math.min(GTB_OPACITY[key] + 0.15, 0.95), weight: 1.8 });
-      });
-      l.on('mouseout', function() { lyr.resetStyle(this); });
+      const p = feat.properties || {};
+      const c = suscClass(p.classe);
+      const lib = p.libelle || (c ? c.libelle : 'n.d.');
+      l.bindPopup('<div class="popup-content popup-susc">'
+        + '<span class="popup-susc-swatch" style="background:' + (c ? c.couleur : '#999') + '"></span>'
+        + 'Susceptibilité : <b>' + lib + '</b> (classe ' + p.classe + '/5)'
+        + '</div>', { maxWidth: 300 });
     }
   });
-  window.overlayLayers['Susceptibilité aux inondations'] = lyr;
-  if (window.map && isCardActive('Susceptibilité aux inondations')) lyr.addTo(window.map);
-  notifyLayerReady('Susceptibilité aux inondations');
+  window.overlayLayers[SUSC_KEY] = lyr;
+  if (window.map && isCardActive(SUSC_KEY)) lyr.addTo(window.map);
+  notifyLayerReady(SUSC_KEY);
 }
+
+/* Chargement à la demande (premier cochage) : fichier de ~5,9 Mo. */
+var _suscLoading = null;
+function showLayerLoading(on) {
+  var el = document.getElementById('layer-loading-msg');
+  if (el) el.style.display = on ? 'flex' : 'none';
+}
+function ensureSusceptibilityLoaded() {
+  if (window.overlayLayers[SUSC_KEY]) return Promise.resolve(true);
+  if (_suscLoading) return _suscLoading;
+  showLayerLoading(true);
+  var t0 = performance.now();
+  _suscLoading = loadLayer(SUSC_FILE + '?v=' + SUSC_FILE_VERSION, loadFloodSusceptibility)
+    .then(function (ok) {
+      showLayerLoading(false);
+      console.log('[layers] susceptibilité affichée en ' + Math.round(performance.now() - t0) + ' ms');
+      if (!ok) { showDataErrorBanner([SUSC_FILE]); _suscLoading = null; }
+      return ok;
+    });
+  return _suscLoading;
+}
+window.ensureLayerLoaded = function (name) {
+  if (name === SUSC_KEY) return ensureSusceptibilityLoaded();
+  return Promise.resolve(!!window.overlayLayers[name]);
+};
 
 /* ══════════════════════════════════════════════════
    6. LIMITES ADMINISTRATIVES
@@ -709,9 +731,11 @@ async function loadAllLayers() {
     ['dams_real.geojson',             loadDams],
     ['admin_boundaries_real.geojson', loadAdmin],
     ['aquifers.geojson',              loadAquifers],
-    ['rain_stations_real.geojson',    loadStations],
-    ['flood_susceptibility.geojson',  loadFloodSusceptibility]
+    ['rain_stations_real.geojson',    loadStations]
   ];
+  /* Susceptibilité : chargée seulement si sa carte est cochée (au démarrage
+     ou au premier cochage, voir controls.js). */
+  if (isCardActive(SUSC_KEY)) ensureSusceptibilityLoaded();
   var results = await Promise.allSettled(files.map(function (f) { return loadLayer(f[0], f[1]); }));
   var failed = files
     .map(function (f, i) { return (results[i].status === 'fulfilled' && results[i].value) ? null : f[0]; })

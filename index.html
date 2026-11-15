@@ -281,25 +281,25 @@
             <div class="tc-group-label">🌊 Susceptibilité aux inondations</div>
 
             <div class="thematic-card active" data-layer="Susceptibilité aux inondations">
-              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#d73027 0%,#fc8d59 25%,#fee08b 50%,#91cf60 75%,#1a9850 100%)"></div>
+              <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#006100 0%,#7aab00 25%,#ffff00 50%,#ff9900 75%,#ff2200 100%)"></div>
               <div class="tc-body" style="padding:7px 32px 7px 10px">
                 <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
                   <span style="font-size:14px;flex-shrink:0">🌊</span>
                   <span class="tc-name">Susceptibilité aux inondations</span>
                   <span class="tc-status"></span>
                 </div>
-                <div style="font-size:9px;color:#64748b;margin-bottom:4px">GTB — Gradient Tree Boosting (Machine Learning)</div>
+                <div style="font-size:9px;color:#64748b;margin-bottom:4px">Indice p du modèle Gradient Tree Boosting — 5 classes</div>
                 <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
-                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#d73027;border:1.5px solid #8b1a12"></span>
-                  <span style="font-size:9px;font-weight:700;color:#8b1a12;margin-right:2px">Très élevé</span>
-                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#fc8d59;border:1.5px solid #c2530f"></span>
-                  <span style="font-size:9px;font-weight:700;color:#c2530f;margin-right:2px">Élevé</span>
-                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#fee08b;border:1.5px solid #b8860b"></span>
-                  <span style="font-size:9px;font-weight:700;color:#b8860b;margin-right:2px">Modéré</span>
-                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#91cf60;border:1.5px solid #4d7c2b"></span>
-                  <span style="font-size:9px;font-weight:700;color:#4d7c2b;margin-right:2px">Faible</span>
-                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#1a9850;border:1.5px solid #0e6b34"></span>
-                  <span style="font-size:9px;font-weight:700;color:#0e6b34">Très faible</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#006100"></span>
+                  <span style="font-size:9px;font-weight:700;color:#334155;margin-right:2px">Très faible</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#7aab00"></span>
+                  <span style="font-size:9px;font-weight:700;color:#334155;margin-right:2px">Faible</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#ffff00;border:1px solid #c9c900"></span>
+                  <span style="font-size:9px;font-weight:700;color:#334155;margin-right:2px">Modérée</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#ff9900"></span>
+                  <span style="font-size:9px;font-weight:700;color:#334155;margin-right:2px">Élevée</span>
+                  <span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#ff2200"></span>
+                  <span style="font-size:9px;font-weight:700;color:#334155">Très élevée</span>
                 </div>
               </div>
               <button class="tc-zoom" data-layer="Susceptibilité aux inondations" title="Centrer sur la couche Susceptibilité aux inondations" aria-label="Centrer sur la couche Susceptibilité aux inondations">⊙</button>
@@ -383,6 +383,9 @@
           </div>
           <div id="legend-resize-handle" title="Redimensionner"></div>
         </div>
+
+        <!-- Message pendant le téléchargement d'une couche chargée à la demande -->
+        <div id="layer-loading-msg" role="status" aria-live="polite">Chargement de la couche…</div>
 
         <!-- Bandeau permanent — rappel que la carte est informative -->
         <div id="map-disclaimer-banner">Carte informative, non réglementaire</div>

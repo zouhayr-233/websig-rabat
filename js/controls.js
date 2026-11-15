@@ -58,14 +58,20 @@ document.addEventListener('DOMContentLoaded', function () {
         updateLegend();
         return;
       }
+      var cardEl = this;
       function handler(ev) {
         if (ev.detail.name === name) {
           document.removeEventListener('layerReady', handler);
-          if (nowActive) toggleLayer(name, true);
+          /* État lu au moment où la couche arrive (l'utilisateur a pu
+             décocher pendant le téléchargement). */
+          toggleLayer(name, cardEl.classList.contains('active'));
           updateLegend();
         }
       }
       document.addEventListener('layerReady', handler);
+      /* Couches chargées à la demande (susceptibilité) : premier cochage */
+      if (nowActive && window.ensureLayerLoaded) window.ensureLayerLoaded(name);
+      updateLegend();
     });
   });
 
@@ -226,7 +232,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function onMove(e) {
       if (!dragging) return;
-      var newW = Math.max(120, Math.min(400, startW + e.clientX - startX));
+      /* Légende ancrée à droite : la poignée est dans le coin inférieur
+         gauche, tirer vers la gauche élargit l'encart. */
+      var newW = Math.max(120, Math.min(400, startW - (e.clientX - startX)));
       var newH = Math.max(40,  Math.min(window.innerHeight * 0.75, startH + e.clientY - startY));
       legend.style.width    = newW + 'px';
       content.style.maxHeight = newH + 'px';
@@ -463,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function () {
           lgPoly('#cffafe','#0e7490', true, 'Nappe côtière'),
         ]));
 
-      if (L === 'Susceptibilité aux inondations')
+      if (L === window.SUSC_KEY)
         sections.push(lgSusceptibilitySection());
     });
 
@@ -494,28 +502,16 @@ document.addEventListener('DOMContentLoaded', function () {
       + '</div>';
   }
 
-  /* ── Susceptibilité aux inondations — pastille + nom + superficie/% réels
-     (lus depuis flood_susceptibility.geojson, pas codés en dur) afin que le
-     sens ne repose pas uniquement sur la couleur. Réutilise la palette GTB
-     déjà définie dans layers.js (GTB_FILL / GTB_BORDER / GTB_LABEL). ── */
+  /* ── Susceptibilité aux inondations — cinq classes avec leurs seuils
+     (palette SUSC_CLASSES de layers.js, même source que la carte), puis la
+     mention sur la nature de l'indice. ── */
   function lgSusceptibilitySection() {
-    var order = ['very_high', 'high', 'moderate', 'low', 'very_low'];
-    var data = window.appData && window.appData.floodSusceptibility;
-    var rows = order.map(function (key) {
-      var area = 'n.d.', pct = 'n.d.';
-      if (data) {
-        var feat = data.features.find(function (f) {
-          return ((f.properties || {}).risk_code || '').toLowerCase() === key;
-        });
-        if (feat) {
-          area = (+feat.properties.area_km2).toLocaleString('fr-FR') + ' km²';
-          pct  = feat.properties.pct + ' %';
-        }
-      }
-      var label = window.GTB_LABEL[key] + ' — ' + area + ' (' + pct + ')';
-      return lgPoly(window.GTB_FILL[key], window.GTB_BORDER[key], false, label);
+    var rows = (window.SUSC_CLASSES || []).map(function (c) {
+      return lgPoly(c.couleur, c.couleur, false, c.libelle + ' (' + c.seuil + ')');
     });
-    return lgSection('🌊 Susceptibilité aux inondations (GTB)', rows);
+    rows.push('<p class="lg-note">Indice relatif issu d\'un modèle Gradient Tree '
+      + 'Boosting ; ce n\'est pas un zonage réglementaire.</p>');
+    return lgSection('🌊 ' + window.SUSC_KEY, rows);
   }
 
   /* ── Polygon symbol ── */
