@@ -53,7 +53,7 @@ du fichier `index.html` ne suffit pas).
 | Nappes souterraines | `data/aquifers.geojson` | Polygone | 12 systèmes (source : NAPPES.shp, ABHS et ABHBC), attributs `NOM_NAPPE`, `TYPE_NAPPE`, `AREA_KM2` |
 | Barrages & retenues | `data/dams_real.geojson` | Point | 11 ouvrages (source : Barrages.shp ; attributs `BARRAGE`, `OUED`, `Capacité_` en Mm³, `AGENCE`, `ANNEE`) |
 | Stations pluviométriques | `data/rain_stations_real.geojson` | Point | 5 stations |
-| Découpage administratif | `data/admin_boundaries_real.geojson` | Polygone | Limite de la région |
+| Découpage administratif | `data/admin_boundaries_real.geojson` | Polygone | Limite de la région (géométrie de `limite-de-région.shp`, la limite utilisée pour le modèle) |
 | Villes principales | (dans `js/layers.js`) | Point | 12 centres urbains |
 
 Classes de susceptibilité (indice p, probabilité estimée par le modèle) :
@@ -70,7 +70,7 @@ Total classé : 17 553 km² sur environ 17 576 km² (23 km² non classés : plan
 sans données). Ces superficies sont calculées sur le **raster classé** (grille de 3 secondes
 d'arc), pas sur les polygones : ceux-ci sont une version généralisée pour l'affichage
 (composantes de moins de 4 cellules rattachées à la classe voisine, simplification à environ
-50 m), dont la surface géométrique diffère légèrement.
+50 m, puis découpage sur la limite régionale), dont la surface géométrique diffère légèrement.
 
 ---
 

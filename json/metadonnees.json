@@ -100,12 +100,8 @@
       "nom": "Polarisation VV — carte des zones inondées"
     },
     {
-      "sigle": "Sentinel-2",
-      "nom": "NDWI — inventaire des zones inondées"
-    },
-    {
       "sigle": "Sentinel-2 niveau 2A",
-      "nom": "NDVI et NDWI"
+      "nom": "NDVI"
     },
     {
       "sigle": "MERIT Hydro v1.0.1",
