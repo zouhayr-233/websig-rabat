@@ -320,11 +320,19 @@ function renderAquiferChart(data) {
 
   var labels = [], areas = [];
   if (data && data.aquifers) {
+    /* Superficie vide = donnée manquante (null, pas de barre, « n.d. »),
+       jamais 0. AREA_NAPPE_ENTIERE_KM2 n'est volontairement pas utilisé. */
     var pairs = data.aquifers.features.map(function (f) {
       var p = f.properties || {};
-      return { name: p.NOM_NAPPE || p.Nom_Nappe || '?', km2: +p.AREA_KM2 || 0 };
-    }).sort(function (a, b) { return b.km2 - a.km2; });
-    labels = pairs.map(function (p) { return p.name; });
+      var v = p.AREA_KM2;
+      var km2 = (v === null || v === undefined || v === '' || isNaN(+v)) ? null : +v;
+      return { name: p.NOM_NAPPE || p.Nom_Nappe || '?', km2: km2 };
+    }).sort(function (a, b) {
+      if (a.km2 === null) return (b.km2 === null) ? 0 : 1;
+      if (b.km2 === null) return -1;
+      return b.km2 - a.km2;
+    });
+    labels = pairs.map(function (p) { return p.km2 === null ? p.name + ' (n.d.)' : p.name; });
     areas  = pairs.map(function (p) { return p.km2; });
   }
 
@@ -349,7 +357,9 @@ function renderAquiferChart(data) {
       responsive: true, maintainAspectRatio: false, indexAxis: 'y',
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: function (c) { return '  ' + c.parsed.x.toLocaleString('fr-FR') + ' km²'; } } }
+        tooltip: { callbacks: { label: function (c) {
+          return (c.raw === null) ? '  Donnée manquante' : '  ' + _fmtInt(Math.round(c.parsed.x * 100) / 100) + ' km²';
+        } } }
       },
       scales: {
         x: { ticks: { color: '#64748b', font: { size: 10 }, callback: function (v) { return v.toLocaleString('fr-FR') + ' km²'; } },
