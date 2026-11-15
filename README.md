@@ -51,7 +51,7 @@ du fichier `index.html` ne suffit pas).
 | Bassins & sous-bassins versants | `data/watersheds_real.geojson` | Polygone | Sous-bassins (ABHS) |
 | Réseau hydrographique — oueds | `data/rivers_real.geojson` | Ligne | Hiérarchie en 4 niveaux (rang ABHS) |
 | Nappes souterraines | `data/aquifers.geojson` | Polygone | 12 systèmes (source : NAPPES.shp, ABHS et ABHBC), attributs `NOM_NAPPE`, `TYPE_NAPPE`, `AREA_KM2` |
-| Barrages & retenues | `data/dams_real.geojson` | Point | 10 ouvrages cartographiés (attributs `BARRAGE`, `OUED`, `Capacité_` en Mm³, `AGENCE`, `ANNEE`) |
+| Barrages & retenues | `data/dams_real.geojson` | Point | 11 ouvrages (source : Barrages.shp ; attributs `BARRAGE`, `OUED`, `Capacité_` en Mm³, `AGENCE`, `ANNEE`) |
 | Stations pluviométriques | `data/rain_stations_real.geojson` | Point | 5 stations |
 | Découpage administratif | `data/admin_boundaries_real.geojson` | Polygone | Limite de la région |
 | Villes principales | (dans `js/layers.js`) | Point | 12 centres urbains |

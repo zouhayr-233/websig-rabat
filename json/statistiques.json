@@ -70,7 +70,7 @@
   },
   "barrages": {
     "_source": "Rapport de PFE ; Oued El Makhazine est un ouvrage voisin de la région (ABH Loukkos)",
-    "_note": "Koudiat Bourna figure ici mais pas dans data/dams_real.geojson : ses coordonnées ne sont pas disponibles dans le dépôt.",
+    "_note": "Koudiat Bourna : coordonnées, oued et statut (« Projeté ») issus de Barrages.shp ; capacité de 20 Mm³ reprise du rapport (le shapefile indique 17 Mm³).",
     "ouvrages": [
       {
         "nom": "Ouljet Es Soltane",
