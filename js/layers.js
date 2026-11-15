@@ -482,19 +482,83 @@ function loadFloodSusceptibility(data) {
       return { fillColor: col, fillOpacity: SUSC_FILL_OPACITY, color: col, weight: 0.5, opacity: SUSC_FILL_OPACITY };
     },
     onEachFeature: function(feat, l) {
-      const p = feat.properties || {};
-      const c = suscClass(p.classe);
-      const lib = p.libelle || (c ? c.libelle : 'n.d.');
-      l.bindPopup('<div class="popup-content popup-susc">'
-        + '<span class="popup-susc-swatch" style="background:' + (c ? c.couleur : '#999') + '"></span>'
-        + 'Susceptibilité : <b>' + lib + '</b> (classe ' + p.classe + '/5)'
-        + '</div>', { maxWidth: 300 });
+      l.bindPopup(suscPopupHtml(feat.properties || {}), { maxWidth: 300 });
     }
   });
   window.overlayLayers[SUSC_KEY] = lyr;
   if (window.map && isCardActive(SUSC_KEY)) lyr.addTo(window.map);
   notifyLayerReady(SUSC_KEY);
 }
+
+/* Le canvas est sous l'overlayPane (SVG) pour garder oueds et limites
+   au-dessus du remplissage. Or le polygone de la région (remplissage
+   transparent mais « peint ») capte les clics avant le canvas. Quand le clic
+   tombe sur la limite régionale ou sur la carte nue, on cherche donc la
+   classe sous le point (test point-dans-polygone, boîtes englobantes
+   pré-calculées) et on ouvre la popup de susceptibilité. Les popups des
+   autres couches (bassins, nappes, oueds, points) restent prioritaires. */
+var _suscIndex = null;
+function suscBuildIndex(data) {
+  var rings = [];
+  data.features.forEach(function (f) {
+    var g = f.geometry; if (!g) return;
+    var polys = g.type === 'Polygon' ? [g.coordinates] : (g.type === 'MultiPolygon' ? g.coordinates : []);
+    polys.forEach(function (poly) {
+      var outer = poly[0], minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (var i = 0; i < outer.length; i++) {
+        var x = outer[i][0], y = outer[i][1];
+        if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y;
+      }
+      rings.push({ props: f.properties || {}, poly: poly, bb: [minX, minY, maxX, maxY] });
+    });
+  });
+  return rings;
+}
+function _inRing(x, y, ring) {
+  var inside = false;
+  for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+function suscPropsAt(latlng) {
+  var data = window.appData.floodSusceptibility;
+  if (!data) return null;
+  if (!_suscIndex) _suscIndex = suscBuildIndex(data);
+  var x = latlng.lng, y = latlng.lat;
+  for (var k = 0; k < _suscIndex.length; k++) {
+    var r = _suscIndex[k], b = r.bb;
+    if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue;
+    if (!_inRing(x, y, r.poly[0])) continue;
+    var inHole = false;
+    for (var h = 1; h < r.poly.length; h++) if (_inRing(x, y, r.poly[h])) { inHole = true; break; }
+    if (!inHole) return r.props;
+  }
+  return null;
+}
+function suscPopupHtml(p) {
+  var c = suscClass(p.classe);
+  return '<div class="popup-content popup-susc">'
+    + '<span class="popup-susc-swatch" style="background:' + (c ? c.couleur : '#999') + '"></span>'
+    + 'Susceptibilité : <b>' + (p.libelle || (c ? c.libelle : 'n.d.')) + '</b> (classe ' + p.classe + '/5)'
+    + '</div>';
+}
+function suscClickFallback(e) {
+  var lyr = window.overlayLayers[SUSC_KEY];
+  if (!lyr || !window.map.hasLayer(lyr)) return;
+  var p = suscPropsAt(e.latlng);
+  /* Remplace la popup de la région ouverte par le même clic */
+  if (p) L.popup({ maxWidth: 300 }).setLatLng(e.latlng).setContent(suscPopupHtml(p)).openOn(window.map);
+}
+/* Clic sur la carte nue (Leaflet ne remonte pas les clics de polygones
+   SVG jusqu'à la carte) et clic sur le polygone de la région. */
+if (window.map) window.map.on('click', suscClickFallback);
+document.addEventListener('layerReady', function (ev) {
+  if (ev.detail.name !== 'Limites administratives') return;
+  var admin = window.overlayLayers['Limites administratives'];
+  if (admin) admin.on('click', suscClickFallback);
+});
 
 /* Chargement à la demande (premier cochage) : fichier de ~5,9 Mo. */
 var _suscLoading = null;

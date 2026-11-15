@@ -72,7 +72,9 @@ function loadStatistiques() {
   return _statsPromise;
 }
 
-function _fmtInt(v) { return (v == null) ? 'n.d.' : (+v).toLocaleString('fr-FR'); }
+/* Espace insécable normale (U+00A0) : l'espace fine (U+202F) produite par
+   toLocaleString est presque invisible avec la police du tableau de bord. */
+function _fmtInt(v) { return (v == null) ? 'n.d.' : (+v).toLocaleString('fr-FR').replace(/\u202f/g, '\u00a0'); }
 function _fmtPct(v) {
   return (v == null) ? 'n.d.' : (+v).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' %';
 }
