@@ -161,17 +161,6 @@ function classifyOued(feat) {
   return 'minor';
 }
 
-/* ── Level fill bar ──────────────────────────────── */
-function levelBar(pct) {
-  const c = pct > 70 ? '#1976d2' : pct > 40 ? '#e65100' : '#c62828';
-  return '<div class="popup-level-bar">'
-       + '<div class="popup-level-bar-label"><span>Remplissage actuel</span>'
-       + '<span style="color:' + c + ';font-weight:700">' + pct + '%</span></div>'
-       + '<div class="popup-level-bar-track">'
-       + '<div class="popup-level-bar-fill" style="width:' + pct + '%;background:' + c + '"></div>'
-       + '</div></div>';
-}
-
 /* ── Popup header helper ─────────────────────────── */
 function popupHeader(color, icon, title) {
   return '<div class="popup-hd" style="background:' + color + '">'
@@ -353,7 +342,7 @@ function loadRivers(data) {
 
 /* ══════════════════════════════════════════════════
    3. BARRAGES — professional symbols + rich popups
-   Fields: BARRAGE, OUED, Capacité_, ANNEE, current_level
+   Fields: BARRAGE, OUED, Capacité_ (Mm³), AGENCE, ANNEE
    ══════════════════════════════════════════════════ */
 function loadDams(data) {
   window.appData.dams = data;
@@ -364,17 +353,17 @@ function loadDams(data) {
     onEachFeature: function(feat, l) {
       const p    = feat.properties || {};
       const name = p.BARRAGE || p.name || 'Barrage';
-      const cap  = p['Capacit\xe9_'] || p.Capacite_ || p['Capacité_'] || '—';
-      const pct  = p.current_level || 75;
+      const cap  = p['Capacité_'] != null ? (+p['Capacité_']).toLocaleString('fr-FR') + ' Mm³' : 'n.d.';
+      /* Pas de taux de remplissage : aucune donnée de niveau dans la couche
+         (l'ancienne barre affichait une valeur fictive de 75 %). */
       l.bindPopup('<div class="popup-content">'
         + popupHeader('#0d47a1', '🏗️', name)
         + '<table>'
-        + '<tr><td>Oued</td><td><b>' + (p.OUED || '—') + '</b></td></tr>'
-        + '<tr><td>Capacité totale</td><td>' + cap + ' Mm³</td></tr>'
-        + '<tr><td>Mise en service</td><td>' + (p.ANNEE || '—') + '</td></tr>'
-        + '<tr><td>Statut</td><td><span class="status-badge operational">● Opérationnel</span></td></tr>'
+        + '<tr><td>Oued</td><td><b>' + (p.OUED || 'n.d.') + '</b></td></tr>'
+        + '<tr><td>Capacité totale</td><td>' + cap + '</td></tr>'
+        + '<tr><td>Agence</td><td>' + (p.AGENCE || 'n.d.') + '</td></tr>'
+        + '<tr><td>Mise en service</td><td>' + (p.ANNEE || 'n.d.') + '</td></tr>'
         + '</table>'
-        + levelBar(pct)
         + '</div>', { maxWidth: 320 });
       l.bindTooltip(name, {
         permanent: false, direction: 'top', offset: [0, -20],

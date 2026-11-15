@@ -32,11 +32,11 @@ document.addEventListener('DOMContentLoaded', function () {
   loadStatistiques().then(function (stats) {
     renderStatCards(stats);
     renderRiskPie(stats);
+    renderDamChart(stats);
   });
 
   /* Wait for GeoJSON layers to finish loading */
   document.addEventListener('appDataReady', function () {
-    renderDamChart(window.appData);
     renderWatershedChart(window.appData);
     renderAquiferChart(window.appData);
     renderMonthlyRain(window.appData);
@@ -46,7 +46,6 @@ document.addEventListener('DOMContentLoaded', function () {
   /* Safety fallback: render with static values if data never arrives */
   setTimeout(function () {
     if (!window.appData || !window.appData.dams) {
-      renderDamChart(null);
       renderWatershedChart(null);
       renderAquiferChart(null);
       renderMonthlyRain(null);
@@ -54,12 +53,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }, 7000);
 });
-
-/* ── Helper: Dam capacity field name varies ─────── */
-function _damCap(props) {
-  for (var k in props) { if (k.toLowerCase().includes('apacit')) return +props[k] || 0; }
-  return 0;
-}
 
 /* ── Geo area helper (degrees² → km²) ──────────── */
 var _KM2_PER_DEG2 = 111.1 * 111.1 * Math.cos(34 * Math.PI / 180); /* ≈ 10 229 km²/deg² at lat 34° */
@@ -183,49 +176,51 @@ function renderRiskPie(stats) {
     plugins: [endLabelPlugin]
   });
 }
-function renderDamChart(data) {
+/* ══════════════════════════════════════════════════
+   2. BARRES — Capacité des barrages par agence de bassin (Mm³)
+   Liste de référence des onze ouvrages du rapport (json/statistiques.json),
+   y compris Koudiat Bourna qui n'est pas encore cartographié.
+   ══════════════════════════════════════════════════ */
+function renderDamChart(stats) {
   var ctx = document.getElementById('damLevelChart');
   if (!ctx) return;
 
-  var MAJOR = [
-    { name: 'O. El Makhazine', cap: 773 },
-    { name: 'Ouljet Es Soltane', cap: 510 },
-    { name: 'El Kansera',       cap: 266 },
-    { name: 'Sidi Yahya',       cap: 11  },
-    { name: 'Rouidat Amont',    cap: 3   }
-  ];
-
-  if (data && data.dams) {
-    var pairs = data.dams.features.map(function (f) {
-      return { name: f.properties.BARRAGE || '?', cap: _damCap(f.properties) };
-    }).sort(function (a, b) { return b.cap - a.cap; });
-    MAJOR = pairs.slice(0, 5);
+  var b = stats && stats.barrages;
+  var ouvrages = (b && Array.isArray(b.ouvrages)) ? b.ouvrages : [];
+  if (!ouvrages.length) {
+    ctx.replaceWith(Object.assign(document.createElement('p'), {
+      className: 'legend-empty', textContent: 'Données indisponibles (n.d.) — json/statistiques.json'
+    }));
+    return;
   }
 
-  var names = MAJOR.map(function (d) { return d.name; });
-  var caps  = MAJOR.map(function (d) { return d.cap; });
-  var blues = ['#1e40af','#2563eb','#3b82f6','#60a5fa','#93c5fd'];
+  /* Somme par agence, dans l'ordre de la liste des agences */
+  var order = (b.agences || []).map(function (a) { return a.sigle; });
+  var totals = {};
+  ouvrages.forEach(function (o) {
+    if (order.indexOf(o.agence) === -1) order.push(o.agence);
+    totals[o.agence] = (totals[o.agence] || 0) + (+o.capacite_mm3 || 0);
+  });
+  var counts = {};
+  ouvrages.forEach(function (o) { counts[o.agence] = (counts[o.agence] || 0) + 1; });
+  var names = order;
+  var caps  = order.map(function (a) { return totals[a]; });
+  var blues = ['#1e40af', '#3b82f6', '#93c5fd'];
 
   /* Inline plugin: draw capacity values at the end of each bar */
   var barLabelPlugin = {
     id: 'barLabels',
     afterDatasetsDraw: function (chart) {
-      var ctx = chart.ctx;
+      var c = chart.ctx;
       var meta = chart.getDatasetMeta(0);
-      var dataset = chart.data.datasets[0];
       meta.data.forEach(function (bar, i) {
-        var val = dataset.data[i];
-        if (!val) return;
-        var lbl = val >= 1 ? Math.round(val).toLocaleString('fr-FR') + ' Mm³' : val.toFixed(1) + ' Mm³';
-        ctx.save();
-        ctx.font = 'bold 9px "Source Sans Pro",sans-serif';
-        ctx.textBaseline = 'middle';
-        /* place label right of bar tip; if bar is too short, still show after */
-        var xPos = Math.max(bar.x, chart.chartArea.left) + 5;
-        ctx.fillStyle = '#334155';
-        ctx.textAlign = 'left';
-        ctx.fillText(lbl, xPos, bar.y);
-        ctx.restore();
+        c.save();
+        c.font = 'bold 10px "Source Sans Pro",sans-serif';
+        c.textBaseline = 'middle';
+        c.textAlign = 'left';
+        c.fillStyle = '#334155';
+        c.fillText(_fmtInt(caps[i]) + ' Mm³', Math.max(bar.x, chart.chartArea.left) + 5, bar.y);
+        c.restore();
       });
     }
   };
@@ -234,34 +229,22 @@ function renderDamChart(data) {
     type: 'bar',
     data: {
       labels: names,
-      datasets: [{
-        label: 'Capacité (Mm³)',
-        data: caps,
-        backgroundColor: blues,
-        borderWidth: 0,
-        borderRadius: 6,
-        borderSkipped: false
-      }]
+      datasets: [{ label: 'Capacité (Mm³)', data: caps, backgroundColor: blues, borderWidth: 0, borderRadius: 6, borderSkipped: false }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-      layout: { padding: { right: 60 } },
+      layout: { padding: { right: 70 } },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: function (c) { return '  ' + c.parsed.x.toLocaleString('fr-FR') + ' Mm³'; } }}
+        tooltip: { callbacks: { label: function (c) {
+          var a = names[c.dataIndex];
+          return '  ' + _fmtInt(c.parsed.x) + ' Mm³ (' + counts[a] + ' ouvrage' + (counts[a] > 1 ? 's' : '') + ')';
+        }}}
       },
       scales: {
-        x: {
-          ticks: { color: '#64748b', font: { size: 10 },
-                   callback: function (v) { return v + ' Mm³'; } },
-          grid: { color: 'rgba(100,116,139,0.1)' },
-          border: { display: false }
-        },
-        y: {
-          ticks: { color: '#334155', font: { size: 10, weight: '600' } },
-          grid: { display: false },
-          border: { display: false }
-        }
+        x: { ticks: { color: '#64748b', font: { size: 10 }, callback: function (v) { return _fmtInt(v) + ' Mm³'; } },
+             grid: { color: 'rgba(100,116,139,0.1)' }, border: { display: false } },
+        y: { ticks: { color: '#334155', font: { size: 11, weight: '600' } }, grid: { display: false }, border: { display: false } }
       }
     },
     plugins: [barLabelPlugin]
