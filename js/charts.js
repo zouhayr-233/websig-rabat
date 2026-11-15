@@ -345,7 +345,7 @@ function renderAquiferChart(data) {
     return;
   }
 
-  var greens = ['#084c8d','#0d5b9e','#0c6e84','#0b6b50','#3d6b10','#3a3daa','#6a2090'];
+  var greens = ['#084c8d','#0d5b9e','#0c6e84','#0b6b50','#3d6b10','#3a3daa','#6a2090','#155e75','#3730a3','#047857','#92400e','#9d174d'];
 
   new Chart(ctx, {
     type: 'bar',

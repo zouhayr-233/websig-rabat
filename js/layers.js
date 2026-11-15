@@ -637,6 +637,11 @@ function loadAquifers(data) {
     { fill: '#d4e8c2', border: '#3d6b10' },  /* vert pâle          — Bouagba      */
     { fill: '#dce0fa', border: '#3a3daa' },  /* bleu-lavande       — Khmissat     */
     { fill: '#e8d8f5', border: '#6a2090' },  /* mauve              — Fès-Meknès   */
+    { fill: '#d6eef2', border: '#155e75' },  /* bleu canard        — Es Shoul     */
+    { fill: '#e0e7ff', border: '#3730a3' },  /* indigo pâle        — Temara       */
+    { fill: '#d1fae5', border: '#047857' },  /* vert d'eau         — Tanoubart    */
+    { fill: '#fef3c7', border: '#92400e' },  /* sable              — R'mel        */
+    { fill: '#fce7f3', border: '#9d174d' },  /* rose atténué       — Oulad Ougbane*/
   ];
   const aqMap = {};
   data.features.forEach(function(f, idx) {
