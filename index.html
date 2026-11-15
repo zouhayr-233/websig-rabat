@@ -277,15 +277,15 @@
               <button class="tc-zoom" data-layer="Stations pluviométriques" title="Centrer">⊙</button>
             </div>
 
-            <!-- ── Carte 6 : Susceptibilité aux Inondations (GTB) ── -->
+            <!-- ── Carte 6 : Susceptibilité aux inondations (modèle GTB) ── -->
             <div class="tc-group-label">🌊 Susceptibilité aux inondations</div>
 
-            <div class="thematic-card active" data-layer="Susceptibilité aux inondations">
+            <div class="thematic-card active" data-layer="Susceptibilité aux inondations (modèle GTB)">
               <div class="tc-bar" style="height:5px;background:linear-gradient(90deg,#006100 0%,#7aab00 25%,#ffff00 50%,#ff9900 75%,#ff2200 100%)"></div>
               <div class="tc-body" style="padding:7px 32px 7px 10px">
                 <div class="tc-head" style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
                   <span style="font-size:14px;flex-shrink:0">🌊</span>
-                  <span class="tc-name">Susceptibilité aux inondations</span>
+                  <span class="tc-name">Susceptibilité aux inondations (modèle GTB)</span>
                   <span class="tc-status"></span>
                 </div>
                 <div style="font-size:9px;color:#64748b;margin-bottom:4px">Indice p du modèle Gradient Tree Boosting — 5 classes</div>
@@ -302,7 +302,7 @@
                   <span style="font-size:9px;font-weight:700;color:#334155">Très élevée</span>
                 </div>
               </div>
-              <button class="tc-zoom" data-layer="Susceptibilité aux inondations" title="Centrer sur la couche Susceptibilité aux inondations" aria-label="Centrer sur la couche Susceptibilité aux inondations">⊙</button>
+              <button class="tc-zoom" data-layer="Susceptibilité aux inondations (modèle GTB)" title="Centrer sur la couche Susceptibilité aux inondations (modèle GTB)" aria-label="Centrer sur la couche Susceptibilité aux inondations (modèle GTB)">⊙</button>
             </div>
 
             <!-- ── Carte 7 : Découpage Administratif ── -->
@@ -426,10 +426,10 @@
             </div>
 
             <div class="chart-block">
-              <h3 class="chart-title">Superficie par classe de susceptibilité aux inondations (km²)</h3>
+              <h3 class="chart-title">Susceptibilité aux inondations (modèle GTB) — superficie par classe (km²)</h3>
               <p class="risk-summary" id="risk-summary">Chargement…</p>
               <div class="chart-wrap tall">
-                <canvas id="riskBarChart" role="img" aria-label="Diagramme en barres de la distribution des surfaces par classe de susceptibilité aux inondations, en kilomètres carrés et en pourcentage."></canvas>
+                <canvas id="riskBarChart" role="img" aria-label="Diagramme en barres de la couche Susceptibilité aux inondations (modèle GTB) : superficie par classe, en kilomètres carrés et en pourcentage."></canvas>
               </div>
               <div class="risk-legend-inline" id="risk-legend-inline"></div>
             </div>

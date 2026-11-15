@@ -435,7 +435,7 @@ function loadStations(data) {
    d'un calcul sur ces polygones.
    ══════════════════════════════════════════════════ */
 
-var SUSC_KEY   = 'Susceptibilité aux inondations';
+var SUSC_KEY   = 'Susceptibilité aux inondations (modèle GTB)';
 var SUSC_FILE  = 'flood_susceptibility.geojson';
 var SUSC_FILE_VERSION = '20261115';
 /* Classes, seuils et couleurs : identiques à la carte du rapport */
@@ -700,7 +700,7 @@ var LAYER_LABELS = {
   'admin_boundaries_real.geojson': 'Limites administratives',
   'aquifers.geojson':              'Nappes souterraines',
   'rain_stations_real.geojson':    'Stations pluviométriques',
-  'flood_susceptibility.geojson':  'Susceptibilité aux inondations'
+  'flood_susceptibility.geojson':  'Susceptibilité aux inondations (modèle GTB)'
 };
 
 function showDataErrorBanner(failedFiles) {
