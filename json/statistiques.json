@@ -1,0 +1,71 @@
+{
+  "titre": "Statistiques du tableau de bord — WebSIG RSK",
+  "mise_a_jour": "2026-11",
+  "indicateurs": {
+    "_source": "Rapport de PFE (chapitres 3 et 4), valeurs de référence",
+    "barrages": 11,
+    "capacite_totale_mm3": 1567,
+    "reseau_hydrographique_km": 1339,
+    "stations_pluviometriques": 5
+  },
+  "susceptibilite": {
+    "titre": "Susceptibilité aux inondations (modèle GTB)",
+    "source": "Susceptibilite_GTB_classes.tif (raster classé final, grille 3 secondes d'arc, EPSG:4326)",
+    "region_km2": 17576,
+    "classe_km2": 17553,
+    "non_classe_km2": 23,
+    "classes": [
+      {
+        "classe": 1,
+        "libelle": "Très faible",
+        "seuil_min": null,
+        "seuil_max": 0.2,
+        "couleur": "#006100",
+        "superficie_km2": 13870,
+        "part_pct": 79.0
+      },
+      {
+        "classe": 2,
+        "libelle": "Faible",
+        "seuil_min": 0.2,
+        "seuil_max": 0.4,
+        "couleur": "#7aab00",
+        "superficie_km2": 1524,
+        "part_pct": 8.7
+      },
+      {
+        "classe": 3,
+        "libelle": "Modérée",
+        "seuil_min": 0.4,
+        "seuil_max": 0.6,
+        "couleur": "#ffff00",
+        "superficie_km2": 940,
+        "part_pct": 5.4
+      },
+      {
+        "classe": 4,
+        "libelle": "Élevée",
+        "seuil_min": 0.6,
+        "seuil_max": 0.8,
+        "couleur": "#ff9900",
+        "superficie_km2": 682,
+        "part_pct": 3.9
+      },
+      {
+        "classe": 5,
+        "libelle": "Très élevée",
+        "seuil_min": 0.8,
+        "seuil_max": null,
+        "couleur": "#ff2200",
+        "superficie_km2": 537,
+        "part_pct": 3.1
+      }
+    ],
+    "elevee_ou_tres_elevee": {
+      "superficie_km2": 1219,
+      "part_pct": 6.9
+    },
+    "convention_superficie": "Chaque cellule vaut (0,000833333° x 111,32 x cos(latitude)) km par (0,000833333° x 110,57) km, soit environ 0,0071 km². C'est la convention qui reproduit les superficies du rapport.",
+    "_note": "Superficies calculées sur le raster classé (import/stats_susceptibilite.json), pas sur les polygones généralisés de data/flood_susceptibility.geojson."
+  }
+}

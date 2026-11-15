@@ -28,9 +28,14 @@ document.addEventListener('DOMContentLoaded', function () {
   /* Annual rain chart: fetch real data from precip_report.json */
   renderAnnualRain();
 
+  /* Statistiques de référence (rapport) : indépendantes des couches */
+  loadStatistiques().then(function (stats) {
+    renderStatCards(stats);
+    renderRiskPie(stats);
+  });
+
   /* Wait for GeoJSON layers to finish loading */
   document.addEventListener('appDataReady', function () {
-    renderRiskPie(window.appData);
     renderDamChart(window.appData);
     renderWatershedChart(window.appData);
     renderAquiferChart(window.appData);
@@ -41,7 +46,6 @@ document.addEventListener('DOMContentLoaded', function () {
   /* Safety fallback: render with static values if data never arrives */
   setTimeout(function () {
     if (!window.appData || !window.appData.dams) {
-      renderRiskPie(null);
       renderDamChart(null);
       renderWatershedChart(null);
       renderAquiferChart(null);
@@ -61,40 +65,78 @@ function _damCap(props) {
 var _KM2_PER_DEG2 = 111.1 * 111.1 * Math.cos(34 * Math.PI / 180); /* ≈ 10 229 km²/deg² at lat 34° */
 
 /* ══════════════════════════════════════════════════
-   1. HORIZONTAL BAR — Flood susceptibility distribution (GTB)
-   A donut hides small/unbalanced classes; a bar chart with an
-   always-visible end label keeps every class readable regardless of
-   how skewed the areas are.
+   STATISTIQUES DE RÉFÉRENCE — json/statistiques.json
+   Chiffres du rapport (superficies calculées sur le raster classé,
+   indicateurs synthétiques). Rien n'est recalculé dans le navigateur.
    ══════════════════════════════════════════════════ */
-function renderRiskPie(data) {
+var _statsPromise = null;
+function loadStatistiques() {
+  if (!_statsPromise) {
+    _statsPromise = fetch('json/statistiques.json?v=20261115')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function (e) { console.warn('[charts] statistiques.json:', e.message); return null; });
+  }
+  return _statsPromise;
+}
+
+function _fmtInt(v) { return (v == null) ? 'n.d.' : (+v).toLocaleString('fr-FR'); }
+function _fmtPct(v) {
+  return (v == null) ? 'n.d.' : (+v).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' %';
+}
+
+/* Indicateurs synthétiques en haut de l'onglet */
+function renderStatCards(stats) {
+  var ind = (stats && stats.indicateurs) || {};
+  var map = {
+    'stat-dams':     ind.barrages,
+    'stat-capacity': ind.capacite_totale_mm3,
+    'stat-rivers':   ind.reseau_hydrographique_km,
+    'stat-stations': ind.stations_pluviometriques
+  };
+  Object.keys(map).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = _fmtInt(map[id]);
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   1. HORIZONTAL BAR — Susceptibilité aux inondations (modèle GTB)
+   Ordre : très faible (en haut) vers très élevée, couleurs des classes
+   de la carte. Libellé de fin de barre toujours visible, même pour les
+   petites classes.
+   ══════════════════════════════════════════════════ */
+function renderRiskPie(stats) {
   var ctx = document.getElementById('riskBarChart');
   if (!ctx) return;
 
-  var labels = ['Très élevé', 'Élevé', 'Modéré', 'Faible', 'Très faible'];
-  var colors = ['#d73027', '#fc8d59', '#fee08b', '#91cf60', '#1a9850'];
-  var areas  = [825, 191, 167, 188, 16295]; /* GTB result — updated dynamically */
-  var pcts   = [4.67, 1.08, 0.95, 1.06, 92.24];
-
-  if (data && data.floodSusceptibility) {
-    var totals = { very_high: 0, high: 0, moderate: 0, low: 0, very_low: 0 };
-    var pctByCode = { very_high: 0, high: 0, moderate: 0, low: 0, very_low: 0 };
-    data.floodSusceptibility.features.forEach(function (f) {
-      var code = (f.properties.risk_code || '').toLowerCase();
-      var area = +f.properties.area_km2 || 0;
-      var pct = +f.properties.pct || 0;
-      if (code in totals) { totals[code] += area; pctByCode[code] = pct; }
-    });
-    areas = [Math.round(totals.very_high), Math.round(totals.high), Math.round(totals.moderate), Math.round(totals.low), Math.round(totals.very_low)];
-    pcts  = [pctByCode.very_high, pctByCode.high, pctByCode.moderate, pctByCode.low, pctByCode.very_low];
+  var susc = stats && stats.susceptibilite;
+  var classes = (susc && Array.isArray(susc.classes)) ? susc.classes.slice().sort(function (a, b) { return a.classe - b.classe; }) : [];
+  if (!classes.length) {
+    ctx.replaceWith(Object.assign(document.createElement('p'), {
+      className: 'legend-empty', textContent: 'Données indisponibles (n.d.) — json/statistiques.json'
+    }));
+    return;
   }
 
-  /* Update inline legend */
+  var labels = classes.map(function (c) { return c.libelle; });
+  var colors = classes.map(function (c) { return c.couleur; });
+  var areas  = classes.map(function (c) { return c.superficie_km2; });
+  var pcts   = classes.map(function (c) { return c.part_pct; });
+
+  /* Légende sous le graphique + phrase de synthèse */
   var rl = document.getElementById('risk-legend-inline');
   if (rl) {
-    rl.innerHTML = labels.map(function(lbl, i) {
-      return '<span class="risk-dot" style="background:' + colors[i] + '"></span> '
-        + lbl + ' : ' + areas[i].toLocaleString('fr-FR') + ' km² (' + pcts[i] + '%)';
-    }).join('&ensp;');
+    rl.innerHTML = classes.map(function (c) {
+      return '<span class="risk-item"><span class="risk-dot" style="background:' + c.couleur + '"></span> '
+        + c.libelle + ' : ' + _fmtInt(c.superficie_km2) + ' km² (' + _fmtPct(c.part_pct) + ')</span>';
+    }).join(' ')
+      + '<span class="risk-item">Total classé : ' + _fmtInt(susc.classe_km2) + ' km²</span>';
+  }
+  var hi = susc.elevee_ou_tres_elevee || {};
+  var sent = document.getElementById('risk-summary');
+  if (sent) {
+    sent.textContent = 'Susceptibilité élevée ou très élevée : ' + _fmtInt(hi.superficie_km2)
+      + ' km², soit ' + _fmtPct(hi.part_pct) + ' de la région.';
   }
 
   var endLabelPlugin = {
@@ -103,7 +145,7 @@ function renderRiskPie(data) {
       var c = chart.ctx;
       var meta = chart.getDatasetMeta(0);
       meta.data.forEach(function (bar, i) {
-        var lbl = areas[i].toLocaleString('fr-FR') + ' km² (' + pcts[i] + '%)';
+        var lbl = _fmtInt(areas[i]) + ' km² (' + _fmtPct(pcts[i]) + ')';
         c.save();
         c.font = 'bold 11px "Source Sans Pro",sans-serif';
         c.textBaseline = 'middle';
@@ -123,11 +165,11 @@ function renderRiskPie(data) {
     },
     options: {
       responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-      layout: { padding: { right: 80 } },
+      layout: { padding: { right: 118 } },
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: { label: function (c) {
-          return ' ' + c.label + ' : ' + c.parsed.x.toLocaleString('fr-FR') + ' km² (' + pcts[c.dataIndex] + '%)';
+          return ' ' + c.label + ' : ' + _fmtInt(c.parsed.x) + ' km² (' + _fmtPct(pcts[c.dataIndex]) + ')';
         }}}
       },
       scales: {

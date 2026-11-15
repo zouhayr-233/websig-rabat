@@ -744,7 +744,8 @@ async function loadAllLayers() {
 
   loadCities();
   console.log('[layers] done. Keys:', Object.keys(window.overlayLayers));
-  updateStatCards();
+  /* Indicateurs synthétiques : json/statistiques.json (charts.js), plus
+     calculés depuis les couches. */
   document.dispatchEvent(new CustomEvent('appDataReady'));
 
   /* ── Z-order fix: flood zones drawn last so they cover rivers.
@@ -759,66 +760,6 @@ async function loadAllLayers() {
   }, 400);
 
   hideSpinnerNow();
-}
-
-function getDamCapacity(props) {
-  for (var k in props) { if (k.toLowerCase().includes('apacit')) return +props[k] || 0; }
-  return 0;
-}
-
-/* Haversine great-circle length (km) of a Line/MultiLineString geometry */
-function haversineKm(lat1, lon1, lat2, lon2) {
-  var R = 6371;
-  var dLat = (lat2 - lat1) * Math.PI / 180;
-  var dLon = (lon2 - lon1) * Math.PI / 180;
-  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-          Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-function lineStringLengthKm(coords) {
-  var km = 0;
-  for (var i = 1; i < coords.length; i++) {
-    km += haversineKm(coords[i-1][1], coords[i-1][0], coords[i][1], coords[i][0]);
-  }
-  return km;
-}
-function geometryLengthKm(geom) {
-  if (!geom) return 0;
-  if (geom.type === 'LineString') return lineStringLengthKm(geom.coordinates);
-  if (geom.type === 'MultiLineString') {
-    return geom.coordinates.reduce(function(s, line) { return s + lineStringLengthKm(line); }, 0);
-  }
-  return 0;
-}
-
-function updateStatCards() {
-  var d = window.appData;
-
-  if (d.dams) {
-    var feats = d.dams.features;
-    var totalCap = feats.reduce(function(s, f) { return s + getDamCapacity(f.properties); }, 0);
-    var elD = document.getElementById('stat-dams');
-    var elC = document.getElementById('stat-capacity');
-    if (elD) elD.textContent = feats.length;
-    if (elC) elC.textContent = Math.round(totalCap).toLocaleString('fr-FR');
-  }
-
-  if (d.rivers) {
-    /* Haversine length (km) — rivers_real.geojson has no Shape_Leng field
-       (that was an OUEDS.shp-only attribute), so the previous
-       Shape_Leng*111 computation silently summed to 0 for every feature. */
-    var totalKm = d.rivers.features.reduce(function(s, f) {
-      return s + geometryLengthKm(f.geometry);
-    }, 0);
-    var elR = document.getElementById('stat-rivers');
-    if (elR) elR.textContent = Math.round(totalKm).toLocaleString('fr-FR');
-  }
-
-  if (d.stations) {
-    var elS = document.getElementById('stat-stations');
-    if (elS) elS.textContent = d.stations.features.length;
-  }
 }
 
 loadAllLayers();

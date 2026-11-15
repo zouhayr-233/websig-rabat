@@ -408,11 +408,11 @@
           <div class="tab-content active" id="tab-stats">
             <div class="stat-cards-grid">
               <div class="stat-card">
-                <div class="stat-number" id="stat-dams">10</div>
+                <div class="stat-number" id="stat-dams">…</div>
                 <div class="stat-label">Barrages</div>
               </div>
               <div class="stat-card">
-                <div class="stat-number" id="stat-capacity">1 567</div>
+                <div class="stat-number" id="stat-capacity">…</div>
                 <div class="stat-label">Mm³ capacité totale</div>
               </div>
               <div class="stat-card">
@@ -420,23 +420,18 @@
                 <div class="stat-label">km de réseau hydrographique</div>
               </div>
               <div class="stat-card">
-                <div class="stat-number" id="stat-stations">5</div>
+                <div class="stat-number" id="stat-stations">…</div>
                 <div class="stat-label">Stations pluviométriques</div>
               </div>
             </div>
 
             <div class="chart-block">
-              <h3 class="chart-title">Distribution des classes de susceptibilité aux inondations (GTB — 5 classes)</h3>
+              <h3 class="chart-title">Superficie par classe de susceptibilité aux inondations (km²)</h3>
+              <p class="risk-summary" id="risk-summary">Chargement…</p>
               <div class="chart-wrap tall">
                 <canvas id="riskBarChart" role="img" aria-label="Diagramme en barres de la distribution des surfaces par classe de susceptibilité aux inondations, en kilomètres carrés et en pourcentage."></canvas>
               </div>
-              <div class="risk-legend-inline" id="risk-legend-inline">
-                <span class="risk-dot" style="background:#d73027"></span> Très élevé : 825 km² (4.67%)
-                <span class="risk-dot" style="background:#fc8d59"></span> Élevé : 191 km² (1.08%)
-                <span class="risk-dot" style="background:#fee08b"></span> Modéré : 167 km² (0.95%)
-                <span class="risk-dot" style="background:#91cf60"></span> Faible : 188 km² (1.06%)
-                <span class="risk-dot" style="background:#1a9850"></span> Très faible : 16 295 km² (92.24%)
-              </div>
+              <div class="risk-legend-inline" id="risk-legend-inline"></div>
             </div>
 
             <div class="chart-block">
