@@ -1174,19 +1174,6 @@ body.map-expanded #right-panel { display: none !important; }
 .popup-susc { font-size: 13px; display: flex; align-items: center; gap: 7px; }
 .popup-susc-swatch { width: 14px; height: 14px; border-radius: 2px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.25); }
 
-/* ── Bandeau permanent « carte informative, non réglementaire » ── */
-#map-disclaimer-banner {
-  position: absolute;
-  bottom: 6px; left: 50%; transform: translateX(-50%);
-  z-index: 900;
-  background: rgba(13,27,42,0.68);
-  color: rgba(255,255,255,0.92);
-  font-size: 10px; font-weight: 500; letter-spacing: 0.02em;
-  padding: 3px 11px; border-radius: 999px;
-  pointer-events: none; white-space: nowrap;
-  max-width: 92%; overflow: hidden; text-overflow: ellipsis;
-}
-
 /* ── MAP REGION TITLE — floating on map ── */
 #map-region-title {
   position: absolute;
