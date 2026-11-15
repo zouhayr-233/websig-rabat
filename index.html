@@ -490,62 +490,11 @@
             </div>
           </div>
 
-          <!-- TAB: À PROPOS -->
+          <!-- TAB: À PROPOS — contenu chargé dynamiquement depuis json/metadonnees.json
+               (voir js/about.js), pas codé en dur dans le JavaScript. -->
           <div class="tab-content" id="tab-about">
-            <div class="about-header">
-              <h2>WebSIG RSK — Ressources en eau et susceptibilité aux inondations</h2>
-              <h3>Région Rabat-Salé-Kénitra, Maroc</h3>
-            </div>
-
-            <div class="about-card">
-              <h4>🎓 Contexte académique</h4>
-              <table class="about-table">
-                <tr><td>Type</td><td>Projet de Fin d'Études (PFE) — Master 2</td></tr>
-                <tr><td>Année</td><td>2024 – 2026</td></tr>
-                <tr><td>Université</td><td>Université Ibn Tofail — Kénitra</td></tr>
-                <tr><td>Faculté</td><td>Faculté des Sciences, Kénitra</td></tr>
-                <tr><td>Filière</td><td><strong>Géomatique Appliquée</strong></td></tr>
-                <tr><td>Contact</td><td>zouhayr.aanzoul@uit.ac.ma</td></tr>
-              </table>
-            </div>
-
-            <div class="about-card">
-              <h4>🎯 Objectifs</h4>
-              <ul class="about-list">
-                <li>Cartographie interactive des ressources en eau de la région RSK</li>
-                <li>Carte de susceptibilité aux inondations par apprentissage automatique (GTB — Gradient Tree Boosting, 5 classes)</li>
-                <li>Intégration de données pluviométriques et hydrologiques (2000–2025)</li>
-                <li>Outil WebSIG d'aide à la décision pour la gestion des ressources en eau et de la susceptibilité aux inondations</li>
-              </ul>
-            </div>
-
-            <div class="about-card">
-              <h4>🛠️ Technologies</h4>
-              <div class="tech-stack">
-                <span class="tech-badge html">HTML5</span>
-                <span class="tech-badge css">CSS3</span>
-                <span class="tech-badge js">JavaScript ES6</span>
-                <span class="tech-badge leaflet">Leaflet 1.9</span>
-                <span class="tech-badge chartjs">Chart.js 4</span>
-                <span class="tech-badge geojson">GeoJSON</span>
-                <span class="tech-badge nominatim">Nominatim</span>
-              </div>
-            </div>
-
-            <div class="about-card">
-              <h4>📦 Sources de données</h4>
-              <ul class="about-list">
-                <li>Agence du Bassin Hydraulique du Sebou (ABHS)</li>
-                <li>Direction de la Météorologie Nationale (DMN)</li>
-                <li>Haut-Commissariat aux Eaux et Forêts (HCEF)</li>
-                <li>OpenStreetMap Contributors</li>
-                <li>ESRI World Imagery &amp; Topo</li>
-                <li>SRTM 30m — Modèle Numérique de Terrain (NASA)</li>
-              </ul>
-            </div>
-
-            <div class="about-footer">
-              <p>© 2026 — PFE Master Géomatique Appliquée, Université Ibn Tofail, Kénitra</p>
+            <div id="about-dynamic-content">
+              <p class="legend-empty">Chargement…</p>
             </div>
           </div>
 
@@ -612,6 +561,7 @@
   <script src="js/layers.js?v=55"></script>
   <script src="js/controls.js?v=51"></script>
   <script src="js/charts.js?v=50"></script>
+  <script src="js/about.js?v=1"></script>
 
 </body>
 </html>

@@ -1,0 +1,102 @@
+{
+  "nom_site": "WebSIG RSK — Ressources en eau et susceptibilité aux inondations",
+  "region": "Rabat-Salé-Kénitra, Maroc",
+  "version": "Version 2",
+  "mise_a_jour": "novembre 2026",
+  "projet": {
+    "type": "Projet de Fin d'Études (PFE) — Master 2",
+    "filiere": "Géomatique Appliquée",
+    "universite": "Université Ibn Tofail — Kénitra",
+    "faculte": "Faculté des Sciences, Kénitra",
+    "annees": "2024–2026",
+    "auteur": "AANZOUL Zouhayr",
+    "contact": "zouhayr.aanzoul@uit.ac.ma"
+  },
+  "objectif": "Rendre accessible au grand public la connaissance des ressources en eau et de la susceptibilité aux inondations de la région Rabat-Salé-Kénitra.",
+  "methode": {
+    "modele": "Gradient Tree Boosting (GTB)",
+    "implementation": "scikit-learn, HistGradientBoostingClassifier",
+    "nombre_variables": 15,
+    "grille": "3 secondes d'arc (environ 90 m)",
+    "inventaire_points": 800,
+    "points_exploitables": 797,
+    "points_inondes": 398,
+    "points_non_inondes": 399,
+    "nombre_classes": 5,
+    "indice": "Probabilité p estimée par le modèle, classée en 5 classes (seuils 0,2 ; 0,4 ; 0,6 ; 0,8)"
+  },
+  "validation": {
+    "type": "Validation spatiale par blocs géographiques",
+    "auc_blocs_10km": 0.77,
+    "auc_blocs_20km": 0.73,
+    "auc_validation_aleatoire": 0.87,
+    "commentaire_aleatoire": "Une validation aléatoire donnerait 0,87 et surestime la qualité de la carte.",
+    "variables_dominantes": "Le relief (altitude, altitude relative, position topographique) explique l'essentiel de la performance."
+  },
+  "limites": [
+    "Inventaire concentré dans la plaine du Gharb : la performance mesurée vaut surtout pour ce contexte, l'extrapolation ailleurs n'est pas testée.",
+    "Zones urbaines mal couvertes.",
+    "Modèle statique : il répond à « où ? », pas à « quand ? ».",
+    "Indice relatif, non réglementaire, qui n'est pas un système d'alerte.",
+    "Simplification géométrique visible aux forts zooms : les plus petites taches, de moins de quatre cellules, sont fondues dans leur voisinage.",
+    "Données figées à la date de conversion.",
+    "Dépendance à des services tiers (fonds de carte, géocodage)."
+  ],
+  "avertissement": "Susceptibilité modélisée à titre informatif. Ce n'est pas un zonage réglementaire.",
+  "sources": [
+    {
+      "sigle": "ABHS",
+      "nom": "Agence du Bassin Hydraulique du Sebou"
+    },
+    {
+      "sigle": "ABHBC",
+      "nom": "Agence du Bassin Hydraulique du Bouregreg et de la Chaouia"
+    },
+    {
+      "sigle": "DMN",
+      "nom": "Direction de la Météorologie Nationale"
+    },
+    {
+      "sigle": "HCP",
+      "nom": "Haut-Commissariat au Plan (RGPH 2024)"
+    },
+    {
+      "sigle": "OpenStreetMap",
+      "nom": "Contributeurs OpenStreetMap"
+    },
+    {
+      "sigle": "Sentinel-2",
+      "nom": "Copernicus (ESA) — détection des inondations par NDWI"
+    },
+    {
+      "sigle": "ERA5-Land",
+      "nom": "ECMWF — réanalyse climatique"
+    },
+    {
+      "sigle": "SRTM",
+      "nom": "NASA — modèle numérique de terrain 30 m"
+    },
+    {
+      "sigle": "MERIT Hydro",
+      "nom": "Réseau hydrographique et hydrologie"
+    },
+    {
+      "sigle": "FAO/UNESCO",
+      "nom": "Carte mondiale des sols"
+    },
+    {
+      "sigle": "Esri",
+      "nom": "Fonds de carte (Satellite, Terrain)"
+    }
+  ],
+  "technologies": [
+    "HTML5",
+    "CSS3",
+    "JavaScript ES6",
+    "Leaflet 1.9",
+    "Chart.js 4",
+    "GeoJSON",
+    "Nominatim"
+  ],
+  "_note_verification": "HCEF retiré de la liste des sources (aucune couche n'en provient, voir VERIFICATION.md §5). Méthode, validation et limites : texte du rapport de PFE (chapitres 3 et 4), version 2 de novembre 2026. data/rf_model_report.json décrit un ancien modèle Random Forest et n'est pas utilisé par l'application."
+}

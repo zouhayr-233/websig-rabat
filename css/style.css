@@ -959,6 +959,18 @@ ul { list-style: none; padding: 0; }
 .about-table td:first-child { color: var(--text-muted); width: 35%; padding-right: 8px; }
 .about-list { list-style: disc; padding-left: 16px; font-size: 12px; color: var(--text-body); }
 .about-list li { padding: 2px 0; }
+.about-list-compact { font-size: 11px; margin-top: 4px; }
+.about-text { font-size: 12px; color: var(--text-body); line-height: 1.5; margin: 0; }
+.about-subtitle {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.03em;
+  margin: 10px 0 2px;
+}
+.about-version { font-size: 11px; color: var(--text-muted); margin: 4px 0 0; font-weight: 600; }
+.about-disclaimer-card {
+  background: #fef2f2; border-color: #fca5a5; color: #991b1b;
+  font-size: 11.5px; font-style: italic; text-align: center;
+}
 .tech-stack { display: flex; flex-wrap: wrap; gap: 6px; }
 .tech-badge {
   padding: 3px 9px; border-radius: 10px;
