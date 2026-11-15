@@ -66,7 +66,7 @@
       "part_pct": 6.9
     },
     "convention_superficie": "Chaque cellule vaut (0,000833333° x 111,32 x cos(latitude)) km par (0,000833333° x 110,57) km, soit environ 0,0071 km². C'est la convention qui reproduit les superficies du rapport.",
-    "_note": "Superficies calculées sur le raster classé (import/stats_susceptibilite.json), pas sur les polygones généralisés de data/flood_susceptibility.geojson."
+    "_note": "Superficies calculées sur le raster classé (import/stats_susceptibilite.json). La carte affiche ce même raster sous forme de tuiles (data/susceptibilite_tuiles), sans généralisation."
   },
   "barrages": {
     "_source": "Rapport de PFE ; Oued El Makhazine est un ouvrage voisin de la région (ABH Loukkos)",

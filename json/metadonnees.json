@@ -85,7 +85,7 @@
     "Zones urbaines mal couvertes.",
     "Modèle statique : il répond à « où ? », pas à « quand ? ».",
     "Indice relatif, non réglementaire, qui n'est pas un système d'alerte.",
-    "Simplification géométrique visible aux forts zooms : les plus petites taches, de moins de quatre cellules, sont fondues dans leur voisinage.",
+    "Résolution de 90 m : aux forts zooms, les cellules du raster deviennent visibles sous forme de carrés.",
     "Données figées à la date de conversion.",
     "Dépendance à des services tiers (fonds de carte, géocodage)."
   ],

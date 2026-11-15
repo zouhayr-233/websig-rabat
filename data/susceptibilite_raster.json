@@ -1,0 +1,27 @@
+{
+  "_description": "Couche Susceptibilité aux inondations (modèle GTB) : tuiles du raster classé, sans généralisation vectorielle.",
+  "source": "Susceptibilite_GTB_classes.tif (classes 1 à 5, 0 = non classé, EPSG:4326)",
+  "consultation": {
+    "fichier": "susceptibilite_classes.png",
+    "projection": "EPSG:4326 (grille d'origine)",
+    "valeur": "niveau de gris = classe (0 = non classé)",
+    "largeur": 2175,
+    "hauteur": 2242,
+    "ouest": -7.126758233333334,
+    "nord": 35.0163704,
+    "pas_lon": 0.0008333333333333334,
+    "pas_lat": 0.0008333333333333334
+  },
+  "masque": "cellules et pixels hors de data/admin_boundaries_real.geojson rendus transparents",
+  "tuiles": {
+    "modele": "susceptibilite_tuiles/{z}/{x}/{y}.png",
+    "schema": "XYZ, EPSG:3857, 256 px",
+    "zoom_min": 7,
+    "zoom_max": 12,
+    "reechantillonnage": "classe majoritaire (zooms 7 à 11), plus proche voisin (zoom 12, ~3 px par cellule)",
+    "sud": 33.148037,
+    "ouest": -7.126758,
+    "nord": 35.01637,
+    "est": -5.314258
+  }
+}
