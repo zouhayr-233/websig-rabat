@@ -49,7 +49,6 @@ function renderAbout(meta) {
   html += '<div class="about-card"><h4>🤖 Méthode</h4><table class="about-table">'
     + '<tr><td>Modèle</td><td>' + naIfMissing(m.modele) + '</td></tr>'
     + '<tr><td>Implémentation</td><td>' + naIfMissing(m.implementation) + '</td></tr>'
-    + '<tr><td>Variables</td><td>' + naIfMissing(m.nombre_variables) + '</td></tr>'
     + '<tr><td>Grille</td><td>' + naIfMissing(m.grille) + '</td></tr>'
     + '<tr><td>Points d\'entraînement</td><td>'
         + (m.points_exploitables != null
@@ -60,6 +59,14 @@ function renderAbout(meta) {
     + '<tr><td>Classes</td><td>' + naIfMissing(m.nombre_classes) + '</td></tr>'
     + '</table>'
     + (m.indice ? '<p class="about-text" style="margin-top:6px">' + m.indice + '</p>' : '')
+    + (Array.isArray(m.variables) && m.variables.length
+        ? '<p class="about-subtitle">Variables du modèle (' + naIfMissing(m.nombre_variables) + ')</p>'
+          + '<ul class="about-list about-list-compact">'
+          + m.variables.map(function (g) {
+              return '<li><strong>' + g.groupe + '</strong> : ' + (g.liste || []).join(', ') + '</li>';
+            }).join('')
+          + '</ul>'
+        : '')
     + '</div>';
 
   html += '<div class="about-card"><h4>✅ Validation</h4><table class="about-table">'

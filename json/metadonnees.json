@@ -17,6 +17,53 @@
     "modele": "Gradient Tree Boosting (GTB)",
     "implementation": "scikit-learn, HistGradientBoostingClassifier",
     "nombre_variables": 15,
+    "variables": [
+      {
+        "groupe": "Relief",
+        "liste": [
+          "altitude",
+          "altitude relative (1 km)",
+          "altitude relative (3 km)",
+          "TPI (1 km)",
+          "TPI (3 km)"
+        ]
+      },
+      {
+        "groupe": "Pente et orientation",
+        "liste": [
+          "pente",
+          "orientation des versants"
+        ]
+      },
+      {
+        "groupe": "Hydrologie",
+        "liste": [
+          "TWI",
+          "densité de drainage",
+          "distance aux cours d'eau"
+        ]
+      },
+      {
+        "groupe": "Végétation",
+        "liste": [
+          "NDVI"
+        ]
+      },
+      {
+        "groupe": "Climat",
+        "liste": [
+          "précipitations"
+        ]
+      },
+      {
+        "groupe": "Anthropique et sols",
+        "liste": [
+          "distance aux routes",
+          "occupation du sol",
+          "type de sol"
+        ]
+      }
+    ],
     "grille": "3 secondes d'arc (environ 90 m)",
     "inventaire_points": 800,
     "points_exploitables": 797,
@@ -45,44 +92,56 @@
   "avertissement": "Susceptibilité modélisée à titre informatif. Ce n'est pas un zonage réglementaire.",
   "sources": [
     {
-      "sigle": "ABHS",
-      "nom": "Agence du Bassin Hydraulique du Sebou"
+      "sigle": "SRTM",
+      "nom": "MNT SRTM v3, 30 m (NASA/USGS)"
     },
     {
-      "sigle": "ABHBC",
-      "nom": "Agence du Bassin Hydraulique du Bouregreg et de la Chaouia"
+      "sigle": "Sentinel-1",
+      "nom": "Polarisation VV — carte des zones inondées"
     },
     {
-      "sigle": "DMN",
-      "nom": "Direction de la Météorologie Nationale"
+      "sigle": "Sentinel-2",
+      "nom": "NDWI — inventaire des zones inondées"
     },
     {
-      "sigle": "HCP",
-      "nom": "Haut-Commissariat au Plan (RGPH 2024)"
+      "sigle": "Sentinel-2 niveau 2A",
+      "nom": "NDVI et NDWI"
+    },
+    {
+      "sigle": "MERIT Hydro v1.0.1",
+      "nom": "TWI"
+    },
+    {
+      "sigle": "Sentinel-2 Land Cover",
+      "nom": "Esri / Impact Observatory — occupation du sol"
+    },
+    {
+      "sigle": "ERA5-Land",
+      "nom": "Précipitations"
+    },
+    {
+      "sigle": "FAO/UNESCO",
+      "nom": "Carte des sols"
     },
     {
       "sigle": "OpenStreetMap",
       "nom": "Contributeurs OpenStreetMap"
     },
     {
-      "sigle": "Sentinel-2",
-      "nom": "Copernicus (ESA) — détection des inondations par NDWI"
+      "sigle": "ABHS et ABHBC",
+      "nom": "Agences de bassin du Sebou et du Bouregreg-Chaouia — réseau hydrographique, bassins, barrages, nappes"
     },
     {
-      "sigle": "ERA5-Land",
-      "nom": "ECMWF — réanalyse climatique"
+      "sigle": "HCP et Open Data Maroc",
+      "nom": "Limites administratives"
     },
     {
-      "sigle": "SRTM",
-      "nom": "NASA — modèle numérique de terrain 30 m"
+      "sigle": "HCP",
+      "nom": "Recensement RGPH 2024 — population"
     },
     {
-      "sigle": "MERIT Hydro",
-      "nom": "Réseau hydrographique et hydrologie"
-    },
-    {
-      "sigle": "FAO/UNESCO",
-      "nom": "Carte mondiale des sols"
+      "sigle": "DMN et ABHS",
+      "nom": "Stations pluviométriques"
     },
     {
       "sigle": "Esri",
