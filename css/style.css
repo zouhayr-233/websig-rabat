@@ -895,6 +895,13 @@ ul { list-style: none; padding: 0; }
   transition: background var(--transition);
 }
 .btn-primary:hover { background: var(--blue-dark); }
+/* Lien « Donner mon avis » : même style que .btn-primary, zone de 44 px de haut */
+a.btn-avis {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; color: #ffffff; text-decoration: none;
+}
+a.btn-avis:hover, a.btn-avis:focus { color: #ffffff; }
+a.btn-avis:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 /* Measure result */
 #measure-result {

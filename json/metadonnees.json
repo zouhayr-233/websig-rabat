@@ -12,6 +12,13 @@
     "auteur": "AANZOUL Zouhayr",
     "contact": "zouhayr.aanzoul@uit.ac.ma"
   },
+  "avis": {
+    "titre": "Votre avis",
+    "texte": "Signalez une erreur, proposez une amélioration ou donnez votre appréciation de l'application.",
+    "libelle": "Donner mon avis",
+    "aria_label": "Donner mon avis (formulaire Google Forms, s'ouvre dans un nouvel onglet)",
+    "url": "https://docs.google.com/forms/d/e/1FAIpQLSf4W2pw-oYWHY-mUWHVK3801VPGxCZYITwg3h7j9Nkdzz0QSA/viewform?usp=header"
+  },
   "objectif": "Rendre accessible au grand public la connaissance des ressources en eau et de la susceptibilité aux inondations de la région Rabat-Salé-Kénitra.",
   "methode": {
     "modele": "Gradient Tree Boosting (GTB)",

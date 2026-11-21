@@ -64,6 +64,9 @@ du fichier `index.html` ne suffit pas).
   compacte (fond semi-transparent, 220 px de large au plus, 40 dvh de haut au plus, 24 % de la
   carte au plus sur téléphone) ; boutons A− / A+ (échelle 0,8 à 1,4), curseur de transparence
   (0,4 à 1) et bouton de repli. Réglages mémorisés dans le navigateur (`localStorage`).
+- **Votre avis** : le panneau « À propos » (et la fenêtre « Info ») propose un bouton « Donner mon
+  avis », lien vers un formulaire Google Forms (nouvel onglet) pour signaler une erreur, proposer une
+  amélioration ou donner son appréciation de l'application.
 - **Vue limitée à la région** : zoom minimal 8, emprise maximale `[[32.2, -8.2], [35.8, -4.2]]`
   (`maxBoundsViscosity` 1), vue initiale cadrée sur la limite régionale. La vue ne descend
   jamais au sud du 30e parallèle.

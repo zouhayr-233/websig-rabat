@@ -42,6 +42,16 @@ function renderAbout(meta) {
     + '<tr><td>Contact</td><td>' + (p.contact ? '<a href="mailto:' + p.contact + '">' + p.contact + '</a>' : 'n.d.') + '</td></tr>'
     + '</table></div>';
 
+  /* Votre avis : lien simple vers le formulaire (nouvel onglet, sans iframe ni suivi) */
+  var av = meta.avis || {};
+  if (av.url) {
+    html += '<div class="about-card"><h4>💬 ' + (av.titre || 'Votre avis') + '</h4>'
+      + '<p class="about-text">' + naIfMissing(av.texte) + '</p>'
+      + '<a class="btn-primary btn-avis" href="' + av.url + '" target="_blank" rel="noopener noreferrer"'
+      + ' aria-label="' + (av.aria_label || '').replace(/"/g, '&quot;') + '">' + (av.libelle || 'Donner mon avis') + '</a>'
+      + '</div>';
+  }
+
   html += '<div class="about-card"><h4>🎯 Objectif</h4><p class="about-text">' + naIfMissing(meta.objectif) + '</p></div>';
 
   var nf = function (x) { return (x == null) ? 'n.d.' : String(x).replace('.', ','); };
