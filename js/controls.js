@@ -410,25 +410,75 @@ document.addEventListener('DOMContentLoaded', function () {
   if (btnArea)  btnArea.addEventListener('click',  function () { measureMode === 'area'     ? stopMeasure() : startMeasure('area');     });
   if (btnClear) btnClear.addEventListener('click', clearMeasures);
 
+  /* ── Calcul des mesures en projection Merchich / Nord Maroc (EPSG:26191),
+     celle des traitements du mémoire (js/vendor/proj4.js, chargé avant).
+     Définition vérifiée contre la base EPSG (epsg.io, spatialreference.org,
+     PROJ) : ellipsoïde Clarke 1880 (IGN) ; décalage vers WGS 84 = EPSG:1166.
+     Le tracé à l'écran reste dessiné par Leaflet (Web Mercator). ── */
+  var EPSG_26191 = '+proj=lcc +lat_1=33.3 +lat_0=33.3 +lon_0=-5.4 +k_0=0.999625769 +x_0=500000 '
+                 + '+y_0=300000 +a=6378249.2 +b=6356515 +towgs84=31,146,47,0,0,0,0 +units=m +no_defs';
+  var projOK = false;
+  try {
+    if (window.proj4) { proj4.defs('EPSG:26191', EPSG_26191); projOK = true; }
+  } catch (e) { projOK = false; }
+
+  /* Sommets [lng, lat] -> [x, y] en mètres (EPSG:26191) ; null si indisponible */
+  function projeter(latlngs) {
+    if (!projOK) return null;
+    try {
+      var out = latlngs.map(function (ll) { return proj4('EPSG:4326', 'EPSG:26191', [ll.lng, ll.lat]); });
+      for (var i = 0; i < out.length; i++) if (!isFinite(out[i][0]) || !isFinite(out[i][1])) return null;
+      return out;
+    } catch (e) { return null; }
+  }
+  /* Distance : somme des longueurs planes des segments projetés */
+  function distanceProjetee(latlngs) {
+    var p = projeter(latlngs); if (!p) return null;
+    var m = 0;
+    for (var i = 1; i < p.length; i++) m += Math.hypot(p[i][0] - p[i-1][0], p[i][1] - p[i-1][1]);
+    return m;
+  }
+  /* Surface : formule de Gauss (shoelace) sur les sommets projetés, en m² */
+  function surfaceProjetee(latlngs) {
+    var p = projeter(latlngs); if (!p || p.length < 3) return null;
+    var s = 0;
+    for (var i = 0; i < p.length; i++) { var j = (i + 1) % p.length; s += p[i][0] * p[j][1] - p[j][0] * p[i][1]; }
+    return Math.abs(s) / 2;
+  }
+  window.mesuresEPSG26191 = { distance: distanceProjetee, surface: surfaceProjetee };
+
   if (window.map) {
     window.map.on('draw:created', function (e) {
       if (measureGroup) measureGroup.addLayer(e.layer);
       stopMeasure();
-      let txt = '';
+      let txt = '', approx = false;
       if (e.layerType === 'polyline') {
         const ll = e.layer.getLatLngs();
-        let m = 0;
-        for (let i = 1; i < ll.length; i++) m += ll[i-1].distanceTo(ll[i]);
+        let m = distanceProjetee(ll);
+        if (m === null || isNaN(m)) {              /* garde-fou : méthode sphérique de Leaflet */
+          approx = true; m = 0;
+          for (let i = 1; i < ll.length; i++) m += ll[i-1].distanceTo(ll[i]);
+        }
         txt = m >= 1000 ? 'Distance : ' + (m/1000).toFixed(3) + ' km' : 'Distance : ' + Math.round(m) + ' m';
       } else if (e.layerType === 'polygon') {
         try {
-          const a = L.GeometryUtil.geodesicArea(e.layer.getLatLngs()[0]);
+          const ring = e.layer.getLatLngs()[0];
+          let a = surfaceProjetee(ring);
+          if (a === null || isNaN(a)) { approx = true; a = L.GeometryUtil.geodesicArea(ring); }
           txt = a >= 1e6 ? 'Superficie : ' + (a/1e6).toFixed(4) + ' km²' : 'Superficie : ' + Math.round(a) + ' m²';
         } catch (_) {}
       }
       if (txt) {
         const r = document.getElementById('measure-result');
-        if (r) { r.textContent = txt; r.style.display = 'block'; setTimeout(function () { r.style.display = 'none'; }, 8000); }
+        if (r) {
+          r.textContent = txt;
+          const note = document.createElement('span');
+          note.className = 'measure-note';
+          note.textContent = approx ? 'Mesure approximative (projection indisponible)'
+                                    : 'Calculé en projection Merchich / Nord Maroc (EPSG:26191)';
+          r.appendChild(note);
+          r.style.display = 'block'; setTimeout(function () { r.style.display = 'none'; }, 8000);
+        }
       }
     });
   }

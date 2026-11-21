@@ -903,6 +903,12 @@ a.btn-avis {
 a.btn-avis:hover, a.btn-avis:focus { color: #ffffff; }
 a.btn-avis:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
+/* Mention discrète sous le résultat de mesure (projection utilisée) */
+#measure-result .measure-note {
+  display: block; margin-top: 2px;
+  font-family: 'Source Sans Pro', sans-serif; font-size: 11px; font-weight: 400;
+  color: #475569; letter-spacing: 0;
+}
 /* Measure result */
 #measure-result {
   position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);

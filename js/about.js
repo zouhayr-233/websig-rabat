@@ -70,6 +70,7 @@ function renderAbout(meta) {
     + '</table>'
     + (m.indice ? '<p class="about-text" style="margin-top:6px">' + m.indice + '</p>' : '')
     + (m.affichage_carte ? '<p class="about-subtitle">Affichage de la carte</p><p class="about-text">' + m.affichage_carte + '</p>' : '')
+    + (m.mesures ? '<p class="about-text" style="margin-top:6px">' + m.mesures + '</p>' : '')
     + (Array.isArray(m.variables) && m.variables.length
         ? '<p class="about-subtitle">Variables du modèle (' + naIfMissing(m.nombre_variables) + ')</p>'
           + '<ul class="about-list about-list-compact">'

@@ -78,7 +78,8 @@
     "points_non_inondes": 399,
     "nombre_classes": 5,
     "indice": "Probabilité p estimée par le modèle, classée en 5 classes (seuils 0,2 ; 0,4 ; 0,6 ; 0,8)",
-    "affichage_carte": "Segmentation par objets (algorithme de Felzenszwalb et Huttenlocher) appliquée à la carte de probabilité du modèle. Chaque segment reçoit la classe dominante de ses cellules, pondérée pour conserver la superficie de chaque classe ; les segments voisins de même classe sont fusionnés ; les contours sont simplifiés à environ 50 m. Les polygones diffèrent du raster de 0,2 % à 0,9 % par classe. Les statistiques viennent du raster."
+    "affichage_carte": "Segmentation par objets (algorithme de Felzenszwalb et Huttenlocher) appliquée à la carte de probabilité du modèle. Chaque segment reçoit la classe dominante de ses cellules, pondérée pour conserver la superficie de chaque classe ; les segments voisins de même classe sont fusionnés ; les contours sont simplifiés à environ 50 m. Les polygones diffèrent du raster de 0,2 % à 0,9 % par classe. Les statistiques viennent du raster.",
+    "mesures": "Distances et surfaces : calculées en projection Merchich / Nord Maroc (Lambert conique conforme, EPSG:26191), celle des traitements du mémoire."
   },
   "validation": {
     "type": "Validation spatiale par blocs géographiques",
