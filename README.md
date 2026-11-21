@@ -7,7 +7,7 @@
 ![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=flat&logo=leaflet&logoColor=white)
 ![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=flat&logo=chartdotjs&logoColor=white)
 
-**Version 3 — mise à jour : novembre 2026**
+**Version 3.1 — mise à jour : novembre 2026**
 Application en ligne : <https://zouhayr-233.github.io/websig-rabat/>
 
 ---
@@ -87,6 +87,32 @@ fond échouent, le message « Ce fond de carte est momentanément indisponible �
 
 ---
 
+## Mesures
+
+Les outils **Distance** et **Surface** calculent dans la projection **Merchich / Nord Maroc**
+(Lambert conique conforme, **EPSG:26191**), celle de tous les traitements métriques du mémoire :
+
+```
++proj=lcc +lat_1=33.3 +lat_0=33.3 +lon_0=-5.4 +k_0=0.999625769 +x_0=500000 +y_0=300000
++a=6378249.2 +b=6356515 +towgs84=31,146,47,0,0,0,0 +units=m +no_defs
+```
+
+Définition vérifiée contre la base EPSG (epsg.io, spatialreference.org, PROJ) : ellipsoïde
+Clarke 1880 (IGN) ; le décalage vers WGS 84 correspond à la transformation EPSG:1166
+(« Merchich to WGS 84 (1) »).
+
+- **Distance** : chaque sommet est projeté de [longitude, latitude] vers EPSG:26191, puis les
+  longueurs planes des segments sont additionnées (m, ou km au-delà de 1 000 m).
+- **Surface** : sommets projetés, puis formule de l'aire de Gauss (shoelace) (m², ou km² au-delà
+  de 1 km²).
+- **Bibliothèque** : proj4js 2.23.0 (licence MIT), copie locale dans `js/vendor/proj4.js` : la
+  mesure ne dépend d'aucun service externe. Si la projection est indisponible, l'outil revient au
+  calcul sphérique de Leaflet et l'indique (« Mesure approximative »).
+- **Remarque** : le tracé affiché suit la projection d'affichage de la carte (Web Mercator), la
+  valeur mesurée suit EPSG:26191 ; l'écart est négligeable à l'échelle de la région (tests :
+  carré de 10 km de côté mesuré à 100,00 km² ; segments de 10 km à 0,03 % de la distance
+  géodésique sur l'ellipsoïde).
+
 ## Couches cartographiques
 
 | Couche | Fichier | Type | Contenu |
@@ -134,6 +160,8 @@ websig-rabat/
 │   ├── layers.js           # Chargement des GeoJSON, styles, popups
 │   ├── controls.js         # Barre de boutons, panneaux, légende, mesures, recherche
 │   ├── charts.js           # Tableau de bord (Chart.js)
+│   ├── symboles.js         # Symboles SVG des barrages et des stations (carte, panneau, légende)
+│   ├── vendor/proj4.js     # proj4js 2.23.0 (MIT) : mesures en EPSG:26191
 │   └── about.js            # Onglet « À propos » (depuis json/metadonnees.json)
 ├── data/                   # Couches GeoJSON et données de précipitations
 ├── json/
