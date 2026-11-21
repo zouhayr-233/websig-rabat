@@ -1,1 +1,6 @@
 import/
+
+# Shapefiles de travail (non publiés) et verrous ArcGIS
+Flood-area.*
+NON.*
+*.sr.lock
