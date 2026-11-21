@@ -429,9 +429,10 @@ function loadStations(data) {
    5. SUSCEPTIBILITÉ AUX INONDATIONS — modèle GTB
    Indice p (probabilité estimée par le modèle Gradient Tree Boosting),
    classé en 5 classes. Fichier data/susceptibilite.geojson : 5 entités
-   MultiPolygon (attributs classe / libelle / superficie_km2), contours
-   lissés pour l'affichage (filtre majoritaire gaussien sur le raster
-   classé, puis vectorisation et simplification à ~18 m). Les superficies
+   MultiPolygon (attributs classe / libelle / superficie_km2), version
+   segmentée pour l'affichage (raster de 90 m regroupé en 6 314 zones
+   homogènes, classe dominante de chaque zone, contours simplifiés à
+   ~50 m). Les superficies
    du tableau de bord viennent de json/statistiques.json (raster), jamais
    d'un calcul sur ces polygones.
    ══════════════════════════════════════════════════ */
@@ -473,9 +474,9 @@ function suscRenderer() {
 function suscStyle(feat) {
   var c = suscClass((feat.properties || {}).classe);
   var col = c ? c.couleur : '#999999';
-  /* Contour de la même couleur que le remplissage (épaisseur 0,5) : masque
-     les fines fentes entre polygones voisins. */
-  return { fillColor: col, fillOpacity: SUSC_OPACITY, color: col, weight: 0.5, opacity: SUSC_OPACITY };
+  /* Contour de la même couleur que le remplissage (épaisseur 0,8) : masque
+     les fines fentes entre zones voisines. */
+  return { fillColor: col, fillOpacity: SUSC_OPACITY, color: col, weight: 0.8, opacity: SUSC_OPACITY };
 }
 
 function suscPopupHtml(p) {

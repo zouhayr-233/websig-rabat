@@ -71,7 +71,7 @@
     "points_non_inondes": 399,
     "nombre_classes": 5,
     "indice": "Probabilité p estimée par le modèle, classée en 5 classes (seuils 0,2 ; 0,4 ; 0,6 ; 0,8)",
-    "affichage_carte": "Contours lissés pour l'affichage : filtre majoritaire gaussien appliqué au raster classé (sigma de 1,5 cellule, environ 135 m), calé pour conserver la superficie de chaque classe, puis vectorisation et simplification à environ 18 m. Les polygones lissés diffèrent du raster de 0,4 % à 3,6 % par classe ; les chiffres affichés (statistiques, graphiques) viennent du raster."
+    "affichage_carte": "Segmentation par objets (algorithme de Felzenszwalb et Huttenlocher) appliquée à la carte de probabilité du modèle. Chaque segment reçoit la classe dominante de ses cellules, pondérée pour conserver la superficie de chaque classe ; les segments voisins de même classe sont fusionnés ; les contours sont simplifiés à environ 50 m. Les polygones diffèrent du raster de 0,2 % à 0,9 % par classe. Les statistiques viennent du raster."
   },
   "validation": {
     "type": "Validation spatiale par blocs géographiques",
@@ -86,7 +86,7 @@
     "Zones urbaines mal couvertes.",
     "Modèle statique : il répond à « où ? », pas à « quand ? ».",
     "Indice relatif, non réglementaire, qui n'est pas un système d'alerte.",
-    "Les contours de la couche de susceptibilité sont lissés pour l'affichage ; les superficies indiquées viennent du raster d'origine.",
+    "La couche de susceptibilité est une version segmentée pour l'affichage : le raster de 90 m a été regroupé en zones homogènes, chacune prenant la classe dominante de ses cellules. Les petites taches isolées sont donc absorbées par leur voisinage. Les superficies indiquées viennent du raster d'origine.",
     "Données figées à la date de conversion.",
     "Dépendance à des services tiers (fonds de carte, géocodage)."
   ],

@@ -88,7 +88,7 @@ fond échouent, le message « Ce fond de carte est momentanément indisponible �
 
 | Couche | Fichier | Type | Contenu |
 |---|---|---|---|
-| **Susceptibilité aux inondations (modèle GTB)** | `data/susceptibilite.geojson` | MultiPolygone | 5 entités, une par classe (attributs `classe`, `libelle`, `superficie_km2`), contours lissés. Moteur canvas, chargée au premier cochage, opacité réglable |
+| **Susceptibilité aux inondations (modèle GTB)** | `data/susceptibilite.geojson` | MultiPolygone | 5 entités, une par classe (attributs `classe`, `libelle`, `superficie_km2`), version segmentée (6 314 zones). Moteur canvas, chargée au premier cochage, opacité réglable |
 | Bassins & sous-bassins versants | `data/watersheds_real.geojson` | Polygone | Sous-bassins (ABHS) |
 | Réseau hydrographique — oueds | `data/rivers_real.geojson` | Ligne | Hiérarchie en 4 niveaux (rang ABHS) |
 | Nappes souterraines | `data/aquifers.geojson` | Polygone | 12 systèmes (source : NAPPES.shp, ABHS et ABHBC), attributs `NOM_NAPPE`, `TYPE_NAPPE`, `AREA_KM2` |
@@ -111,11 +111,11 @@ Total classé : 17 553 km² sur environ 17 576 km² (23 km² non classés : plan
 sans données). Ces superficies sont calculées sur le **raster classé** (grille de 3 secondes
 d'arc) et viennent de `json/statistiques.json`, jamais d'un calcul sur les polygones.
 
-**Couche lissée (méthode d'affichage).** Un filtre majoritaire gaussien est appliqué au raster
-classé (sigma de 1,5 cellule, environ 135 m), calé pour conserver la superficie de chaque
-classe ; le résultat est vectorisé puis simplifié à environ 18 m. Les contours n'ont donc plus
-d'effet pixélisé. La surface des polygones lissés diffère de celle du raster de 0,4 % à 3,6 %
-selon la classe : c'est normal, et c'est pourquoi les chiffres affichés viennent du raster.
+**Couche segmentée (méthode d'affichage).** Segmentation par objets (algorithme de Felzenszwalb
+et Huttenlocher) appliquée à la carte de probabilité du modèle. Chaque segment reçoit la classe
+dominante de ses cellules, pondérée pour conserver la superficie de chaque classe ; les segments
+voisins de même classe sont fusionnés ; les contours sont simplifiés à environ 50 m. Les
+polygones diffèrent du raster de 0,2 % à 0,9 % par classe. Les statistiques viennent du raster.
 
 ---
 
@@ -149,7 +149,7 @@ viennent de `json/statistiques.json` et ne sont jamais recalculés dans le navig
 1. Préparer le GeoJSON en **EPSG:4326** (WGS 84), coordonnées arrondies à 5 décimales,
    en gardant les **mêmes noms d'attributs** que la couche actuelle (voir le tableau ci-dessus).
 2. Le copier dans `data/` sous **le même nom de fichier** (ex. `data/dams_real.geojson`).
-   **Couche de susceptibilité lissée** : copier le nouveau GeoJSON tel quel sous
+   **Couche de susceptibilité segmentée** : copier le nouveau GeoJSON tel quel sous
    `data/susceptibilite.geojson`, sans le re-simplifier : 5 entités MultiPolygon (une par
    classe) en EPSG:4326, attributs `classe` (1 à 5), `libelle` et `superficie_km2`. Vérifier
    qu'il s'ouvre, qu'il contient 5 entités et que les superficies des attributs sont celles du
