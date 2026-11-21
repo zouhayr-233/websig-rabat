@@ -38,10 +38,13 @@ const terrainLayer = L.tileLayer(
   { maxZoom: 19, attribution: '&copy; Esri' }
 );
 
-const darkLayer = L.tileLayer(
-  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  { maxZoom: 19, subdomains: 'abcd', attribution: '&copy; CARTO' }
-);
+/* Fond « Nuit » : Esri World Dark Gray Base, sans clé et sans étiquettes.
+   (CARTO Dark Matter, utilisé jusqu'ici, renvoie désormais pour toutes ses
+   tuiles une image « API KEY REQUIRED ».) Données jusqu'au zoom 16 :
+   au-delà, Leaflet agrandit les tuiles du zoom 16. */
+const ESRI_DARK_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+const ESRI_DARK_ATTR = 'Tuiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; contributeurs OpenStreetMap';
+const darkLayer = L.tileLayer(ESRI_DARK_URL, { maxNativeZoom: 16, maxZoom: 20, attribution: ESRI_DARK_ATTR });
 
 /* Add OSM as default */
 osmLayer.addTo(map);
@@ -50,8 +53,23 @@ const baseLayers = {
   'OpenStreetMap': osmLayer,
   'Satellite':     satLayer,
   'Terrain':       terrainLayer,
-  'CartoDB Dark':  darkLayer
+  'Nuit':          darkLayer
 };
+
+/* Garde-fou : si plus de 6 tuiles d'un fond échouent, message discret
+   « Ce fond de carte est momentanément indisponible » (rien d'autre). */
+const BASEMAP_ERROR_LIMIT = 6;
+Object.keys(baseLayers).forEach(function (name) {
+  const lyr = baseLayers[name];
+  lyr._tileErrors = 0;
+  lyr.on('tileerror', function () {
+    lyr._tileErrors++;
+    if (lyr._tileErrors > BASEMAP_ERROR_LIMIT && window.activeBaseLayer === lyr) {
+      const msg = document.getElementById('basemap-error-msg');
+      if (msg) msg.classList.add('visible');
+    }
+  });
+});
 window.activeBaseLayer = osmLayer;
 
 /* ── 3. Controls ───────────────────────────────────── */
@@ -122,7 +140,7 @@ try { new NorthArrow().addTo(map); } catch(e) {}
 /* MiniMap — optional */
 try {
   new L.Control.MiniMap(
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd' }),
+    L.tileLayer(ESRI_DARK_URL, { maxNativeZoom: 16, attribution: '' }),
     { position: 'bottomright', width: 110, height: 80, zoomLevelOffset: -6, toggleDisplay: true }
   ).addTo(map);
 } catch(e) { console.warn('[map] MiniMap unavailable'); }
@@ -246,6 +264,9 @@ window.searchLocation = searchLocation;
 function switchBaseLayer(name) {
   if (!baseLayers[name]) return;
   if (window.activeBaseLayer) map.removeLayer(window.activeBaseLayer);
+  /* nouveau fond : on efface le message d'indisponibilité du précédent */
+  const msg = document.getElementById('basemap-error-msg');
+  if (msg) msg.classList.toggle('visible', baseLayers[name]._tileErrors > BASEMAP_ERROR_LIMIT);
   baseLayers[name].addTo(map);
   baseLayers[name].bringToBack();
   window.activeBaseLayer = baseLayers[name];
