@@ -676,6 +676,8 @@ function loadAquifers(data) {
 
 /* ══════════════════════════════════════════════════
    8. VILLES PRINCIPALES — inline data (no fetch)
+   (Benslimane retirée en novembre 2026 : hors de la région, à 10,6 km de la
+   limite — commune de la région Casablanca-Settat ; voir outils/decouper_couches.py)
    Cities: Rabat, Salé, Kénitra, Khémisset, Tiflet,
            Sidi Kacem, Sidi Slimane
    ══════════════════════════════════════════════════ */
@@ -707,9 +709,6 @@ function loadCities() {
       { type: 'Feature',
         geometry: { type: 'Point', coordinates: [-5.9218, 34.2590] },
         properties: { name: 'Sidi Slimane',    type: 'secondary', population: 80000,  role: 'Province de Sidi Kacem',            altitude: 80  }},
-      { type: 'Feature',
-        geometry: { type: 'Point', coordinates: [-7.1200, 33.6190] },
-        properties: { name: 'Benslimane',      type: 'secondary', population: 70000,  role: 'Chef-lieu de province',             altitude: 220 }},
       { type: 'Feature',
         geometry: { type: 'Point', coordinates: [-6.0085, 34.6890] },
         properties: { name: 'Souk El Arbaa',   type: 'secondary', population: 76000,  role: 'Province de Kénitra',               altitude: 20  }},

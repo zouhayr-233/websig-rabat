@@ -4,3 +4,4 @@ import/
 Flood-area.*
 NON.*
 *.sr.lock
+.venv-outils/
