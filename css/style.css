@@ -916,7 +916,8 @@ ul { list-style: none; padding: 0; }
   --legend-scale: 1;          /* 0,8 à 1,4 (boutons A− / A+) */
   --legend-alpha: 0.85;       /* 0,4 à 1 (curseur) */
   position: absolute;
-  bottom: 128px;
+  /* au-dessus du bloc bas-droite (crédits + mini-carte), mesuré en JS : --br-h */
+  bottom: calc(var(--rail-h) + var(--br-h, 118px) + 10px);
   right: 14px;
   z-index: 900;
   display: flex; flex-direction: column;
@@ -1156,6 +1157,18 @@ ul { list-style: none; padding: 0; }
 .susc-opacity input[type="range"] { width: 100%; accent-color: var(--blue-main); }
 .panel .section-title, .panel .tc-group-label { color: #1e3a8a; }
 
+/* ── Crédits de la carte (attribution) : toujours visibles ──
+   10 px (9 px sur téléphone), une ligne si la largeur le permet, retour à la
+   ligne sinon ; largeur limitée pour ne pas passer sous le tiroir ouvert. */
+.leaflet-container .leaflet-control-attribution {
+  font-size: 10px; line-height: 1.3;
+  padding: 1px 4px;
+  background: rgba(255,255,255,0.7);
+  white-space: normal;
+  max-width: max(260px, calc(100vw - 440px));
+  margin: 0;
+}
+
 /* Badges « Technologies » (À propos) : fond blanc et texte bleu foncé pour le contraste AA */
 .panel .tech-badge { background: #ffffff; color: #1e3a8a; }
 
@@ -1219,11 +1232,13 @@ ul { list-style: none; padding: 0; }
   }
   .rail-btn { width: 48px; height: 48px; box-shadow: none; }
   .leaflet-bottom { bottom: var(--rail-h); }
+  .leaflet-container .leaflet-control-attribution { font-size: 9px; max-width: calc(100vw - 150px); }
   #measure-result { bottom: calc(var(--rail-h) + 12px); }
 
   /* Feuille qui monte du bas, au-dessus de la barre */
   .panel {
-    top: auto; left: 0; right: 0; bottom: var(--rail-h);
+    top: auto; left: 0; right: 0;
+    bottom: calc(var(--rail-h) + var(--br-h, 16px));   /* crédits visibles entre la feuille et la barre */
     width: auto; max-height: 65dvh;
     border-radius: 14px 14px 0 0;
   }
@@ -1240,7 +1255,7 @@ ul { list-style: none; padding: 0; }
   .stat-cards-grid { grid-template-columns: 1fr 1fr; }
   .leaflet-control-minimap { display: none !important; }
   #map-legend-float {
-    right: 8px; bottom: calc(var(--rail-h) + 8px);
+    right: 8px; bottom: calc(var(--rail-h) + var(--br-h, 16px) + 6px);
     max-width: 60vw;
     max-height: calc((100dvh - var(--header-h)) * 0.4);
   }

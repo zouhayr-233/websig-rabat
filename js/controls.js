@@ -245,6 +245,19 @@ document.addEventListener('DOMContentLoaded', function () {
     toggleSearch(!document.body.classList.contains('search-open'));
   });
 
+  /* Hauteur du bloc bas-droite de la carte (crédits + mini-carte) -> --br-h :
+     la légende et la feuille du téléphone se placent au-dessus, les crédits
+     restent visibles quelle que soit leur longueur (selon le fond actif). */
+  var brCorner = document.querySelector('.leaflet-bottom.leaflet-right');
+  if (brCorner) {
+    var majBr = function () {
+      document.documentElement.style.setProperty('--br-h', Math.ceil(brCorner.getBoundingClientRect().height) + 'px');
+    };
+    majBr();
+    if (window.ResizeObserver) new ResizeObserver(majBr).observe(brCorner);
+    if (window.map) window.map.on('baselayerchange layeradd layerremove', majBr);
+  }
+
   /* Passage téléphone <-> ordinateur : Leaflet doit recalculer sa taille */
   window.addEventListener('resize', function () {
     if (window.map) window.map.invalidateSize();

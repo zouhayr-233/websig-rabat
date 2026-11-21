@@ -26,7 +26,8 @@ const map = L.map('map', {
   minZoom: 8,
   maxBounds: RSK_MAX_BOUNDS,
   maxBoundsViscosity: 1.0,
-  zoomControl: false
+  zoomControl: false,
+  attributionControl: false    /* un seul contrôle d'attribution, ajouté plus bas */
 });
 
 /* Vue initiale : emprise de la limite régionale (fitBounds), dès que la
@@ -39,20 +40,24 @@ document.addEventListener('layerReady', function (ev) {
   if (lyr && lyr.getBounds && lyr.getBounds().isValid()) map.fitBounds(lyr.getBounds(), { padding: [10, 10], animate: false });
 });
 
-/* ── 2. Base layers ────────────────────────────────── */
+/* ── 2. Base layers ────────────────────────────────────
+   Crédits : un seul crédit OpenStreetMap par fond actif. Crédits Esri
+   repris du champ copyrightText de chaque service (novembre 2026), la
+   mention OpenStreetMap étant écrite en français. */
+const OSM_CREDIT = '&copy; <a href="https://www.openstreetmap.org/copyright">contributeurs OpenStreetMap</a>';
 const osmLayer = L.tileLayer(
   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }
+  { maxZoom: 19, attribution: OSM_CREDIT }
 );
 
 const satLayer = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  { maxZoom: 19, attribution: '&copy; Esri' }
+  { maxZoom: 19, attribution: 'Tuiles &copy; Esri &mdash; Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community' }
 );
 
 const terrainLayer = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-  { maxZoom: 19, attribution: '&copy; Esri' }
+  { maxZoom: 19, attribution: 'Tuiles &copy; Esri &mdash; Sources: Esri, HERE, Garmin, Intermap, increment P Corp., GEBCO, USGS, FAO, NPS, NRCAN, GeoBase, IGN, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), ' + OSM_CREDIT + ', and the GIS User Community' }
 );
 
 /* Fond « Nuit » : Esri World Dark Gray Base, sans clé et sans étiquettes.
@@ -60,11 +65,9 @@ const terrainLayer = L.tileLayer(
    tuiles une image « API KEY REQUIRED ».) Données jusqu'au zoom 16 :
    au-delà, Leaflet agrandit les tuiles du zoom 16. */
 const ESRI_DARK_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
-const ESRI_DARK_ATTR = 'Tuiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; contributeurs OpenStreetMap';
+const ESRI_DARK_ATTR = 'Tuiles &copy; Esri &mdash; Esri, HERE, Garmin, ' + OSM_CREDIT + ', and the GIS user community';
 const darkLayer = L.tileLayer(ESRI_DARK_URL, { maxNativeZoom: 16, maxZoom: 20, attribution: ESRI_DARK_ATTR });
 
-/* Add OSM as default */
-osmLayer.addTo(map);
 
 const baseLayers = {
   'OpenStreetMap': osmLayer,
@@ -92,7 +95,16 @@ window.activeBaseLayer = osmLayer;
 /* ── 3. Controls ───────────────────────────────────── */
 /* Zoom en haut à gauche : la barre de boutons des panneaux se place juste dessous */
 L.control.zoom({ position: 'topleft' }).addTo(map);
-L.control.attribution({ position: 'bottomright', prefix: 'WebSIG RSK | PFE 2025' }).addTo(map);
+/* Un seul contrôle d'attribution : préfixe Leaflet d'origine + « WebSIG RSK »,
+   puis les crédits du fond actif (mis à jour à chaque changement de fond). */
+L.control.attribution({
+  position: 'bottomright',
+  prefix: L.Control.Attribution.prototype.options.prefix + ' | WebSIG RSK'
+}).addTo(map);
+/* Fond par défaut ajouté APRÈS le contrôle d'attribution : Leaflet ne retire
+   le crédit d'une couche à son retrait que si elle a été ajoutée après le
+   contrôle (sinon le crédit OpenStreetMap restait affiché sur les autres fonds). */
+osmLayer.addTo(map);
 
 /* Graphic bar scale — classic cartographic style (alternating segments) */
 const GraphicScale = L.Control.extend({
