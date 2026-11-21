@@ -579,6 +579,12 @@ function ensureSusceptibilityLoaded() {
     });
   return _suscLoading;
 }
+/* Curseur d'opacité du panneau Couches (20 à 100 %) */
+window.setSusceptibilityOpacity = function (v) {
+  SUSC_OPACITY = v;
+  var lyr = window.overlayLayers[SUSC_KEY];
+  if (lyr && lyr.setOpacity) lyr.setOpacity(v);
+};
 window.ensureLayerLoaded = function (name) {
   if (name === SUSC_KEY) return ensureSusceptibilityLoaded();
   return Promise.resolve(!!window.overlayLayers[name]);

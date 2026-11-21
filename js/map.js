@@ -55,7 +55,8 @@ const baseLayers = {
 window.activeBaseLayer = osmLayer;
 
 /* ── 3. Controls ───────────────────────────────────── */
-L.control.zoom({ position: 'topright' }).addTo(map);
+/* Zoom en haut à gauche : la barre de boutons des panneaux se place juste dessous */
+L.control.zoom({ position: 'topleft' }).addTo(map);
 L.control.attribution({ position: 'bottomright', prefix: 'WebSIG RSK | PFE 2025' }).addTo(map);
 
 /* Graphic bar scale — classic cartographic style (alternating segments) */
@@ -100,9 +101,9 @@ const GraphicScale = L.Control.extend({
 });
 new GraphicScale().addTo(map);
 
-/* North arrow — compass rose badge, top-left (classic map-layout position) */
+/* North arrow — compass rose badge, top-right (la colonne de gauche porte le zoom et la barre de boutons) */
 const NorthArrow = L.Control.extend({
-  options: { position: 'topleft' },
+  options: { position: 'topright' },
   onAdd() {
     const d = L.DomUtil.create('div', 'leaflet-control-north-arrow');
     d.innerHTML = '<svg viewBox="0 0 32 32" width="32" height="32" xmlns="http://www.w3.org/2000/svg">'

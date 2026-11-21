@@ -96,48 +96,158 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  /* ── SIDEBAR COLLAPSE ────────────────────────────── */
-  const sidebar       = document.getElementById('sidebar');
-  const sidebarToggle = document.getElementById('sidebar-toggle');
-  if (sidebarToggle && sidebar) {
-    sidebarToggle.addEventListener('click', function () {
-      sidebar.classList.toggle('collapsed');
-      this.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
-      setTimeout(function () { if (window.map) window.map.invalidateSize(); }, 320);
+  /* ══════════════════════════════════════════════════
+     PANNEAUX À LA DEMANDE — barre de boutons + panneau unique
+     Un seul panneau ouvert à la fois ; même bouton, croix ou Échap
+     pour le fermer. Tous fermés au chargement.
+     ══════════════════════════════════════════════════ */
+  var PANEL_TITLES = { couches: 'Couches', stats: 'Statistiques', precip: 'Précipitations', apropos: 'À propos' };
+  var panel      = document.getElementById('panel');
+  var panelTitle = document.getElementById('panel-title');
+  var panelBody  = panel ? panel.querySelector('.panel-body') : null;
+  var legendEl   = document.getElementById('map-legend-float');
+  var currentPanel = null;
+  var lastOpener   = null;
+
+  function isPhone() { return window.matchMedia('(max-width: 768px)').matches; }
+  function railBtn(key) { return document.querySelector('.rail-btn[data-open="' + key + '"]'); }
+  function setExpanded(key, on) {
+    var b = railBtn(key);
+    if (b) b.setAttribute('aria-expanded', on ? 'true' : 'false');
+  }
+
+  /* Un graphique créé dans un conteneur masqué a une taille nulle :
+     on le redimensionne à l'ouverture de son panneau. */
+  function resizeChartsIn(el) {
+    if (!el || !window.Chart || !Chart.instances) return;
+    Object.values(Chart.instances).forEach(function (c) {
+      if (el.contains(c.canvas)) c.resize();
     });
   }
 
-  /* ── RIGHT PANEL COLLAPSE ────────────────────────── */
-  const rightPanel   = document.getElementById('right-panel');
-  const rightToggle  = document.getElementById('right-panel-toggle');
-  if (rightToggle && rightPanel) {
-    rightToggle.addEventListener('click', function () {
-      rightPanel.classList.toggle('collapsed');
-      this.textContent = rightPanel.classList.contains('collapsed') ? '◀' : '▶';
-      setTimeout(function () { if (window.map) window.map.invalidateSize(); }, 320);
+  function openPanel(key) {
+    if (!panel || !PANEL_TITLES[key]) return;
+    if (isPhone()) setLegendOpen(false);          /* téléphone : un seul élément ouvert */
+    var section = null;
+    panel.querySelectorAll('.panel-section').forEach(function (s) {
+      var on = s.dataset.panel === key;
+      s.classList.toggle('active', on);
+      if (on) section = s;
     });
+    panelTitle.textContent = PANEL_TITLES[key];
+    panel.hidden = false;
+    Object.keys(PANEL_TITLES).forEach(function (k) { setExpanded(k, k === key); });
+    currentPanel = key;
+    if (panelBody) panelBody.scrollTop = 0;
+    requestAnimationFrame(function () { resizeChartsIn(section); });
   }
 
-  /* ── PANEL TABS ──────────────────────────────────── */
-  document.querySelectorAll('.tab-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
-      document.querySelectorAll('.tab-content').forEach(function (c) { c.classList.remove('active'); });
-      this.classList.add('active');
-      const tab = document.getElementById('tab-' + this.dataset.tab);
-      if (tab) tab.classList.add('active');
-      /* Charts inside a tab hidden via display:none have a 0x0 canvas while
-         inactive. Most browsers resize them automatically (ResizeObserver)
-         once the tab becomes visible, but we force it explicitly so the
-         charts are never left blank on slower/older browsers. */
-      if (tab && window.Chart && Chart.instances) {
-        setTimeout(function () {
-          Object.values(Chart.instances).forEach(function (c) {
-            if (tab.contains(c.canvas)) c.resize();
-          });
-        }, 0);
+  function closePanel(returnFocus) {
+    if (!panel || panel.hidden) return;
+    panel.hidden = true;
+    Object.keys(PANEL_TITLES).forEach(function (k) { setExpanded(k, false); });
+    var key = currentPanel;
+    currentPanel = null;
+    if (returnFocus) { var b = railBtn(key); if (b) b.focus(); }
+  }
+
+  /* Légende : affichée / repliée par son bouton (réglages : voir plus bas) */
+  function setLegendOpen(on) {
+    if (!legendEl) return;
+    legendEl.classList.toggle('is-collapsed', !on);
+    setExpanded('legende', on);
+    if (on && isPhone()) closePanel(false);
+  }
+  window.setLegendOpen = setLegendOpen;
+
+  /* Barre de boutons : contrôle Leaflet en haut à gauche, sous le zoom
+     (rangée en bas sur téléphone, par CSS). */
+  var railEl = document.getElementById('rail');
+  if (railEl && window.map) {
+    var RailControl = L.Control.extend({
+      options: { position: 'topleft' },
+      onAdd: function () {
+        L.DomEvent.disableClickPropagation(railEl);
+        L.DomEvent.disableScrollPropagation(railEl);
+        return railEl;
       }
     });
+    new RailControl().addTo(window.map);
+  }
+  document.querySelectorAll('.rail-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var key = this.dataset.open;
+      lastOpener = this;
+      if (key === 'legende') {
+        setLegendOpen(legendEl && legendEl.classList.contains('is-collapsed'));
+        return;
+      }
+      if (currentPanel === key) closePanel(true); else openPanel(key);
+    });
+  });
+  var panelClose = document.getElementById('panel-close');
+  if (panelClose) panelClose.addEventListener('click', function () { closePanel(true); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (currentPanel) { closePanel(true); return; }
+    if (document.body.classList.contains('search-open')) toggleSearch(false);
+  });
+  window.openPanel = openPanel;
+  window.closePanel = closePanel;
+
+  /* ── Panneau Couches : Tout décocher / Réinitialiser ──
+     « Réinitialiser » = couches affichées par défaut dans index.html. */
+  var allCards = Array.prototype.slice.call(document.querySelectorAll('.thematic-card'));
+  var DEFAULT_ACTIVE = allCards.filter(function (c) { return c.classList.contains('active'); })
+                               .map(function (c) { return c.dataset.layer; });
+  function setCard(card, on) { if (card.classList.contains('active') !== on) card.click(); }
+  var btnNone  = document.getElementById('btn-layers-none');
+  var btnReset = document.getElementById('btn-layers-reset');
+  if (btnNone)  btnNone.addEventListener('click', function () { allCards.forEach(function (c) { setCard(c, false); }); });
+  if (btnReset) btnReset.addEventListener('click', function () {
+    allCards.forEach(function (c) { setCard(c, DEFAULT_ACTIVE.indexOf(c.dataset.layer) !== -1); });
+  });
+
+  /* Cartes de couches utilisables au clavier (case à cocher) */
+  allCards.forEach(function (card) {
+    card.setAttribute('role', 'checkbox');
+    card.setAttribute('tabindex', '0');
+    var name = card.querySelector('.tc-name');
+    if (name) card.setAttribute('aria-label', name.textContent.trim());
+    var sync = function () { card.setAttribute('aria-checked', card.classList.contains('active') ? 'true' : 'false'); };
+    sync();
+    card.addEventListener('click', function () { setTimeout(sync, 0); });
+    card.addEventListener('keydown', function (e) {
+      if (e.target !== card) return;
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+    });
+  });
+
+  /* ── Curseur d'opacité de la couche de susceptibilité (20 à 100 %) ── */
+  var opRange = document.getElementById('susc-opacity-range');
+  var opValue = document.getElementById('susc-opacity-value');
+  if (opRange) {
+    opRange.addEventListener('input', function () {
+      var v = +this.value;
+      if (opValue) opValue.textContent = v + ' %';
+      if (window.setSusceptibilityOpacity) window.setSusceptibilityOpacity(v / 100);
+    });
+  }
+
+  /* ── Recherche sur téléphone : barre ouverte par la loupe ── */
+  var btnSearchToggle = document.getElementById('btn-search-toggle');
+  function toggleSearch(on) {
+    document.body.classList.toggle('search-open', on);
+    if (btnSearchToggle) btnSearchToggle.setAttribute('aria-expanded', on ? 'true' : 'false');
+    if (on) { var i = document.getElementById('search-input'); if (i) i.focus(); }
+  }
+  if (btnSearchToggle) btnSearchToggle.addEventListener('click', function () {
+    toggleSearch(!document.body.classList.contains('search-open'));
+  });
+
+  /* Passage téléphone <-> ordinateur : Leaflet doit recalculer sa taille */
+  window.addEventListener('resize', function () {
+    if (window.map) window.map.invalidateSize();
   });
 
   /* ── DATA ERROR BANNER — dismiss button ──────────── */
@@ -193,23 +303,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const btnInfo = document.getElementById('btn-info');
   if (btnInfo) btnInfo.addEventListener('click', openInfoModal);
 
-  /* ── MAP EXPAND BUTTON ───────────────────────────── */
-  var mapExpanded = false;
-  var btnMapExpand = document.getElementById('btn-map-expand');
-  if (btnMapExpand) {
-    btnMapExpand.addEventListener('click', function () {
-      mapExpanded = !mapExpanded;
-      document.body.classList.toggle('map-expanded', mapExpanded);
-      var ei = document.getElementById('expand-icon');
-      var ci = document.getElementById('collapse-icon');
-      if (ei) ei.style.display = mapExpanded ? 'none' : '';
-      if (ci) ci.style.display = mapExpanded ? ''     : 'none';
-      btnMapExpand.title = mapExpanded ? 'Réduire la carte' : 'Agrandir la carte';
-      /* Let Leaflet know the map container changed size */
-      setTimeout(function () { if (window.map) window.map.invalidateSize(); }, 200);
-    });
-  }
-
   /* ── LEGEND DRAG-RESIZE ──────────────────────────── */
   (function () {
     var legend  = document.getElementById('map-legend-float');
@@ -264,26 +357,6 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('touchend',    onUp, { capture: true });
     document.addEventListener('touchcancel', onUp, { capture: true });
   }());
-
-  /* ── ORIENTATION CHANGE — close panels when switching to landscape ──
-     Uses resize (more reliable than orientationchange on Android/iOS) */
-  var _lastLandscape = window.innerWidth > window.innerHeight;
-  window.addEventListener('resize', function () {
-    var nowLandscape = window.innerWidth > window.innerHeight;
-    if (nowLandscape === _lastLandscape) return;   /* width/height ratio unchanged */
-    _lastLandscape = nowLandscape;
-    /* Close both sliding panels */
-    var sidebar    = document.getElementById('sidebar');
-    var rightPanel = document.getElementById('right-panel');
-    var overlay    = document.getElementById('mobile-overlay');
-    if (sidebar)    sidebar.classList.remove('mobile-open');
-    if (rightPanel) rightPanel.classList.remove('mobile-open');
-    if (overlay)    overlay.classList.remove('active');
-    /* Let the browser finish reflowing before telling Leaflet */
-    setTimeout(function () {
-      if (window.map) window.map.invalidateSize();
-    }, 400);
-  });
 
   /* ── MEASURE TOOLS ───────────────────────────────── */
   let measureGroup = null;
@@ -365,61 +438,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const btnMC = document.getElementById('modal-close-btn'); if (btnMC) btnMC.addEventListener('click', closeInfoModal);
   const btnMO = document.getElementById('modal-ok-btn');    if (btnMO) btnMO.addEventListener('click', closeInfoModal);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeInfoModal(); });
-
-  /* ══ MOBILE PANEL MANAGEMENT ════════════════════════
-     Sidebar  → slides from left  (☰ button)
-     RightPanel → slides from right (📊 button)
-     Backdrop → closes any open panel on tap
-     ═════════════════════════════════════════════════ */
-  var mobileOverlay = document.getElementById('mobile-overlay');
-
-  function isMobile() { return window.innerWidth <= 1024; }
-
-  function openMobilePanel(panel) {
-    closeMobilePanels(false);
-    if (panel) panel.classList.add('mobile-open');
-    if (mobileOverlay) mobileOverlay.classList.add('visible');
-    if (window.map) window.map.invalidateSize();
-  }
-
-  function closeMobilePanels(doInvalidate) {
-    if (sidebar)     sidebar.classList.remove('mobile-open');
-    if (rightPanel)  rightPanel.classList.remove('mobile-open');
-    if (mobileOverlay) mobileOverlay.classList.remove('visible');
-    if (doInvalidate !== false)
-      setTimeout(function () { if (window.map) window.map.invalidateSize(); }, 300);
-  }
-
-  /* Hamburger — toggle sidebar */
-  var mobileMenu = document.getElementById('btn-mobile-menu');
-  if (mobileMenu) {
-    mobileMenu.addEventListener('click', function () {
-      if (isMobile()) {
-        sidebar && sidebar.classList.contains('mobile-open')
-          ? closeMobilePanels() : openMobilePanel(sidebar);
-      } else {
-        if (sidebar) {
-          sidebar.classList.toggle('collapsed');
-          sidebarToggle && (sidebarToggle.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀');
-          setTimeout(function () { if (window.map) window.map.invalidateSize(); }, 320);
-        }
-      }
-    });
-  }
-
-  /* Stats button — toggle right panel */
-  var mobileStats = document.getElementById('btn-mobile-stats');
-  if (mobileStats) {
-    mobileStats.addEventListener('click', function () {
-      rightPanel && rightPanel.classList.contains('mobile-open')
-        ? closeMobilePanels() : openMobilePanel(rightPanel);
-    });
-  }
-
-  /* Backdrop tap → close all */
-  if (mobileOverlay) {
-    mobileOverlay.addEventListener('click', function () { closeMobilePanels(); });
-  }
 
   /* ══════════════════════════════════════════════════
      PROFESSIONAL GIS LEGEND — all active layers shown
