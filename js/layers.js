@@ -50,33 +50,18 @@ function hideSpinnerNow() {
    PROFESSIONAL ICONS
    ══════════════════════════════════════════════════ */
 
-/* Dam icon — symbole cartographique barrage (convention IGN/BRGM) */
+/* Barrages et stations : symboles définis une seule fois dans js/symboles.js
+   (même définition pour la carte, le panneau « Couches » et la légende).
+   Taille, ancrage et décalage de popup inchangés. */
 var damIcon = L.divIcon({
   className: '',
-  html: '<svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">'
-      + '<circle cx="19" cy="19" r="17" fill="#083d6e" stroke="white" stroke-width="2.5"/>'
-      + '<rect x="7" y="10" width="24" height="4.5" fill="#bbdefb" rx="1" opacity="0.75"/>'
-      + '<polygon points="8,14.5 30,14.5 27,25 11,25" fill="white" opacity="0.97"/>'
-      + '<rect x="17" y="14.5" width="4" height="10.5" fill="#1e88e5" opacity="0.55"/>'
-      + '<line x1="8" y1="18.5" x2="30" y2="18.5" stroke="#1976d2" stroke-width="0.7" opacity="0.4"/>'
-      + '<line x1="9" y1="22" x2="29" y2="22" stroke="#1976d2" stroke-width="0.7" opacity="0.4"/>'
-      + '<path d="M7 29 Q10.5 26.5 14 29 Q17.5 31.5 21 29 Q24.5 26.5 31 27.5" stroke="#90caf9" stroke-width="1.8" fill="none" stroke-linecap="round"/>'
-      + '</svg>',
+  html: symboleSVG('barrages'),
   iconSize: [38, 38], iconAnchor: [19, 19], popupAnchor: [0, -22]
 });
 
-/* Station pluviométrique — pluviomètre + échelle (symbole hydrologique ABHS) */
 var stationIcon = L.divIcon({
   className: '',
-  html: '<svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">'
-      + '<circle cx="15" cy="15" r="13" fill="#1565c0" stroke="white" stroke-width="2"/>'
-      + '<rect x="10" y="8" width="7" height="14" fill="white" rx="2" opacity="0.95"/>'
-      + '<rect x="11" y="16" width="5" height="6" fill="#64b5f6" rx="1" opacity="0.85"/>'
-      + '<line x1="14" y1="10.5" x2="16.5" y2="10.5" stroke="#1565c0" stroke-width="0.9" opacity="0.7"/>'
-      + '<line x1="14" y1="12.5" x2="16.5" y2="12.5" stroke="#1565c0" stroke-width="0.9" opacity="0.7"/>'
-      + '<line x1="14" y1="14.5" x2="16.5" y2="14.5" stroke="#1565c0" stroke-width="0.9" opacity="0.7"/>'
-      + '<path d="M20 10 Q21 8 22 10 Q23 12 22 13.5 Q21 15 20 13.5 Q19 12 20 10Z" fill="white" opacity="0.85"/>'
-      + '</svg>',
+  html: symboleSVG('stations'),
   iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -17]
 });
 

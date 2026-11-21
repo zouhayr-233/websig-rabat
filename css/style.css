@@ -977,6 +977,12 @@ ul { list-style: none; padding: 0; }
 }
 .lg-sym-line { display: inline-block; width: 1.4em; flex-shrink: 0; border-radius: 1px; }
 .lg-sym-point { flex-shrink: 0; }
+/* Symboles SVG partagés avec la carte (js/symboles.js) : panneau Couches et légende */
+.tc-symbol, .lg-sym-svg {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; flex-shrink: 0; line-height: 0;
+}
+.tc-symbol svg, .lg-sym-svg svg { display: block; }
 .lg-label { flex: 1; line-height: 1.2; }
 .risk-summary { font-size: 12px; font-weight: 600; color: #7c2d12; background: #fff7ed;
   border-left: 3px solid #ff9900; padding: 5px 8px; margin: 2px 0 8px; border-radius: 3px; }

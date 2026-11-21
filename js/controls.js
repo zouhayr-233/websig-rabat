@@ -460,12 +460,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (L === 'Barrages')
         sections.push(lgSection('🏗️ Barrages', [
-          lgPoint('#0d47a1', 12, '⬟', 'Barrage opérationnel'),
+          lgSymbole('barrages', 'Barrage opérationnel'),
         ]));
 
       if (L === 'Stations pluviométriques')
         sections.push(lgSection('🌧️ Stations pluviométriques', [
-          lgPoint('#1565c0', 10, '●', 'Station de mesure'),
+          lgSymbole('stations', 'Station de mesure'),
         ]));
 
       if (L === 'Nappes souterraines')
@@ -541,14 +541,11 @@ document.addEventListener('DOMContentLoaded', function () {
       + '</div>';
   }
 
-  /* ── Point symbol ── */
-  function lgPoint(color, size, glyph, label) {
+  /* ── Symbole ponctuel (barrages, stations) : même définition que la carte
+     (js/symboles.js), affichée en 18 px ── */
+  function lgSymbole(couche, label) {
     return '<div class="lg-item">'
-      + '<span class="lg-sym-point" style="width:' + size + 'px;height:' + size + 'px;'
-      + 'background:' + color + ';border-radius:50%;border:2px solid white;'
-      + 'outline:1.5px solid ' + color + ';flex-shrink:0;'
-      + 'display:inline-flex;align-items:center;justify-content:center;'
-      + 'color:white;font-size:' + Math.round(size*0.55) + 'px">' + '</span>'
+      + '<span class="lg-sym-svg" aria-hidden="true">' + symboleSVG(couche, { taille: 18, decoratif: true }) + '</span>'
       + '<span class="lg-label">' + label + '</span>'
       + '</div>';
   }
