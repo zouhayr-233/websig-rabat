@@ -219,6 +219,49 @@ def traiter_couche(chemin, B, B26, Bb):
     return r, doc_sortie, style
 
 
+# ── couverture du territoire (étape 3) : rapport seulement, rien n'est comblé ──
+COUCHES_COUVRANTES = ['data/susceptibilite.geojson', 'data/watersheds_real.geojson']
+BANDE_M = 1500
+
+
+def segments_cotiers(B26):
+    """Segments de la limite tournés vers l'océan : normale extérieure orientée ouest-nord-ouest
+    (composante x < -0,5 et y > -0,2). Approximation géométrique du trait de côte atlantique."""
+    anneau = B26.exterior if B26.geom_type == 'Polygon' else max(B26.geoms, key=lambda g: g.area).exterior
+    c = list(anneau.coords)
+    sens = 1 if anneau.is_ccw else -1           # extérieur à droite si anneau anti-horaire
+    cot = []
+    for (x1, y1), (x2, y2) in zip(c[:-1], c[1:]):
+        dx, dy = x2 - x1, y2 - y1
+        n = (dx * dx + dy * dy) ** 0.5
+        if n == 0:
+            continue
+        nx, ny = sens * dy / n, -sens * dx / n   # normale extérieure
+        if nx < -0.5 and ny > -0.2:
+            cot.append(LineString([(x1, y1), (x2, y2)]))
+    return unary_union(cot)
+
+
+def couverture(B26):
+    cote = segments_cotiers(B26)
+    zone_cote = cote.buffer(BANDE_M).intersection(B26)
+    zone_bord = B26.boundary.buffer(BANDE_M).intersection(B26).difference(zone_cote)
+    print(f"\n== Couverture de la région (EPSG:26191) ; côte = segments tournés vers l'océan, bandes de {BANDE_M / 1000:g} km")
+    for chemin in COUCHES_COUVRANTES:
+        d = json.load(open(os.path.join(RACINE, chemin), encoding='utf-8'))
+        U = p26(unary_union([make_valid(shape(f['geometry'])) for f in d['features']]))
+        vide = B26.difference(U)
+        a = vide.area / 1e6
+        c = vide.intersection(zone_cote).area / 1e6
+        b = vide.intersection(zone_bord).area / 1e6
+        i = a - c - b
+        morceaux = list(vide.geoms) if hasattr(vide, 'geoms') else ([vide] if not vide.is_empty else [])
+        trous = [m for m in morceaux if not m.intersects(B26.boundary)]
+        print(f'   {chemin} : non couvert {a:.2f} km² ({100 * a * 1e6 / B26.area:.3f} %) | bande côtière {c:.2f} km² | '
+              f'autres bordures {b:.2f} km² | intérieur {i:.2f} km² | morceaux {len(morceaux)}, dont {len(trous)} trous '
+              f'intérieurs ({sum(t.area for t in trous) / 1e6:.2f} km²)')
+
+
 def villes_inline(B, B26):
     src = open(os.path.join(RACINE, VILLES_JS), encoding='utf-8').read()
     villes = re.findall(r"coordinates: \[(-?[\d.]+), (-?[\d.]+)\] \},\s*properties: \{ name: '([^']+)'", src)
@@ -263,6 +306,7 @@ def main():
             print('   -> fichier écrit')
         elif a.appliquer:
             print('   -> rien à découper : fichier laissé tel quel')
+    couverture(B26)
     n, hors = villes_inline(B, B26)
     print(f'\n== {VILLES_JS} (villes principales, données dans le code) : {n} points, {len(hors)} hors limite')
     for x in hors:
