@@ -1150,6 +1150,9 @@ ul { list-style: none; padding: 0; }
 .susc-opacity input[type="range"] { width: 100%; accent-color: var(--blue-main); }
 .panel .section-title, .panel .tc-group-label { color: #1e3a8a; }
 
+/* Badges « Technologies » (À propos) : fond blanc et texte bleu foncé pour le contraste AA */
+.panel .tech-badge { background: #ffffff; color: #1e3a8a; }
+
 /* Focus clavier visible */
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 #toolbar :focus-visible { outline-color: #ffffff; }
@@ -1222,10 +1225,8 @@ ul { list-style: none; padding: 0; }
 
   /* Texte de 14 px au minimum dans les panneaux */
   .panel-body { font-size: 14px; }
-  .panel :is(p, li, td, th, label, output, span, a, .stat-label, .tc-name, .tc-tag,
-             .basemap-name, .chart-title, .section-title, .tc-group-label, .about-text,
-             .about-list, .about-table, .data-table, .risk-legend-inline, .risk-summary,
-             .legend-empty, .layers-action-btn, .about-version, .about-footer) {
+  /* (y compris les tailles en ligne des cartes de couches ; chiffres clés et titre exclus) */
+  .panel-body :is(div, p, li, td, th, label, output, span, a, button, strong, b, em, h3, h4):not(.stat-number):not(.basemap-check) {
     font-size: 14px !important;
   }
   .panel .tc-tag { white-space: normal; }
