@@ -16,10 +16,27 @@ if (typeof L === 'undefined') {
    All GeoJSON data is in WGS84 (EPSG:4326) — Leaflet
    handles the conversion automatically.
    ─────────────────────────────────────────────────── */
+/* Vue limitée à la région RSK : les fonds publics affichent, plus au sud,
+   des noms et des lignes que le WebSIG ne contrôle pas. On empêche donc la
+   vue de s'y rendre (zoom minimal 8, emprise maximale bloquée). */
+const RSK_MAX_BOUNDS = [[32.2, -8.2], [35.8, -4.2]];
 const map = L.map('map', {
-  center: [34.10, -6.40],
+  center: [34.10, -6.40],          /* vue d'attente, remplacée par l'emprise de la région */
   zoom: 9,
+  minZoom: 8,
+  maxBounds: RSK_MAX_BOUNDS,
+  maxBoundsViscosity: 1.0,
   zoomControl: false
+});
+
+/* Vue initiale : emprise de la limite régionale (fitBounds), dès que la
+   couche est chargée ; une seule fois. */
+let _initialFitDone = false;
+document.addEventListener('layerReady', function (ev) {
+  if (_initialFitDone || ev.detail.name !== 'Limites administratives') return;
+  _initialFitDone = true;
+  const lyr = window.overlayLayers && window.overlayLayers['Limites administratives'];
+  if (lyr && lyr.getBounds && lyr.getBounds().isValid()) map.fitBounds(lyr.getBounds(), { padding: [10, 10], animate: false });
 });
 
 /* ── 2. Base layers ────────────────────────────────── */
