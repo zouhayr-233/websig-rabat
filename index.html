@@ -128,16 +128,22 @@
           Région Rabat-Salé-Kénitra
         </div>
 
-        <!-- Légende flottante — en bas à gauche de la carte -->
-        <div id="map-legend-float">
+        <!-- Légende flottante — en bas à droite (ordinateur) ; repliée par défaut sur téléphone -->
+        <div id="map-legend-float" class="is-collapsed" role="region" aria-labelledby="legend-title">
           <div class="mlf-title">
-            Légende
-            <span class="mlf-drag-hint" title="Glisser pour redimensionner">⤢</span>
+            <span id="legend-title">Légende</span>
+            <div class="mlf-tools">
+              <button type="button" id="legend-smaller" class="mlf-btn" title="Réduire la taille" aria-label="Réduire la taille de la légende">A−</button>
+              <button type="button" id="legend-bigger" class="mlf-btn" title="Agrandir" aria-label="Agrandir la légende">A+</button>
+              <input type="range" id="legend-alpha" min="0.4" max="1" step="0.05" value="0.85" title="Transparence de la légende" aria-label="Opacité du fond de la légende">
+              <button type="button" id="legend-collapse" class="mlf-btn" title="Replier la légende" aria-label="Replier la légende">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+              </button>
+            </div>
           </div>
           <div id="legend-content">
             <p class="legend-empty">Cliquez sur une carte pour voir sa légende.</p>
           </div>
-          <div id="legend-resize-handle" title="Redimensionner"></div>
         </div>
 
         <!-- Message pendant le téléchargement d'une couche chargée à la demande -->

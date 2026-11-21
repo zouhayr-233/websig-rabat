@@ -303,59 +303,46 @@ document.addEventListener('DOMContentLoaded', function () {
   const btnInfo = document.getElementById('btn-info');
   if (btnInfo) btnInfo.addEventListener('click', openInfoModal);
 
-  /* ── LEGEND DRAG-RESIZE ──────────────────────────── */
+  /* ── LÉGENDE : taille (A− / A+), transparence, repli ──
+     Réglages mémorisés dans localStorage (la page fonctionne sans). */
   (function () {
-    var legend  = document.getElementById('map-legend-float');
-    var handle  = document.getElementById('legend-resize-handle');
-    var content = document.getElementById('legend-content');
-    if (!legend || !handle) return;
+    var legend = document.getElementById('map-legend-float');
+    if (!legend) return;
+    var KEY = 'websig-rsk-legende';
+    var MIN = 0.8, MAX = 1.4, STEP = 0.1;
+    var st = { scale: 1, alpha: 0.85 };
+    try {
+      var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (saved && typeof saved === 'object') {
+        if (+saved.scale >= MIN && +saved.scale <= MAX) st.scale = +saved.scale;
+        if (+saved.alpha >= 0.4 && +saved.alpha <= 1) st.alpha = +saved.alpha;
+      }
+    } catch (e) { /* stockage indisponible : réglages par défaut */ }
 
-    var dragging = false, startX, startY, startW, startH;
+    var btnS = document.getElementById('legend-smaller');
+    var btnB = document.getElementById('legend-bigger');
+    var alpha = document.getElementById('legend-alpha');
+    var btnC = document.getElementById('legend-collapse');
 
-    function onDown(e) {
-      e.preventDefault();
-      dragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      startW = legend.offsetWidth;
-      startH = content.offsetHeight;
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup',   onUp);
+    function apply(save) {
+      st.scale = Math.round(st.scale * 10) / 10;
+      legend.style.setProperty('--legend-scale', st.scale);
+      legend.style.setProperty('--legend-alpha', st.alpha);
+      if (btnS) btnS.disabled = st.scale <= MIN + 1e-9;
+      if (btnB) btnB.disabled = st.scale >= MAX - 1e-9;
+      if (alpha) alpha.value = st.alpha;
+      if (save) { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
     }
-
-    function onMove(e) {
-      if (!dragging) return;
-      /* Légende ancrée à droite : la poignée est dans le coin inférieur
-         gauche, tirer vers la gauche élargit l'encart. */
-      var newW = Math.max(120, Math.min(400, startW - (e.clientX - startX)));
-      var newH = Math.max(40,  Math.min(window.innerHeight * 0.75, startH + e.clientY - startY));
-      legend.style.width    = newW + 'px';
-      content.style.maxHeight = newH + 'px';
-    }
-
-    function onUp() {
-      dragging = false;
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup',   onUp);
-    }
-
-    handle.addEventListener('mousedown', onDown);
-
-    /* Touch support — capture phase bypasses Leaflet stopPropagation on legend */
-    handle.addEventListener('touchstart', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var t = e.touches[0];
-      onDown({ clientX: t.clientX, clientY: t.clientY, preventDefault: function(){} });
-    }, { passive: false, capture: true });
-    document.addEventListener('touchmove', function (e) {
-      if (!dragging) return;
-      e.preventDefault();
-      var t = e.touches[0];
-      onMove({ clientX: t.clientX, clientY: t.clientY });
-    }, { passive: false, capture: true });
-    document.addEventListener('touchend',    onUp, { capture: true });
-    document.addEventListener('touchcancel', onUp, { capture: true });
+    if (btnS) btnS.addEventListener('click', function () { st.scale = Math.max(MIN, st.scale - STEP); apply(true); });
+    if (btnB) btnB.addEventListener('click', function () { st.scale = Math.min(MAX, st.scale + STEP); apply(true); });
+    if (alpha) alpha.addEventListener('input', function () { st.alpha = +this.value; apply(true); });
+    if (btnC) btnC.addEventListener('click', function () {
+      setLegendOpen(false);
+      var b = railBtn('legende'); if (b) b.focus();
+    });
+    apply(false);
+    /* Ouverte par défaut sur ordinateur, repliée sur téléphone */
+    setLegendOpen(!isPhone());
   }());
 
   /* ── MEASURE TOOLS ───────────────────────────────── */
