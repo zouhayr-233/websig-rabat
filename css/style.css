@@ -1190,14 +1190,49 @@ ul { list-style: none; padding: 0; }
 
 .mobile-only { display: none; }
 
+/* ── Plein écran de la carte (API Fullscreen ou CSS seul, ex. iPhone) ──
+   Le bandeau est masqué ; la carte couvre tout l'écran ; la barre de boutons,
+   les panneaux et la légende restent utilisables. */
+body.map-fullscreen { --header-h: 0px; }
+body.map-fullscreen #toolbar { display: none; }
+body.map-fullscreen #map {
+  inset: 0; top: 0;
+  height: 100vh; height: 100dvh;
+}
+.leaflet-control-exit-fullscreen {
+  display: none;
+  width: 44px; height: 44px; padding: 0;
+  align-items: center; justify-content: center;
+  background: #ffffff; color: #1e3a8a;
+  border: 1.5px solid rgba(15,23,42,0.25); border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(15,23,42,0.22); cursor: pointer;
+}
+.leaflet-control-exit-fullscreen:hover { background: #dbeafe; }
+body.map-fullscreen .leaflet-control-exit-fullscreen { display: flex; }
+
+/* ── Boutons de zoom sur appareil tactile : 44 px, espacés de 8 px ──
+   (souris : boutons Leaflet inchangés) */
+@media (pointer: coarse) {
+  .leaflet-container .leaflet-bar.leaflet-control-zoom {
+    display: flex; flex-direction: column; gap: 8px;
+    border: none; box-shadow: none; background: transparent;
+  }
+  .leaflet-container .leaflet-bar.leaflet-control-zoom a {
+    width: 44px; height: 44px; line-height: 42px; font-size: 24px;
+    border: 1.5px solid rgba(15,23,42,0.25); border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(15,23,42,0.18);
+  }
+}
+
 /* ── Écrans moyens : boutons du bandeau sans libellé ── */
 @media (max-width: 1100px) {
   #toolbar .btn-label { display: none; }
   #toolbar .toolbar-separator { margin: 0 2px; }
 }
 
-/* ── Téléphone (768 px ou moins) ── */
-@media (max-width: 768px) {
+/* ── Téléphone (768 px ou moins, ou téléphone tactile en paysage : 500 px de haut ou moins) ──
+   Même requête que PHONE_QUERY dans js/controls.js. */
+@media (max-width: 768px), (pointer: coarse) and (max-height: 500px) {
   :root { --header-h: 40px; --rail-h: 60px; }
 
   #toolbar { padding: 0 6px; gap: 6px; }
@@ -1206,9 +1241,9 @@ ul { list-style: none; padding: 0; }
   #coords-display, .toolbar-separator { display: none; }
   /* Outils masqués sur téléphone, comme avant (la grille reste disponible) */
   #btn-measure-distance, #btn-measure-area, #btn-clear-measure,
-  #btn-export-png, #btn-fullscreen, #btn-info { display: none !important; }
+  #btn-export-png, #btn-info { display: none !important; }   /* plein écran : disponible sur téléphone */
   .mobile-only { display: flex; }
-  #btn-search-toggle, #btn-grid { min-width: 36px; min-height: 32px; justify-content: center; }
+  #btn-search-toggle, #btn-grid, #btn-fullscreen { min-width: 36px; min-height: 32px; justify-content: center; }
   #toolbar .toolbar-center { flex: 0 0 auto; margin-left: auto; }
 
   /* Recherche : barre déroulée sous le bandeau, ouverte par la loupe */

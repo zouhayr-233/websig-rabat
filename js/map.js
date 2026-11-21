@@ -27,7 +27,11 @@ const map = L.map('map', {
   maxBounds: RSK_MAX_BOUNDS,
   maxBoundsViscosity: 1.0,
   zoomControl: false,
-  attributionControl: false    /* un seul contrôle d'attribution, ajouté plus bas */
+  attributionControl: false,   /* un seul contrôle d'attribution, ajouté plus bas */
+  /* Gestes tactiles explicitement actifs (pincement, double toucher, glisser) */
+  touchZoom: true,
+  doubleClickZoom: true,
+  dragging: true
 });
 
 /* Vue initiale : emprise de la limite régionale (fitBounds), dès que la
@@ -302,16 +306,60 @@ function switchBaseLayer(name) {
 }
 window.switchBaseLayer = switchBaseLayer;
 
-/* ── 9. Fullscreen ─────────────────────────────────── */
-function toggleFullscreen() {
-  const el = document.documentElement;
-  if (!document.fullscreenElement) {
-    (el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || function(){}).call(el);
-  } else {
-    (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document);
-  }
+/* ── 9. Plein écran de la CARTE ──────────────────────
+   La carte couvre tout l'écran (classe body.map-fullscreen : bandeau masqué,
+   #map en position fixed, inset 0, 100dvh). L'API Fullscreen du navigateur
+   est utilisée en plus quand elle existe ; sinon (iPhone : pas d'API pour
+   un élément autre qu'une vidéo), le plein écran CSS fait la même chose.
+   Un bouton « Quitter le plein écran » reste visible sur la carte. */
+function isMapFullscreen() { return document.body.classList.contains('map-fullscreen'); }
+function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+function refreshMapSize() {
+  map.invalidateSize();
+  setTimeout(function () { map.invalidateSize(); }, 250);   /* après le redimensionnement du navigateur */
 }
+function setMapFullscreen(on) {
+  document.body.classList.toggle('map-fullscreen', on);
+  const el = document.documentElement;
+  try {
+    if (on && !fsElement()) {
+      const req = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (req) { const pr = req.call(el); if (pr && pr.catch) pr.catch(function () {}); }
+    } else if (!on && fsElement()) {
+      const ex = document.exitFullscreen || document.webkitExitFullscreen;
+      if (ex) { const pr = ex.call(document); if (pr && pr.catch) pr.catch(function () {}); }
+    }
+  } catch (e) { /* API refusée : le plein écran CSS suffit */ }
+  refreshMapSize();
+  document.dispatchEvent(new CustomEvent('mapfullscreen', { detail: { on: on } }));
+}
+function toggleFullscreen() { setMapFullscreen(!isMapFullscreen()); }
+/* Sortie par le navigateur (Échap, geste retour) : on retire aussi la classe */
+['fullscreenchange', 'webkitfullscreenchange'].forEach(function (ev) {
+  document.addEventListener(ev, function () {
+    if (!fsElement() && isMapFullscreen()) setMapFullscreen(false);
+    else refreshMapSize();
+  });
+});
+/* Bouton de sortie, toujours visible en plein écran (masqué sinon, par CSS) */
+const ExitFullscreen = L.Control.extend({
+  options: { position: 'topright' },
+  onAdd() {
+    const b = L.DomUtil.create('button', 'leaflet-control-exit-fullscreen');
+    b.type = 'button';
+    b.title = 'Quitter le plein écran';
+    b.setAttribute('aria-label', 'Quitter le plein écran');
+    b.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+      + '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
+    L.DomEvent.disableClickPropagation(b);
+    L.DomEvent.on(b, 'click', function () { setMapFullscreen(false); });
+    return b;
+  }
+});
+new ExitFullscreen().addTo(map);
 window.toggleFullscreen = toggleFullscreen;
+window.setMapFullscreen = setMapFullscreen;
+window.isMapFullscreen = isMapFullscreen;
 
 /* ── 10. Export PNG ────────────────────────────────── */
 function exportMapPNG() {

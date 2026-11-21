@@ -109,7 +109,10 @@ document.addEventListener('DOMContentLoaded', function () {
   var currentPanel = null;
   var lastOpener   = null;
 
-  function isPhone() { return window.matchMedia('(max-width: 768px)').matches; }
+  /* Disposition « téléphone » : 768 px ou moins, ou téléphone tactile en paysage
+     (hauteur de 500 px ou moins) — même requête que dans style.css */
+  var PHONE_QUERY = '(max-width: 768px), (pointer: coarse) and (max-height: 500px)';
+  function isPhone() { return window.matchMedia(PHONE_QUERY).matches; }
   function railBtn(key) { return document.querySelector('.rail-btn[data-open="' + key + '"]'); }
   function setExpanded(key, on) {
     var b = railBtn(key);
@@ -298,10 +301,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const btnFS = document.getElementById('btn-fullscreen');
   if (btnFS) {
     btnFS.addEventListener('click', function () { if (window.toggleFullscreen) window.toggleFullscreen(); });
-    document.addEventListener('fullscreenchange', function () {
-      const fs = !!document.fullscreenElement;
+    /* Plein écran de la carte (API ou CSS) : libellé et état du bouton */
+    document.addEventListener('mapfullscreen', function (e) {
       const lbl = btnFS.querySelector('.btn-label');
-      if (lbl) lbl.textContent = fs ? 'Quitter' : 'Plein écran';
+      if (lbl) lbl.textContent = e.detail.on ? 'Quitter' : 'Plein écran';
+      btnFS.setAttribute('aria-pressed', e.detail.on ? 'true' : 'false');
     });
   }
 
