@@ -70,7 +70,8 @@
     "points_inondes": 398,
     "points_non_inondes": 399,
     "nombre_classes": 5,
-    "indice": "Probabilité p estimée par le modèle, classée en 5 classes (seuils 0,2 ; 0,4 ; 0,6 ; 0,8)"
+    "indice": "Probabilité p estimée par le modèle, classée en 5 classes (seuils 0,2 ; 0,4 ; 0,6 ; 0,8)",
+    "affichage_carte": "Contours lissés pour l'affichage : filtre majoritaire gaussien appliqué au raster classé (sigma de 1,5 cellule, environ 135 m), calé pour conserver la superficie de chaque classe, puis vectorisation et simplification à environ 18 m. Les polygones lissés diffèrent du raster de 0,4 % à 3,6 % par classe ; les chiffres affichés (statistiques, graphiques) viennent du raster."
   },
   "validation": {
     "type": "Validation spatiale par blocs géographiques",
@@ -85,7 +86,7 @@
     "Zones urbaines mal couvertes.",
     "Modèle statique : il répond à « où ? », pas à « quand ? ».",
     "Indice relatif, non réglementaire, qui n'est pas un système d'alerte.",
-    "Résolution de 90 m : aux forts zooms, les cellules du raster deviennent visibles sous forme de carrés.",
+    "Les contours de la couche de susceptibilité sont lissés pour l'affichage ; les superficies indiquées viennent du raster d'origine.",
     "Données figées à la date de conversion.",
     "Dépendance à des services tiers (fonds de carte, géocodage)."
   ],

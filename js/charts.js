@@ -65,7 +65,7 @@ var _KM2_PER_DEG2 = 111.1 * 111.1 * Math.cos(34 * Math.PI / 180); /* ≈ 10 229 
 var _statsPromise = null;
 function loadStatistiques() {
   if (!_statsPromise) {
-    _statsPromise = fetch('json/statistiques.json?v=20261115')
+    _statsPromise = fetch('json/statistiques.json?v=20261121')
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function (e) { console.warn('[charts] statistiques.json:', e.message); return null; });
   }

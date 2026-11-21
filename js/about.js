@@ -59,6 +59,7 @@ function renderAbout(meta) {
     + '<tr><td>Classes</td><td>' + naIfMissing(m.nombre_classes) + '</td></tr>'
     + '</table>'
     + (m.indice ? '<p class="about-text" style="margin-top:6px">' + m.indice + '</p>' : '')
+    + (m.affichage_carte ? '<p class="about-subtitle">Affichage de la carte</p><p class="about-text">' + m.affichage_carte + '</p>' : '')
     + (Array.isArray(m.variables) && m.variables.length
         ? '<p class="about-subtitle">Variables du modèle (' + naIfMissing(m.nombre_variables) + ')</p>'
           + '<ul class="about-list about-list-compact">'
@@ -119,7 +120,7 @@ function renderAbout(meta) {
 
 async function loadAbout() {
   try {
-    var res = await fetch('json/metadonnees.json?v=20261115');
+    var res = await fetch('json/metadonnees.json?v=20261121');
     if (!res.ok) { renderAbout(null); return; }
     var meta = await res.json();
     renderAbout(meta);

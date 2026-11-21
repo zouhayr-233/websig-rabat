@@ -6,7 +6,7 @@
    =================================================== */
 
 window.overlayLayers = {};
-window.appData = { dams: null, stations: null, watersheds: null, rivers: null, aquifers: null };
+window.appData = { dams: null, stations: null, watersheds: null, rivers: null, floodSusceptibility: null, aquifers: null };
 
 /* Check if a thematic card is active — uses getAttribute to avoid encoding issues */
 function isCardActive(layerName) {
@@ -428,20 +428,18 @@ function loadStations(data) {
 /* ══════════════════════════════════════════════════
    5. SUSCEPTIBILITÉ AUX INONDATIONS — modèle GTB
    Indice p (probabilité estimée par le modèle Gradient Tree Boosting),
-   classé en 5 classes. Affichage : tuiles PNG du raster classé
-   (data/susceptibilite_tuiles/{z}/{x}/{y}.png, zooms 7 à 12), sans
-   généralisation vectorielle : chaque cellule de 90 m est visible
-   telle qu'elle est dans le raster. Popup : classe lue dans la grille
-   d'origine (data/susceptibilite_classes.png). Description des fichiers :
-   data/susceptibilite_raster.json. Les superficies du tableau de bord
-   viennent de json/statistiques.json.
+   classé en 5 classes. Fichier data/susceptibilite.geojson : 5 entités
+   MultiPolygon (attributs classe / libelle / superficie_km2), contours
+   lissés pour l'affichage (filtre majoritaire gaussien sur le raster
+   classé, puis vectorisation et simplification à ~18 m). Les superficies
+   du tableau de bord viennent de json/statistiques.json (raster), jamais
+   d'un calcul sur ces polygones.
    ══════════════════════════════════════════════════ */
 
 var SUSC_KEY   = 'Susceptibilité aux inondations (modèle GTB)';
-var SUSC_META  = 'susceptibilite_raster.json';
-var SUSC_FILE_VERSION = '20261115';
-/* Classes, seuils et couleurs : identiques à la carte du rapport (et aux
-   couleurs des tuiles, voir la palette dans le script de génération) */
+var SUSC_FILE  = 'susceptibilite.geojson';
+var SUSC_FILE_VERSION = '20261121';
+/* Classes, seuils et couleurs : identiques à la carte du rapport */
 var SUSC_CLASSES = [
   { classe: 1, libelle: 'Très faible', seuil: 'p < 0,2',    couleur: '#006100' },
   { classe: 2, libelle: 'Faible',      seuil: '0,2 à 0,4',  couleur: '#7aab00' },
@@ -449,10 +447,9 @@ var SUSC_CLASSES = [
   { classe: 4, libelle: 'Élevée',      seuil: '0,6 à 0,8',  couleur: '#ff9900' },
   { classe: 5, libelle: 'Très élevée', seuil: 'p ≥ 0,8',    couleur: '#ff2200' }
 ];
-var SUSC_OPACITY = 0.65;
+var SUSC_OPACITY = 0.65;          /* réglable par le curseur du panneau Couches */
 window.SUSC_KEY = SUSC_KEY;
 window.SUSC_CLASSES = SUSC_CLASSES;
-var _suscMeta = null;
 
 function suscClass(n) {
   for (var i = 0; i < SUSC_CLASSES.length; i++) if (SUSC_CLASSES[i].classe === +n) return SUSC_CLASSES[i];
@@ -460,61 +457,27 @@ function suscClass(n) {
 }
 
 /* Panneau dédié sous l'overlayPane (z-index 400) : oueds, limites et
-   bassins restent dessinés au-dessus du remplissage. */
-function suscPane() {
+   bassins (SVG) restent dessinés au-dessus du remplissage. Moteur canvas
+   pour cette couche seulement. */
+var _suscRenderer = null;
+function suscRenderer() {
+  if (_suscRenderer) return _suscRenderer;
   if (!window.map.getPane('susceptibilitePane')) {
     var pane = window.map.createPane('susceptibilitePane');
     pane.style.zIndex = 350;
   }
-  return 'susceptibilitePane';
+  _suscRenderer = L.canvas({ pane: 'susceptibilitePane', padding: 0.5 });
+  return _suscRenderer;
 }
 
-function buildSusceptibilityLayer(meta) {
-  var t = meta.tuiles;
-  var lyr = L.tileLayer('data/' + t.modele + '?v=' + SUSC_FILE_VERSION, {
-    pane: suscPane(),
-    opacity: SUSC_OPACITY,
-    minNativeZoom: t.zoom_min,
-    maxNativeZoom: t.zoom_max,       /* au-delà : tuiles z12 agrandies, cellules nettes (CSS pixelated) */
-    maxZoom: 19,
-    bounds: L.latLngBounds([t.sud, t.ouest], [t.nord, t.est]),
-    className: 'susc-tiles'
-  });
-  return lyr;
+function suscStyle(feat) {
+  var c = suscClass((feat.properties || {}).classe);
+  var col = c ? c.couleur : '#999999';
+  /* Contour de la même couleur que le remplissage (épaisseur 0,5) : masque
+     les fines fentes entre polygones voisins. */
+  return { fillColor: col, fillOpacity: SUSC_OPACITY, color: col, weight: 0.5, opacity: SUSC_OPACITY };
 }
 
-/* ── Popup : classe lue dans la grille d'origine (EPSG:4326, 1 octet par
-   cellule), chargée au premier clic puis gardée en mémoire. ── */
-var _suscGrid = null, _suscGridLoading = null;
-function loadSuscGrid() {
-  if (_suscGrid) return Promise.resolve(_suscGrid);
-  if (_suscGridLoading) return _suscGridLoading;
-  var c = _suscMeta.consultation;
-  _suscGridLoading = new Promise(function (resolve) {
-    var img = new Image();
-    img.onload = function () {
-      var cv = document.createElement('canvas');
-      cv.width = c.largeur; cv.height = c.hauteur;
-      var ctx = cv.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      var rgba = ctx.getImageData(0, 0, c.largeur, c.hauteur).data;
-      var g = new Uint8Array(c.largeur * c.hauteur);
-      for (var i = 0, j = 0; i < g.length; i++, j += 4) g[i] = rgba[j];
-      cv.width = cv.height = 0;               /* libère la mémoire du canvas */
-      _suscGrid = g; resolve(g);
-    };
-    img.onerror = function () { console.warn('[layers] grille de consultation indisponible'); _suscGridLoading = null; resolve(null); };
-    img.src = 'data/' + c.fichier + '?v=' + SUSC_FILE_VERSION;
-  });
-  return _suscGridLoading;
-}
-function suscClassAt(grid, latlng) {
-  var c = _suscMeta.consultation;
-  var col = Math.floor((latlng.lng - c.ouest) / c.pas_lon);
-  var row = Math.floor((c.nord - latlng.lat) / c.pas_lat);
-  if (col < 0 || row < 0 || col >= c.largeur || row >= c.hauteur) return 0;
-  return grid[row * c.largeur + col];
-}
 function suscPopupHtml(p) {
   var c = suscClass(p.classe);
   return '<div class="popup-content popup-susc">'
@@ -522,30 +485,83 @@ function suscPopupHtml(p) {
     + 'Susceptibilité : <b>' + (p.libelle || (c ? c.libelle : 'n.d.')) + '</b> (classe ' + p.classe + '/5)'
     + '</div>';
 }
-function suscClick(e) {
-  var lyr = window.overlayLayers[SUSC_KEY];
-  if (!lyr || !window.map.hasLayer(lyr) || !_suscMeta) return;
-  var latlng = e.latlng;
-  loadSuscGrid().then(function (grid) {
-    if (!grid) return;
-    var k = suscClassAt(grid, latlng), c = suscClass(k);
-    /* Remplace la popup de la région ouverte par le même clic */
-    if (c) L.popup({ maxWidth: 300 }).setLatLng(latlng)
-      .setContent(suscPopupHtml({ classe: c.classe, libelle: c.libelle })).openOn(window.map);
+
+function loadFloodSusceptibility(data) {
+  window.appData.floodSusceptibility = data;
+  var lyr = L.geoJSON(data, {
+    renderer: suscRenderer(),
+    pane: 'susceptibilitePane',
+    style: suscStyle,
+    onEachFeature: function (feat, l) {
+      l.bindPopup(suscPopupHtml(feat.properties || {}), { maxWidth: 300 });
+    }
   });
+  window.overlayLayers[SUSC_KEY] = lyr;
+  if (window.map && isCardActive(SUSC_KEY)) lyr.addTo(window.map);
+  notifyLayerReady(SUSC_KEY);
 }
-/* Les tuiles ne reçoivent pas de clic : on écoute la carte nue et le
-   polygone de la région (Leaflet ne remonte pas les clics de polygones
-   SVG jusqu'à la carte). Les popups des autres couches restent prioritaires. */
-if (window.map) window.map.on('click', suscClick);
+
+/* Le canvas est sous l'overlayPane (SVG) : le polygone de la région
+   (remplissage transparent mais « peint ») capte les clics avant lui, et
+   Leaflet ne remonte pas ces clics jusqu'à la carte. Quand le clic tombe
+   sur la limite régionale ou sur la carte nue, on cherche la classe sous le
+   point (point-dans-polygone, boîtes englobantes pré-calculées). Les popups
+   des autres couches (bassins, nappes, oueds, points) restent prioritaires. */
+var _suscIndex = null;
+function suscBuildIndex(data) {
+  var rings = [];
+  data.features.forEach(function (f) {
+    var g = f.geometry; if (!g) return;
+    var polys = g.type === 'Polygon' ? [g.coordinates] : (g.type === 'MultiPolygon' ? g.coordinates : []);
+    polys.forEach(function (poly) {
+      var outer = poly[0], minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (var i = 0; i < outer.length; i++) {
+        var x = outer[i][0], y = outer[i][1];
+        if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y;
+      }
+      rings.push({ props: f.properties || {}, poly: poly, bb: [minX, minY, maxX, maxY] });
+    });
+  });
+  return rings;
+}
+function _inRing(x, y, ring) {
+  var inside = false;
+  for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+function suscPropsAt(latlng) {
+  var data = window.appData.floodSusceptibility;
+  if (!data) return null;
+  if (!_suscIndex) _suscIndex = suscBuildIndex(data);
+  var x = latlng.lng, y = latlng.lat;
+  for (var k = 0; k < _suscIndex.length; k++) {
+    var r = _suscIndex[k], b = r.bb;
+    if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue;
+    if (!_inRing(x, y, r.poly[0])) continue;
+    var inHole = false;
+    for (var h = 1; h < r.poly.length; h++) if (_inRing(x, y, r.poly[h])) { inHole = true; break; }
+    if (!inHole) return r.props;
+  }
+  return null;
+}
+function suscClickFallback(e) {
+  var lyr = window.overlayLayers[SUSC_KEY];
+  if (!lyr || !window.map.hasLayer(lyr)) return;
+  var p = suscPropsAt(e.latlng);
+  /* Remplace la popup de la région ouverte par le même clic */
+  if (p) L.popup({ maxWidth: 300 }).setLatLng(e.latlng).setContent(suscPopupHtml(p)).openOn(window.map);
+}
+if (window.map) window.map.on('click', suscClickFallback);
 document.addEventListener('layerReady', function (ev) {
   if (ev.detail.name !== 'Limites administratives') return;
   var admin = window.overlayLayers['Limites administratives'];
-  if (admin) admin.on('click', suscClick);
+  if (admin) admin.on('click', suscClickFallback);
 });
 
-/* Chargement à la demande (premier cochage), message pendant le
-   téléchargement des premières tuiles. */
+/* Chargement à la demande (premier cochage), message pendant le téléchargement */
 var _suscLoading = null;
 function showLayerLoading(on) {
   var el = document.getElementById('layer-loading-msg');
@@ -556,34 +572,21 @@ function ensureSusceptibilityLoaded() {
   if (_suscLoading) return _suscLoading;
   showLayerLoading(true);
   var t0 = performance.now();
-  _suscLoading = fetch('data/' + SUSC_META + '?v=' + SUSC_FILE_VERSION)
-    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(function (meta) {
-      _suscMeta = meta;
-      var lyr = buildSusceptibilityLayer(meta);
-      lyr.once('load', function () {
-        showLayerLoading(false);
-        console.log('[layers] susceptibilité affichée en ' + Math.round(performance.now() - t0) + ' ms');
-      });
-      lyr.on('tileerror', function () { showDataErrorBanner([SUSC_META]); });
-      window.overlayLayers[SUSC_KEY] = lyr;
-      if (window.map && isCardActive(SUSC_KEY)) lyr.addTo(window.map);
-      else showLayerLoading(false);
-      notifyLayerReady(SUSC_KEY);
-      return true;
-    })
-    .catch(function (e) {
-      console.warn('[layers] susceptibilité :', e.message);
-      showLayerLoading(false); showDataErrorBanner([SUSC_META]); _suscLoading = null;
-      return null;
+  _suscLoading = loadLayer(SUSC_FILE + '?v=' + SUSC_FILE_VERSION, loadFloodSusceptibility)
+    .then(function (ok) {
+      showLayerLoading(false);
+      console.log('[layers] susceptibilité affichée en ' + Math.round(performance.now() - t0) + ' ms');
+      if (!ok) { showDataErrorBanner([SUSC_FILE]); _suscLoading = null; }
+      return ok;
     });
   return _suscLoading;
 }
-/* Curseur d'opacité du panneau Couches (20 à 100 %) */
+
+/* Curseur d'opacité du panneau Couches (20 à 100 %) : remplissage et contour */
 window.setSusceptibilityOpacity = function (v) {
   SUSC_OPACITY = v;
   var lyr = window.overlayLayers[SUSC_KEY];
-  if (lyr && lyr.setOpacity) lyr.setOpacity(v);
+  if (lyr && lyr.setStyle) lyr.setStyle({ fillOpacity: v, opacity: v });
 };
 window.ensureLayerLoaded = function (name) {
   if (name === SUSC_KEY) return ensureSusceptibilityLoaded();
@@ -774,7 +777,7 @@ var LAYER_LABELS = {
   'admin_boundaries_real.geojson': 'Limites administratives',
   'aquifers.geojson':              'Nappes souterraines',
   'rain_stations_real.geojson':    'Stations pluviométriques',
-  'susceptibilite_raster.json':    'Susceptibilité aux inondations (modèle GTB)'
+  'susceptibilite.geojson':        'Susceptibilité aux inondations (modèle GTB)'
 };
 
 function showDataErrorBanner(failedFiles) {
