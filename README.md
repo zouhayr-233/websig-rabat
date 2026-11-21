@@ -7,7 +7,7 @@
 ![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=flat&logo=leaflet&logoColor=white)
 ![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=flat&logo=chartdotjs&logoColor=white)
 
-**Version 2 — mise à jour : novembre 2026**
+**Version 3 — mise à jour : novembre 2026**
 Application en ligne : <https://zouhayr-233.github.io/websig-rabat/>
 
 ---
@@ -43,11 +43,52 @@ du fichier `index.html` ne suffit pas).
 
 ---
 
+## Interface (version 3)
+
+- **Carte en pleine page** (100 % de la largeur, hauteur `100dvh`) sous un bandeau compact
+  (48 px, 40 px sur téléphone) qui porte la recherche de lieu, les outils (mesure de distance et
+  de surface, export PNG, plein écran, grille) et les coordonnées du curseur. Sur téléphone, la
+  recherche s'ouvre par la loupe ; mesure, export, plein écran et coordonnées y sont masqués.
+- **Barre de 5 boutons** (icônes SVG intégrées, info-bulle et `aria-label`) : Couches, Légende,
+  Statistiques, Précipitations, À propos. Sur ordinateur : colonne à gauche sous le zoom ; sur
+  téléphone (768 px ou moins) : rangée en bas, boutons de 48 px.
+- **Panneaux à la demande** : un seul ouvert à la fois, tous fermés au chargement ; fermeture par
+  le même bouton, la croix ou Échap. Tiroir à gauche de 360 px au plus sur ordinateur (la carte
+  reste utilisable à côté), feuille montante de 65 dvh au plus sur téléphone.
+  - *Couches* : fonds de carte (boutons radio), couches thématiques (cases à cocher, utilisables
+    au clavier), boutons « Tout décocher » et « Réinitialiser » (retour aux couches par défaut),
+    curseur d'opacité de la susceptibilité (20 à 100 %).
+  - *Statistiques*, *Précipitations*, *À propos* : graphiques et textes, redimensionnés à
+    l'ouverture du panneau.
+- **Légende** : ouverte en bas à droite sur ordinateur, repliée par défaut sur téléphone. Carte
+  compacte (fond semi-transparent, 220 px de large au plus, 40 dvh de haut au plus, 24 % de la
+  carte au plus sur téléphone) ; boutons A− / A+ (échelle 0,8 à 1,4), curseur de transparence
+  (0,4 à 1) et bouton de repli. Réglages mémorisés dans le navigateur (`localStorage`).
+- **Vue limitée à la région** : zoom minimal 8, emprise maximale `[[32.2, -8.2], [35.8, -4.2]]`
+  (`maxBoundsViscosity` 1), vue initiale cadrée sur la limite régionale. La vue ne descend
+  jamais au sud du 30e parallèle.
+
+## Fonds de carte
+
+| Fond | Source | Clé |
+|---|---|---|
+| OpenStreetMap (par défaut) | tile.openstreetmap.org | non |
+| Satellite | Esri World Imagery (sans étiquettes ni frontières) | non |
+| Terrain | Esri World Topo Map | non |
+| Nuit | Esri World Dark Gray Base (sans étiquettes ; données jusqu'au zoom 16, agrandies au-delà) | non |
+
+Le fond « Nuit » utilisait CARTO Dark Matter : constat de novembre 2026, toutes les tuiles CARTO
+renvoient une image « API KEY REQUIRED ». Il a été remplacé par Esri World Dark Gray Base, qui ne
+demande pas de clé (la mini-carte de situation utilise le même fond). Si plus de 6 tuiles d'un
+fond échouent, le message « Ce fond de carte est momentanément indisponible » s'affiche.
+
+---
+
 ## Couches cartographiques
 
 | Couche | Fichier | Type | Contenu |
 |---|---|---|---|
-| **Susceptibilité aux inondations (modèle GTB)** | `data/susceptibilite_tuiles/` (+ `susceptibilite_classes.png`, `susceptibilite_raster.json`) | Tuiles raster | Raster classé affiché tel quel (cellules de 90 m), tuiles XYZ zooms 7 à 12 ; popup lue dans la grille d'origine. Chargée au premier cochage |
+| **Susceptibilité aux inondations (modèle GTB)** | `data/susceptibilite.geojson` | MultiPolygone | 5 entités, une par classe (attributs `classe`, `libelle`, `superficie_km2`), contours lissés. Moteur canvas, chargée au premier cochage, opacité réglable |
 | Bassins & sous-bassins versants | `data/watersheds_real.geojson` | Polygone | Sous-bassins (ABHS) |
 | Réseau hydrographique — oueds | `data/rivers_real.geojson` | Ligne | Hiérarchie en 4 niveaux (rang ABHS) |
 | Nappes souterraines | `data/aquifers.geojson` | Polygone | 12 systèmes (source : NAPPES.shp, ABHS et ABHBC), attributs `NOM_NAPPE`, `TYPE_NAPPE`, `AREA_KM2` |
@@ -68,10 +109,13 @@ Classes de susceptibilité (indice p, probabilité estimée par le modèle) :
 
 Total classé : 17 553 km² sur environ 17 576 km² (23 km² non classés : plans d'eau, trous
 sans données). Ces superficies sont calculées sur le **raster classé** (grille de 3 secondes
-d'arc). La carte affiche ce même raster, **sans généralisation** : tuiles PNG en Web Mercator
-(classe majoritaire aux zooms 7 à 11, plus proche voisin au zoom 12, environ 3 pixels par
-cellule), cellules hors de la limite régionale transparentes. Au-delà du zoom 12, les tuiles
-sont agrandies en gardant des cellules nettes.
+d'arc) et viennent de `json/statistiques.json`, jamais d'un calcul sur les polygones.
+
+**Couche lissée (méthode d'affichage).** Un filtre majoritaire gaussien est appliqué au raster
+classé (sigma de 1,5 cellule, environ 135 m), calé pour conserver la superficie de chaque
+classe ; le résultat est vectorisé puis simplifié à environ 18 m. Les contours n'ont donc plus
+d'effet pixélisé. La surface des polygones lissés diffère de celle du raster de 0,4 % à 3,6 %
+selon la classe : c'est normal, et c'est pourquoi les chiffres affichés viennent du raster.
 
 ---
 
@@ -85,12 +129,10 @@ websig-rabat/
 │   ├── map.js              # Carte Leaflet, fonds, contrôles, géocodage, export PNG
 │   ├── graticule.js        # Grille de coordonnées
 │   ├── layers.js           # Chargement des GeoJSON, styles, popups
-│   ├── controls.js         # Panneaux, cartes de couches, légende, mesures
+│   ├── controls.js         # Barre de boutons, panneaux, légende, mesures, recherche
 │   ├── charts.js           # Tableau de bord (Chart.js)
 │   └── about.js            # Onglet « À propos » (depuis json/metadonnees.json)
-├── data/                   # Couches GeoJSON, tuiles de susceptibilité, précipitations
-├── outils/
-│   └── generer_tuiles_susceptibilite.py   # Régénère la couche de susceptibilité depuis le raster
+├── data/                   # Couches GeoJSON et données de précipitations
 ├── json/
 │   ├── statistiques.json   # Chiffres du tableau de bord (référence du rapport)
 │   └── metadonnees.json    # Méthode, validation, limites, sources, version
@@ -107,14 +149,15 @@ viennent de `json/statistiques.json` et ne sont jamais recalculés dans le navig
 1. Préparer le GeoJSON en **EPSG:4326** (WGS 84), coordonnées arrondies à 5 décimales,
    en gardant les **mêmes noms d'attributs** que la couche actuelle (voir le tableau ci-dessus).
 2. Le copier dans `data/` sous **le même nom de fichier** (ex. `data/dams_real.geojson`).
-   Pour la **susceptibilité** (raster), lancer depuis la racine du dépôt :
-   `python outils/generer_tuiles_susceptibilite.py chemin/vers/Susceptibilite_GTB_classes.tif`
-   (rasterio, numpy et Pillow requis) : le script régénère les tuiles, la grille de la popup
-   et `data/susceptibilite_raster.json`.
+   **Couche de susceptibilité lissée** : copier le nouveau GeoJSON tel quel sous
+   `data/susceptibilite.geojson`, sans le re-simplifier : 5 entités MultiPolygon (une par
+   classe) en EPSG:4326, attributs `classe` (1 à 5), `libelle` et `superficie_km2`. Vérifier
+   qu'il s'ouvre, qu'il contient 5 entités et que les superficies des attributs sont celles du
+   raster. Garder les fichiers sources hors du dépôt publié (dossier `import/`, ignoré par Git).
 3. Si les chiffres changent, mettre à jour `json/statistiques.json` (et `json/metadonnees.json`
    si la méthode change). Pour la susceptibilité, recopier les superficies calculées sur le raster.
 4. Changer le paramètre de version pour contourner le cache de GitHub Pages :
-   - susceptibilité (tuiles, grille, description) : constante `SUSC_FILE_VERSION` dans `js/layers.js` ;
+   - couche de susceptibilité : constante `SUSC_FILE_VERSION` dans `js/layers.js` ;
    - fichiers CSS/JS modifiés : `?v=AAAAMMJJ` dans `index.html` ;
    - fichiers JSON : `?v=AAAAMMJJ` dans `js/charts.js` et `js/about.js`.
 5. Tester en local (`python3 -m http.server`), puis commiter et pousser sur `master`
@@ -144,7 +187,7 @@ Limites et détails : onglet « À propos » de l'application et rapport de PFE.
 - **HCP** — Haut-Commissariat au Plan (RGPH)
 - **NASA POWER** — séries de précipitations des stations
 - **OpenStreetMap** — limite régionale, géocodage (Nominatim)
-- **Esri, CARTO, OpenStreetMap** — fonds de carte
+- **OpenStreetMap, Esri** — fonds de carte
 
 La liste complète, y compris les données d'entrée du modèle, est dans `json/metadonnees.json`
 (affichée dans l'onglet « À propos »).
@@ -155,7 +198,7 @@ La liste complète, y compris les données d'entrée du modèle, est dans `json/
 
 | Technologie | Version | Rôle |
 |---|---|---|
-| [Leaflet](https://leafletjs.com) | 1.9.4 | Moteur cartographique (vecteurs SVG, tuiles) |
+| [Leaflet](https://leafletjs.com) | 1.9.4 | Moteur cartographique (SVG ; canvas pour la susceptibilité) |
 | [Chart.js](https://chartjs.org) | 4.4.0 | Graphiques |
 | [Leaflet.draw](https://github.com/Leaflet/Leaflet.draw) | 1.0.4 | Outils de mesure |
 | [Leaflet.MiniMap](https://github.com/Norkart/Leaflet-MiniMap) | 3.6.1 | Carte de situation |
