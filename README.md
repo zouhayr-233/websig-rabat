@@ -15,7 +15,7 @@ Application en ligne : <https://zouhayr-233.github.io/websig-rabat/>
 ## Description
 
 Système d'Information Géographique Web (WebSIG) qui accompagne le rapport de PFE
-(Master Géomatique Appliquée, Université Ibn Tofail) sur les **ressources en eau** et la
+(Master Géomatique Appliquée, Université Ibn Tofaïl) sur les **ressources en eau** et la
 **susceptibilité aux inondations** de la région **Rabat-Salé-Kénitra** (RSK).
 
 L'application est entièrement statique (HTML5, CSS3, JavaScript ES6, Leaflet 1.9, Chart.js 4) :
@@ -215,8 +215,8 @@ La liste complète, y compris les données d'entrée du modèle, est dans `json/
 | | |
 |---|---|
 | **Projet** | Projet de Fin d'Études (PFE) — Master 2 Géomatique Appliquée |
-| **Université** | Université Ibn Tofail — Faculté des Sciences, Kénitra |
+| **Université** | Université Ibn Tofaïl — Faculté des Sciences Humaines et Sociales, Kénitra |
 | **Années** | 2024 – 2026 |
 | **Auteur** | AANZOUL Zouhayr — zouhayr.aanzoul@uit.ac.ma |
 
-© 2026 — Université Ibn Tofail, Faculté des Sciences, Kénitra, Maroc.
+© 2026 — Université Ibn Tofaïl, Faculté des Sciences Humaines et Sociales, Kénitra, Maroc.
