@@ -131,7 +131,7 @@ function renderAbout(meta) {
 
 async function loadAbout() {
   try {
-    var res = await fetch('json/metadonnees.json?v=20261122b');
+    var res = await fetch('json/metadonnees.json?v=20261122c');
     if (!res.ok) { renderAbout(null); return; }
     var meta = await res.json();
     renderAbout(meta);

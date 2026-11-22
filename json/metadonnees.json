@@ -71,7 +71,7 @@
         ]
       }
     ],
-    "grille": "3 secondes d'arc (environ 90 m)",
+    "grille": "1 seconde d'arc (environ 30 m)",
     "inventaire_points": 800,
     "points_exploitables": 797,
     "points_inondes": 398,
