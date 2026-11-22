@@ -19,9 +19,16 @@ function isCardActive(layerName) {
   return false; /* card not found = inactive */
 }
 
+/* Même smoothFactor pour la limite régionale et pour les couches découpées
+   sur elle (valeur par défaut de Leaflet), pour que leurs tracés se
+   superposent à tous les niveaux de zoom. */
+var SMOOTH_FACTOR = 1;
+/* Version des fichiers de données modifiés (cache de GitHub Pages) */
+var DATA_VERSIONS = { 'aquifers.geojson': '20261122', 'rivers_real.geojson': '20261122' };
+
 /* ── Fetch helper ─────────────────────────────────── */
 async function loadLayer(filename, onLoad) {
-  const url = 'data/' + filename;
+  const url = 'data/' + filename + (DATA_VERSIONS[filename] ? '?v=' + DATA_VERSIONS[filename] : '');
   try {
     const res = await fetch(url);
     if (!res.ok) { console.warn('[layers] ' + res.status + ' ' + url); return null; }
@@ -195,8 +202,10 @@ function loadWatersheds(data) {
     style: function(feature) {
       const id = String((feature.properties && (feature.properties.OBJECTID || feature.properties.CodeSousBas)) || 0);
       const p  = colorMap[id] || palette[0];
-      return { fillColor: p.fill, fillOpacity: 0.42, color: p.border, weight: 2.2, opacity: 0.9, dashArray: p.dash };
+      /* Contour de la couleur du remplissage, 0,5 px : rien ne déborde de la limite régionale */
+      return { fillColor: p.fill, fillOpacity: 0.42, color: p.fill, weight: 0.5, opacity: 0.9, dashArray: p.dash };
     },
+    smoothFactor: SMOOTH_FACTOR,
     onEachFeature: function(feat, l) {
       const p   = feat.properties || {};
       const id  = String((p.OBJECTID || p.CodeSousBas) || 0);
@@ -210,11 +219,11 @@ function loadWatersheds(data) {
         + '<tr><td>Code bassin</td><td>' + (p.CodeBassin || '—') + '</td></tr>'
         + '<tr><td>Superficie</td><td>' + sup + '</td></tr>'
         + '</table></div>', { maxWidth: 290 });
-      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.68, weight: 3.0, opacity: 1 }); });
+      l.on('mouseover', function() { this.setStyle({ fillOpacity: 0.68, opacity: 1 }); });
       l.on('mouseout', function() {
         const rid = String((this.feature.properties && (this.feature.properties.OBJECTID || this.feature.properties.CodeSousBas)) || 0);
         const rp  = colorMap[rid] || palette[0];
-        this.setStyle({ fillColor: rp.fill, fillOpacity: 0.42, color: rp.border, weight: 2.2, opacity: 0.9 });
+        this.setStyle({ fillColor: rp.fill, fillOpacity: 0.42, color: rp.fill, weight: 0.5, opacity: 0.9 });
       });
     }
   });
@@ -244,6 +253,7 @@ function loadRivers(data) {
   /* ── river line layer ── */
   var riverLines = L.geoJSON(data, {
     style: ouedStyle,
+    smoothFactor: SMOOTH_FACTOR,
     onEachFeature: function(feat, l) {
       const p    = feat.properties || {};
       const name = p.name || p.NAME || 'Cours d\'eau';
@@ -424,7 +434,7 @@ function loadStations(data) {
 
 var SUSC_KEY   = 'Susceptibilité aux inondations (modèle GTB)';
 var SUSC_FILE  = 'susceptibilite.geojson';
-var SUSC_FILE_VERSION = '20261121';
+var SUSC_FILE_VERSION = '20261122';
 /* Classes, seuils et couleurs : identiques à la carte du rapport */
 var SUSC_CLASSES = [
   { classe: 1, libelle: 'Très faible', seuil: 'p < 0,2',    couleur: '#006100' },
@@ -459,9 +469,9 @@ function suscRenderer() {
 function suscStyle(feat) {
   var c = suscClass((feat.properties || {}).classe);
   var col = c ? c.couleur : '#999999';
-  /* Contour de la même couleur que le remplissage (épaisseur 0,8) : masque
-     les fines fentes entre zones voisines. */
-  return { fillColor: col, fillOpacity: SUSC_OPACITY, color: col, weight: 0.8, opacity: SUSC_OPACITY };
+  /* Contour de la même couleur que le remplissage, 0,5 px (au plus) : masque
+     les fines fentes entre zones voisines sans déborder de la limite régionale. */
+  return { fillColor: col, fillOpacity: SUSC_OPACITY, color: col, weight: 0.5, opacity: SUSC_OPACITY };
 }
 
 function suscPopupHtml(p) {
@@ -478,6 +488,7 @@ function loadFloodSusceptibility(data) {
     renderer: suscRenderer(),
     pane: 'susceptibilitePane',
     style: suscStyle,
+    smoothFactor: SMOOTH_FACTOR,
     onEachFeature: function (feat, l) {
       l.bindPopup(suscPopupHtml(feat.properties || {}), { maxWidth: 300 });
     }
@@ -584,7 +595,17 @@ window.ensureLayerLoaded = function (name) {
    Fields: Nom_Region, Population, CODE_REGIO, Menages
    ══════════════════════════════════════════════════ */
 function loadAdmin(data) {
+  /* Pane dédié au-dessus des couches thématiques (susceptibilité 350,
+     polygones et lignes 400), sous les marqueurs (600) ; non interactif. */
+  if (window.map && !window.map.getPane('limitePane')) {
+    const pane = window.map.createPane('limitePane');
+    pane.style.zIndex = 450;
+    pane.style.pointerEvents = 'none';
+  }
   const lyr = L.geoJSON(data, {
+    pane: 'limitePane',
+    interactive: false,
+    smoothFactor: SMOOTH_FACTOR,
     style: function(feat) {
       const p    = (feat && feat.properties) || {};
       const type = (p.TYPE || p.type || '').toLowerCase();
@@ -593,22 +614,13 @@ function loadAdmin(data) {
       return {
         fillColor: 'transparent', fillOpacity: 0,
         color:     isProv ? '#374151' : '#111827',
-        weight:    isProv ? 1.4 : 2.8,
+        weight:    isProv ? 1.4 : 1.5,      /* trait fin (couleur inchangée) */
         dashArray: isProv ? '7,5' : null,
         opacity:   isProv ? 0.75 : 0.95
       };
     },
-    onEachFeature: function(feat, l) {
-      const p    = feat.properties || {};
-      const name = p.Nom_Region || p.NOM_REGION || p.name || 'Région RSK';
-      l.bindPopup('<div class="popup-content">'
-        + popupHeader('#1d4ed8', '🗂️', name)
-        + '<table>'
-        + '<tr><td>Code région</td><td>' + (p.CODE_REGIO || p.type || '—') + '</td></tr>'
-        + '<tr><td>Population</td><td><b>' + ((+(p.Population || p.population) || 0).toLocaleString('fr-FR')) + '</b> hab.</td></tr>'
-        + '<tr><td>Superficie</td><td>' + ((+(p.area_km2) || 0).toLocaleString('fr-FR') || '—') + ' km²</td></tr>'
-        + '</table></div>', { maxWidth: 270 });
-    }
+    /* Limite non interactive : plus de popup de région (elle n'est plus
+       cliquable ; les clics passent aux couches situées dessous). */
   });
   window.overlayLayers['Limites administratives'] = lyr;
   if (window.map && isCardActive('Limites administratives')) lyr.addTo(window.map);
@@ -643,6 +655,7 @@ function loadAquifers(data) {
     aqMap[id] = aqPalette[idx % aqPalette.length];
   });
   const lyr = L.geoJSON(data, {
+    smoothFactor: SMOOTH_FACTOR,
     style: function(feat) {
       const id = (feat.properties && (feat.properties.NOM_NAPPE || feat.properties.Nom_Nappe)) || '0';
       const cp = aqMap[id] || aqPalette[0];
