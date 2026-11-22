@@ -425,7 +425,7 @@ function loadStations(data) {
    Indice p (probabilité estimée par le modèle Gradient Tree Boosting),
    classé en 5 classes. Fichier data/susceptibilite.geojson : 5 entités
    MultiPolygon (attributs classe / libelle / superficie_km2), version
-   segmentée pour l'affichage (raster de 90 m regroupé en 6 314 zones
+   segmentée pour l'affichage (raster de 30 m regroupé en 6 314 zones
    homogènes, classe dominante de chaque zone, contours simplifiés à
    ~50 m). Les superficies
    du tableau de bord viennent de json/statistiques.json (raster), jamais

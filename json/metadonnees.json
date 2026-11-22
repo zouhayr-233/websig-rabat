@@ -1,7 +1,7 @@
 {
   "nom_site": "WebSIG RSK — Ressources en eau et susceptibilité aux inondations",
   "region": "Rabat-Salé-Kénitra, Maroc",
-  "version": "Version 3.2",
+  "version": "Version 3.3",
   "mise_a_jour": "novembre 2026",
   "projet": {
     "type": "Projet de Fin d'Études (PFE) — Master 2",
@@ -94,7 +94,7 @@
     "Zones urbaines mal couvertes.",
     "Modèle statique : il répond à « où ? », pas à « quand ? ».",
     "Indice relatif, non réglementaire, qui n'est pas un système d'alerte.",
-    "La couche de susceptibilité est une version segmentée pour l'affichage : le raster de 90 m a été regroupé en zones homogènes, chacune prenant la classe dominante de ses cellules. Les petites taches isolées sont donc absorbées par leur voisinage. Les superficies indiquées viennent du raster d'origine.",
+    "La couche de susceptibilité est une version segmentée pour l'affichage : le raster de 30 m a été regroupé en zones homogènes, chacune prenant la classe dominante de ses cellules. Les petites taches isolées sont donc absorbées par leur voisinage. Les superficies indiquées viennent du raster d'origine.",
     "Données figées à la date de conversion.",
     "Dépendance à des services tiers (fonds de carte, géocodage)."
   ],
@@ -162,5 +162,5 @@
     "GeoJSON",
     "Nominatim"
   ],
-  "_note_verification": "HCEF retiré de la liste des sources (aucune couche n'en provient, voir VERIFICATION.md §5). Méthode, validation et limites : texte du rapport de PFE (chapitres 3 et 4), version 2 de novembre 2026. data/rf_model_report.json décrit un ancien modèle Random Forest et n'est pas utilisé par l'application."
+  "_note_verification": "HCEF retiré de la liste des sources (aucune couche n'en provient, voir VERIFICATION.md §5). Méthode, validation et limites : texte du rapport de PFE (chapitres 3 et 4), version 5 de novembre 2026. data/rf_model_report.json décrit un ancien modèle Random Forest et n'est pas utilisé par l'application."
 }
