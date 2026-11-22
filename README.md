@@ -7,7 +7,7 @@
 ![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=flat&logo=leaflet&logoColor=white)
 ![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=flat&logo=chartdotjs&logoColor=white)
 
-**Version 3.1 — mise à jour : novembre 2026**
+**Version 3.2 — mise à jour : novembre 2026**
 Application en ligne : <https://zouhayr-233.github.io/websig-rabat/>
 
 ---
@@ -87,6 +87,22 @@ fond échouent, le message « Ce fond de carte est momentanément indisponible �
 
 ---
 
+## Découpage sur la limite régionale
+
+Les couches thématiques sont découpées sur la limite de la région (`data/admin_boundaries_real.geojson`,
+17 642 km² en EPSG:26191) : aucune ne la dépasse (susceptibilité, bassins, nappes, oueds, barrages,
+villes), à l'exception de la station Rabat-Météo, à 521 m de la limite, conservée en attendant une
+décision. La limite est dessinée au-dessus des couches. Les fonds de carte ne sont ni découpés ni masqués.
+Deux outils, **hors du site** (non chargés par la page), servent à refaire ou contrôler ce découpage :
+
+- `outils/decouper_couches.py` : découpe les couches (`--simulation` par défaut, `--appliquer` pour
+  écrire) et produit les rapports de couverture et de surfaces ;
+- `outils/verifier_limites.py` : vérifie qu'aucun sommet ni aucune surface ne dépasse la limite
+  (code de sortie 1 sinon).
+
+Ils s'exécutent avec shapely 2 et pyproj, installés dans `.venv-outils/` (ignoré par Git) :
+`python -m venv .venv-outils`, puis `.venv-outils/Scripts/python -m pip install "shapely>=2,<3" pyproj`.
+
 ## Mesures
 
 Les outils **Distance** et **Surface** calculent dans la projection **Merchich / Nord Maroc**
@@ -124,7 +140,7 @@ Clarke 1880 (IGN) ; le décalage vers WGS 84 correspond à la transformation EPS
 | Barrages & retenues | `data/dams_real.geojson` | Point | 11 ouvrages (source : Barrages.shp ; attributs `BARRAGE`, `OUED`, `Capacité_` en Mm³, `AGENCE`, `ANNEE`) |
 | Stations pluviométriques | `data/rain_stations_real.geojson` | Point | 5 stations |
 | Découpage administratif | `data/admin_boundaries_real.geojson` | Polygone | Limite de la région (géométrie de `limite-de-région.shp`, la limite utilisée pour le modèle) |
-| Villes principales | (dans `js/layers.js`) | Point | 12 centres urbains |
+| Villes principales | (dans `js/layers.js`) | Point | 11 centres urbains (Benslimane, hors région, retirée) |
 
 Classes de susceptibilité (indice p, probabilité estimée par le modèle) :
 
@@ -164,6 +180,9 @@ websig-rabat/
 │   ├── vendor/proj4.js     # proj4js 2.23.0 (MIT) : mesures en EPSG:26191
 │   └── about.js            # Onglet « À propos » (depuis json/metadonnees.json)
 ├── data/                   # Couches GeoJSON et données de précipitations
+├── outils/                 # Hors du site : découpage et vérification des couches (Python)
+│   ├── decouper_couches.py
+│   └── verifier_limites.py
 ├── json/
 │   ├── statistiques.json   # Chiffres du tableau de bord (référence du rapport)
 │   └── metadonnees.json    # Méthode, validation, limites, sources, version
