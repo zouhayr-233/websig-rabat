@@ -262,6 +262,44 @@ def couverture(B26):
               f'intérieurs ({sum(t.area for t in trous) / 1e6:.2f} km²)')
 
 
+# ── surfaces avant / après et textes affichés (étape 4) : rapport seulement ──
+REF_AVANT = 'aff3da6'      # commit de sauvegarde, avant découpage
+
+
+def lire_version(chemin, ref):
+    import subprocess
+    out = subprocess.run(['git', '-C', RACINE, 'show', f'{ref}:{chemin}'], capture_output=True, check=True).stdout
+    return json.loads(out.decode('utf-8'))
+
+
+def fr(v, dec=1):
+    """Format des popups : toLocaleString('fr-FR', {maximumFractionDigits: dec})."""
+    t = f'{v:,.{dec}f}'.rstrip('0').rstrip('.') if dec else f'{round(v):,}'
+    return t.replace(',', '\u202f').replace('.', ',')   # espace fine insécable, comme fr-FR
+
+
+def surfaces(ref=REF_AVANT):
+    print(f"\n== Surfaces avant ({ref}) / après (EPSG:26191) et textes des popups")
+    for chemin, nom, champ in [('data/susceptibilite.geojson', 'libelle', 'superficie_km2'),
+                               ('data/aquifers.geojson', 'NOM_NAPPE', 'AREA_KM2'),
+                               ('data/watersheds_real.geojson', 'NomSousBas', 'Superficie')]:
+        av = {f['properties'][nom]: p26(make_valid(shape(f['geometry']))).area / 1e6 for f in lire_version(chemin, ref)['features']}
+        ap = json.load(open(os.path.join(RACINE, chemin), encoding='utf-8'))['features']
+        print(f'   {chemin}')
+        for f in ap:
+            n = f['properties'][nom]; a1 = p26(make_valid(shape(f['geometry']))).area / 1e6; a0 = av[n]
+            attr = f['properties'].get(champ)
+            if chemin.endswith('aquifers.geojson'):
+                popup = f'Superficie {fr(attr)} km²' if attr else 'Superficie —'
+            elif chemin.endswith('watersheds_real.geojson'):
+                popup = f'Superficie {fr(attr)} km²' if attr else 'Superficie —'
+            else:
+                popup = '(popup sans surface)'
+            ecart_attr = f'{100 * (a1 - attr) / attr:+.2f} %' if attr else '-'
+            print(f'      {n:28s} avant {a0:10.2f} | après {a1:10.2f} km² ({100 * (a1 - a0) / a0:+.3f} %) | '
+                  f'attribut {champ} = {attr} (écart géométrie/attribut {ecart_attr}) | popup : « {popup} »')
+
+
 def villes_inline(B, B26):
     src = open(os.path.join(RACINE, VILLES_JS), encoding='utf-8').read()
     villes = re.findall(r"coordinates: \[(-?[\d.]+), (-?[\d.]+)\] \},\s*properties: \{ name: '([^']+)'", src)
@@ -307,6 +345,7 @@ def main():
         elif a.appliquer:
             print('   -> rien à découper : fichier laissé tel quel')
     couverture(B26)
+    surfaces()
     n, hors = villes_inline(B, B26)
     print(f'\n== {VILLES_JS} (villes principales, données dans le code) : {n} points, {len(hors)} hors limite')
     for x in hors:
