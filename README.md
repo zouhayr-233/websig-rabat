@@ -7,7 +7,7 @@
 ![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=flat&logo=leaflet&logoColor=white)
 ![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=flat&logo=chartdotjs&logoColor=white)
 
-**Version 3.2 — mise à jour : novembre 2026**
+**Version 3.3 — mise à jour : novembre 2026**
 Application en ligne : <https://zouhayr-233.github.io/websig-rabat/>
 
 ---
@@ -161,6 +161,7 @@ et Huttenlocher) appliquée à la carte de probabilité du modèle. Chaque segme
 dominante de ses cellules, pondérée pour conserver la superficie de chaque classe ; les segments
 voisins de même classe sont fusionnés ; les contours sont simplifiés à environ 50 m. Les
 polygones diffèrent du raster de 0,2 % à 0,9 % par classe. Les statistiques viennent du raster.
+Le raster classé de susceptibilité a une résolution de 30 m ; la couche affichée en est une version segmentée pour l'affichage.
 
 ---
 
