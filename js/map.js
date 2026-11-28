@@ -362,9 +362,45 @@ window.setMapFullscreen = setMapFullscreen;
 window.isMapFullscreen = isMapFullscreen;
 
 /* ── 10. Export PNG ────────────────────────────────── */
+/* Export PNG : html2canvas place mal les <svg> des couches vectorielles de
+   Leaflet (bassins, oueds, nappes, limite) — elles apparaissaient décalées vers
+   le haut et la gauche dans l'image exportée — alors qu'il place correctement
+   les <canvas> (couche de susceptibilité). Dans la copie de la page que capture
+   html2canvas (jamais dans la page affichée), chaque <svg> est donc converti en
+   <canvas> de même taille, au même endroit (même transformation CSS) : les
+   styles des tracés sont des attributs SVG, ils sont conservés. */
+function svgEnCanvasPourExport(doc) {
+  const svgs = Array.prototype.slice.call(doc.querySelectorAll('#map .leaflet-pane > svg'));
+  return Promise.all(svgs.map(function (svg) {
+    return new Promise(function (resolve) {
+      const w = parseFloat(svg.getAttribute('width')), h = parseFloat(svg.getAttribute('height'));
+      if (!w || !h) { resolve(); return; }
+      const copie = svg.cloneNode(true);
+      copie.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      const img = new Image();
+      img.onload = function () {
+        const c = doc.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        /* Position donnée en left/top (et non par la transformation CSS
+           translate3d de Leaflet, elle aussi mal appliquée par html2canvas) */
+        const t = /translate(?:3d)?\(\s*(-?[\d.]+)px\s*,\s*(-?[\d.]+)px/.exec(svg.style.transform || '');
+        c.style.position = 'absolute';
+        c.style.left = (t ? parseFloat(t[1]) : 0) + 'px';
+        c.style.top  = (t ? parseFloat(t[2]) : 0) + 'px';
+        c.style.width = w + 'px'; c.style.height = h + 'px';
+        svg.parentNode.replaceChild(c, svg);
+        resolve();
+      };
+      img.onerror = function () { resolve(); };     /* en cas d'échec : <svg> laissé tel quel */
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(copie));
+    });
+  }));
+}
+
 function exportMapPNG() {
   if (typeof html2canvas === 'undefined') { alert('html2canvas not loaded'); return; }
-  html2canvas(document.getElementById('map'), { useCORS: true, scale: 1 })
+  html2canvas(document.getElementById('map'), { useCORS: true, scale: 1, onclone: svgEnCanvasPourExport })
     .then(function (c) { const a = document.createElement('a'); a.download = 'websig-rsk.png'; a.href = c.toDataURL(); a.click(); })
     .catch(function (e) { console.warn('Export failed:', e); });
 }
